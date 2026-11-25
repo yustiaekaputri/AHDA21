@@ -13,3 +13,5 @@ This is an unverified first Codespaces configuration. It does not create a Codes
 The dev container uses Debian Bookworm PHP packages and MariaDB. Only the loopback database and web ports are used. WordPress and WP-CLI are downloaded during first manual setup. The existing smoke test runs before the canonical URL is changed to the HTTPS forwarding URL; test mode is then disabled. HTTPS handling is based on the known Codespaces environment, not incoming request headers. This is not a production-grade web server or long-lived staging deployment. Do not use real data or production credentials, and do not set the port Public.
 
 If the build, setup or proxy check fails, inspect the terminal, report the error and use a fresh Codespace; do not bypass the empty database checks. The GitHub Actions screenshot preview remains a fallback.
+
+The Codespaces setup also enables the three local HTTP login probes before changing the WordPress canonical URL to the private HTTPS forwarding address. Real Codespaces forwarding remains unverified.

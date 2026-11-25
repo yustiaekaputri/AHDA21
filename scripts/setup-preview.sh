@@ -28,6 +28,13 @@ for name in SDP_SAFE_MODE SDP_SMOKE_TEST_ENABLED SDP_LOW_RESOURCE DISABLE_WP_CRO
   "${wp[@]}" config set "$name" true --raw
 done
 "${wp[@]}" core install --url="$SDP_PREVIEW_URL" --title='Sekolah Directory — DEMO FIKTIF' --admin_user=sdp_preview_admin --admin_password="$(openssl rand -hex 24)" --admin_email=admin@example.invalid --skip-email
+# The installation directory is the HTTP document root, not a URL prefix.
+# Persist both options before defining the constants (which override option reads).
+"${wp[@]}" option update home "$SDP_PREVIEW_URL"
+"${wp[@]}" option update siteurl "$SDP_PREVIEW_URL"
+"${wp[@]}" config set WP_HOME "$SDP_PREVIEW_URL"
+"${wp[@]}" config set WP_SITEURL "$SDP_PREVIEW_URL"
+"${wp[@]}" eval 'foreach ([home_url(),site_url(),wp_login_url()] as $url) { echo $url.PHP_EOL; } if (home_url()!==getenv("SDP_PREVIEW_URL") || site_url()!==getenv("SDP_PREVIEW_URL") || wp_login_url()!==getenv("SDP_PREVIEW_URL")."/wp-login.php") WP_CLI::error("Unexpected WordPress canonical URLs");'
 "${wp[@]}" option update blog_public 0
 "${wp[@]}" option update permalink_structure ''
 if [[ "${SDP_LOGIN_PROBE:-0}" == 1 ]]; then bash "$repo/scripts/probe-login.sh" core; fi

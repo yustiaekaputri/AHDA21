@@ -29,7 +29,7 @@ echo "LOGIN PROBE ($stage)"
 for suffix in '/wp-login.php' '/wp-login.php?redirect_to=%2Fwp-admin%2F' '/wp-admin/'; do
   result="$(curl --max-time 15 -sS -L --max-redirs 5 -o "$body" -w '%{http_code} %{url_effective}' "$SDP_PREVIEW_URL$suffix")"
   echo "$suffix -> $result"
-  if [[ "$result" != 200\ * ]] || ! grep -Eq 'name="log"|id="user_login"' "$body"; then
+  if [[ "$result" != "200 $SDP_PREVIEW_URL/wp-login.php"* ]] || ! grep -Eq 'name="log"|id="user_login"' "$body"; then
     echo "LOGIN PROBE FAILED ($stage): expected real WordPress login form"
     # Server log contains only these anonymous diagnostic requests.
     tail -n 30 "$log"

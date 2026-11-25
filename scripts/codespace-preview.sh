@@ -29,8 +29,9 @@ CREATE USER 'sdp_test'@'127.0.0.1' IDENTIFIED BY '$SDP_DB_PASSWORD';
 GRANT ALL PRIVILEGES ON sdp_test.* TO 'sdp_test'@'127.0.0.1';
 SQL
   curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$SDP_WP_CLI"
-  bash "$repo/scripts/setup-preview.sh"
+  SDP_LOGIN_PROBE=1 bash "$repo/scripts/setup-preview.sh"
   unset SDP_DB_PASSWORD
+  # Update constants only after the loopback smoke and login probes pass.
   php "$SDP_WP_CLI" --path="$SDP_WP_ROOT" config set WP_HOME "$url"
   php "$SDP_WP_CLI" --path="$SDP_WP_ROOT" config set WP_SITEURL "$url"
   php "$SDP_WP_CLI" --path="$SDP_WP_ROOT" config set SDP_SMOKE_TEST_ENABLED false --raw
