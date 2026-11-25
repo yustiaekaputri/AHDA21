@@ -1,0 +1,46 @@
+# Disposable development only; never expose or deploy this stack to production.
+services:
+  db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: sdp_test
+      MARIADB_USER: sdp_test
+      MARIADB_PASSWORD: dev-only-sdp-db
+      MARIADB_ROOT_PASSWORD: dev-only-sdp-root
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes: [db_data:/var/lib/mysql]
+  wordpress:
+    build:
+      context: .
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.3}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports: ["127.0.0.1:8080:80"]
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: sdp_test
+      WORDPRESS_DB_USER: sdp_test
+      WORDPRESS_DB_PASSWORD: dev-only-sdp-db
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_ENVIRONMENT_TYPE', 'local');
+        define('SDP_LOW_RESOURCE', true);
+        define('SDP_SAFE_MODE', true);
+        define('SDP_SMOKE_TEST_ENABLED', true);
+        define('DISABLE_WP_CRON', true);
+        define('WP_HTTP_BLOCK_EXTERNAL', true);
+    volumes:
+      - wp_data:/var/www/html
+      - ./plugin:/var/www/html/wp-content/plugins/sekolah-directory-pro:ro
+      - ./theme:/var/www/html/wp-content/themes/sekolah-directory-theme:ro
+      - ./tests/localwp:/sdp-tests:ro
+      - ./scripts:/sdp-scripts:ro
+      - ./config/php-dev.ini:/usr/local/etc/php/conf.d/sdp-dev.ini:ro
+volumes:
+  wp_data:
+  db_data:

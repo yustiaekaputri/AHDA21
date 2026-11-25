@@ -1,0 +1,78 @@
+name: WordPress integration
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+concurrency:
+  group: wordpress-integration-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3']
+    env:
+      PHP_VERSION: ${{ matrix.php }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Start disposable stack
+        run: bash scripts/setup-wordpress.sh DISPOSABLE-LOCAL-ONLY
+      - name: Lint plugin and theme
+        run: docker compose exec -T wordpress sh -c 'find /var/www/html/wp-content/plugins/sekolah-directory-pro /var/www/html/wp-content/themes/sekolah-directory-theme -name "*.php" -print0 | xargs -0 -n 1 php -l'
+      - name: Integration smoke test
+        run: bash scripts/smoke-wordpress.sh
+      - name: Install browser tooling
+        run: |
+          python3 -m venv /tmp/sdp-browser
+          /tmp/sdp-browser/bin/pip install playwright==1.51.0
+          /tmp/sdp-browser/bin/python -m playwright install --with-deps chromium
+      - name: Capture actual WordPress pages
+        run: |
+          mkdir -p artifacts
+          docker compose exec -T -u www-data wordpress wp eval-file /sdp-scripts/seed-preview.php --user=sdp_local_admin > artifacts/preview-urls.json
+          /tmp/sdp-browser/bin/python scripts/capture-preview.py
+      - name: Verify two-account operator isolation and moderation
+        run: /tmp/sdp-browser/bin/python scripts/test-operator-e2e.py
+      - name: Build installable ZIPs
+        run: |
+          mkdir -p /tmp/sdp-dist/sekolah-directory-pro /tmp/sdp-dist/sekolah-directory-theme artifacts
+          cp -a plugin/. /tmp/sdp-dist/sekolah-directory-pro/
+          cp -a theme/. /tmp/sdp-dist/sekolah-directory-theme/
+          (cd /tmp/sdp-dist && zip -qr "$GITHUB_WORKSPACE/artifacts/sekolah-directory-pro.zip" sekolah-directory-pro && zip -qr "$GITHUB_WORKSPACE/artifacts/sekolah-directory-theme.zip" sekolah-directory-theme)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wordpress-php-${{ matrix.php }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Stop disposable stack
+        if: always()
+        run: docker compose down -v
+  database-acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      PHP_VERSION: '8.3'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Start separate disposable database stack
+        run: bash scripts/setup-wordpress.sh DISPOSABLE-LOCAL-ONLY
+      - name: XLSX CSV checkpoint benchmark and restore
+        run: python3 scripts/test-database-acceptance.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: database-acceptance-php-8.3
+          path: artifacts/database-checks.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Stop disposable database stack
+        if: always()
+        run: docker compose down -v
