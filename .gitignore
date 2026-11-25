@@ -5,3 +5,8 @@ __pycache__/
 wp-config.php
 *.log
 .DS_Store
+!.env.example
+node_modules/
+artifacts/*
+!artifacts/.gitkeep
+/vendor/

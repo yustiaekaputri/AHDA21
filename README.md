@@ -14,4 +14,12 @@ Proyek direktori sekolah Indonesia berbasis WordPress dan NPSN.
 
 Kelima ZIP asli tersedia di akar repositori. Untuk instalasi di WordPress, unggah ZIP plugin melalui menu **Plugins** dan ZIP tema melalui **Appearance → Themes**. Plugin memerlukan WordPress 6.4+ dan PHP 8.0+. Gunakan lingkungan staging untuk versi RC4. Petunjuk LocalWP tersedia di [MULAI-DARI-SINI.txt](tests/localwp/MULAI-DARI-SINI.txt) dan petunjuk VPS di [README VPS](deployment/vps/README.txt).
 
-GitHub Actions menjalankan lint PHP, simulasi PHP dalam mode hemat dan standar, serta tes Python. Pengujian penerimaan di WordPress dan basis data nyata dijalankan melalui LocalWP.
+Workflow GitHub Actions mencakup lint PHP, simulasi mode hemat dan standar, serta tes Python. Pengujian penerimaan di WordPress dan basis data nyata dijalankan melalui LocalWP.
+
+## Menjalankan pratinjau
+
+Dengan Docker Compose, OpenSSL, dan Node.js LTS, jalankan `npm ci` lalu `make start`. WordPress pengembangan tersedia di port lokal 3000. Nama login admin lokal adalah `sdp-admin` dan kata sandinya dibuat otomatis di `.env`. Variabel `SDP_HTTP_PORT` dan `SDP_SITE_URL` mengatur alamat lokal. Data demo dibuat melalui API plugin di database pengembangan.
+
+Jalankan `npx playwright install chromium` lalu `make test` untuk menjalankan pengujian dengan situs uji sekali pakai. Hasil berada di `artifacts/`. Untuk menghentikan pratinjau, jalankan `make stop`.
+
+Lihat [pengujian](TESTING.md), [arsitektur](ARCHITECTURE.md), [status proyek](PROJECT_STATUS.md), [performa](PERFORMANCE.md), dan [deployment](DEPLOYMENT.md).

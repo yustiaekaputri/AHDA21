@@ -43,3 +43,9 @@ Impor Excel: konversi XLSX terbatas melalui menu Impor Excel, lanjutkan impor CS
 
 ## Perubahan v8.1: mode hemat VPS (default)
 Baca PANDUAN-V81.txt; batas versi sebelumnya dalam bagian historis tidak berlaku jika mode hemat aktif. Mode hemat: 50 baris impor CSV langsung, kolektor 1.000 rekaman / 2 MiB, antrean 5 rekaman, statistik 25 rekaman, impor CLI 100 baris, CLI statistik/antrean 5 putaran, API daftar 20 hasil, media 1 MiB / 4 megapiksel. Autocomplete dan Ollama nonaktif. Pengambilan jaringan otomatis nonaktif, pemrosesan antrean lokal tetap dijadwalkan. Untuk LocalWP yang cukup kuat, define('SDP_LOW_RESOURCE', false); di wp-config.php. Mode ini bukan jaminan pemenuhan kuota bandwidth atau performa server. Tidak ada perubahan skema baru.
+
+## Pengembangan RC4
+
+- Siapkan konfigurasi WordPress–MariaDB, data DEMO terisolasi, rangkaian PHPUnit dan Playwright, serta CI dua versi PHP.
+- Selaraskan kelayakan klaim dengan aturan portal operator agar admin tidak bisa menyetujui klaim profil demo yang ditolak modul peninjauan.
+- Validasi metadata unggahan CSV dan XLSX sebelum pemrosesan dan ringkas navigasi tema pada layar kecil.

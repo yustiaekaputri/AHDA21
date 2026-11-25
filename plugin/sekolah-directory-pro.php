@@ -274,8 +274,9 @@ final class SDP_Directory {
     }
     public static function import_action() {
         self::guard('sdp_import'); $f=$_FILES['csv']??[];
-        if(empty($f['tmp_name']) || ($f['error']??1)!==UPLOAD_ERR_OK || !is_uploaded_file($f['tmp_name']) || ($f['size']??0)>SDP_Resource::cap(5242880,2097152) || strtolower(pathinfo($f['name']??'',PATHINFO_EXTENSION))!=='csv') self::redirect('sdp-import','Impor gagal.',['Pilih file CSV valid sesuai batas mode aktif.']);
-        $rows=self::parse_csv($f['tmp_name']); if(is_wp_error($rows)) self::redirect('sdp-import','Impor dibatalkan.',[$rows->get_error_message()]);
+        $path=$f['tmp_name']??null; $name=$f['name']??null; $size=$f['size']??null;
+        if(!is_string($path) || !is_string($name) || !is_int($size) || ($f['error']??1)!==UPLOAD_ERR_OK || !is_uploaded_file($path) || $size>SDP_Resource::cap(5242880,2097152) || strtolower(pathinfo($name,PATHINFO_EXTENSION))!=='csv') self::redirect('sdp-import','Impor gagal.',['Pilih file CSV valid sesuai batas mode aktif.']);
+        $rows=self::parse_csv($path); if(is_wp_error($rows)) self::redirect('sdp-import','Impor dibatalkan.',[$rows->get_error_message()]);
         $created=0; $updated=0; $held=0; $errors=[]; $publish=isset($_POST['publish']) && current_user_can('publish_posts');
         $run=function()use($rows,$publish,&$created,&$updated,&$held,&$errors){foreach($rows as $line=>$row) { $r=self::save($row,$publish); if(is_wp_error($r)) $errors[]="Rekaman $line: ".$r->get_error_message(); else {if($r['updated']) $updated++; else $created++; if(!empty($r['held']))$held++;} }};
         $r=SDP_Resource::enabled()?SDP_Collector::lock($run):$run();if(is_wp_error($r))self::redirect('sdp-import','Impor dibatalkan.',[$r->get_error_message()]);

@@ -1,0 +1,11 @@
+parameters:
+    level: 0
+    paths:
+        - plugin
+        - theme
+    scanFiles:
+        - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+        - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+    tmpDir: artifacts/phpstan-cache
+    parallel:
+        maximumNumberOfProcesses: 2
