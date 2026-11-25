@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+*.zip
+artifacts
+deployment
+docs
+tests
+tools
