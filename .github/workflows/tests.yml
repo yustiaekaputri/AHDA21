@@ -15,13 +15,13 @@ jobs:
     env:
       SDP_PHP_VERSION: ${{ matrix.php }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           tools: composer:v2
           coverage: none
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: npm
@@ -64,7 +64,7 @@ jobs:
         run: scripts/test.sh
       - name: Build ZIP plugin dan tema
         run: scripts/build-zips.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: sdp-php-${{ matrix.php }}
