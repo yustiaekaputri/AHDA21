@@ -81,6 +81,8 @@ jobs:
           done
           curl -fsS "$SDP_PREVIEW_URL/" >/dev/null
           "$RUNNER_TEMP/sdp-venv/bin/python" tests/browser/test_preview.py 2>&1 | tee artifacts/browser.log
+      - name: Actual CSV and XLSX integration
+        run: bash scripts/test-import-integration.sh 2>&1 | tee artifacts/import-integration.log
       - name: Remove temporary browser credentials
         if: always()
         run: rm -f "$RUNNER_TEMP/sdp-preview-auth.json"
