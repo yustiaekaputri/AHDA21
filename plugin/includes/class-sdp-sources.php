@@ -1,75 +1,362 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 final class SDP_Sources {
-    const OPTION='sdp_sources_v21';
-    const BASE='https://referensi.data.kemendikdasmen.go.id/pendidikan/npsn/';
-    public static function boot(){add_action('admin_menu',[__CLASS__,'menu'],21);add_action('admin_post_sdp_sources',[__CLASS__,'action']);}
-    public static function menu(){add_submenu_page('sdp-directory','Sumber Resmi','Sumber Resmi','manage_options','sdp-sources',[__CLASS__,'page']);}
-    public static function all(){return (array)get_option(self::OPTION,[]);}
-    public static function presets(){return [
-        'general'=>['Identitas sekolah / Kemendikdasmen','https://data.kemendikdasmen.go.id/data-induk/satpen/daftar'],
-        'statistics'=>['Statistik per NPSN / Kemendikdasmen','https://data.kemendikdasmen.go.id/data-induk/pd/jumlah-per-satuan-pendidikan'],
-        'accreditation'=>['Akreditasi / BAN-PDM','https://ban-pdm.id/'],
-        'madrasah'=>['Madrasah / Satu Data Kemenag','https://satudata.kemenag.go.id/']];}
-    public static function tick(){
-        $sources=self::all();uasort($sources,function($a,$b){return ($a['last']??0)<=>($b['last']??0);});
-        foreach($sources as $id=>$item){$c=$item['config'];if(empty($c['schedule'])||empty($c['url'])||time()-(int)($item['last']??0)<DAY_IN_SECONDS)continue;self::run($id,$sources);break;}
-    }
-    private static function run($id,$sources){
-        if(!isset($sources[$id]))return new WP_Error('source','Sumber tidak ditemukan.');
-        if(SDP_Collector::pending())return new WP_Error('pending','Selesaikan antrean terlebih dahulu.');
-        $c=$sources[$id]['config'];$sources[$id]['last']=time();update_option(self::OPTION,$sources,false);
-        $body=SDP_Collector::fetch($c);$r=is_wp_error($body)?$body:SDP_Collector::stage($body,$c);
-        $sources[$id]['message']=is_wp_error($r)?$r->get_error_message():$r;update_option(self::OPTION,$sources,false);return $r;
-    }
-    private static function clean($html){return trim(preg_replace('/\s+/u',' ',html_entity_decode(strip_tags(preg_replace('~<br\s*/?>~i',' ',$html)),ENT_QUOTES|ENT_HTML5,'UTF-8'))??'');}
-    public static function parse_reference($html,$npsn){
-        if(strlen($html)>2097152)return new WP_Error('size','Halaman profil terlalu besar.');
-        // Only explicitly labelled table cells, not arbitrary surrounding text or operator details.
-        $aliases=['nama'=>'nama','nama satuan pendidikan'=>'nama','npsn'=>'npsn','alamat'=>'alamat','desa/kelurahan'=>'desa','kecamatan/kota (ln)'=>'kecamatan','kecamatan'=>'kecamatan','kab.-kota/negara (ln)'=>'kabupaten','kabupaten/kota'=>'kabupaten','propinsi/luar negeri (ln)'=>'provinsi','provinsi'=>'provinsi','status sekolah'=>'status','bentuk pendidikan'=>'jenjang','kementerian pembina'=>'naungan','nomor sk izin operasional'=>'sk_operasional','tmt sk operasional'=>'tanggal_operasional','nomor sk pendirian'=>'sk_pendirian','tanggal sk pendirian'=>'tanggal_pendirian','akreditasi'=>'akreditasi','luas tanah'=>'luas_tanah','akses internet'=>'internet','sumber listrik'=>'listrik','telepon'=>'telepon','email'=>'email','website'=>'website'];
-        $out=[];preg_match_all('~<tr\b[^>]*>(.*?)</tr\s*>~is',$html,$rows);
-        foreach($rows[1] as $row){preg_match_all('~<(?:td|th)\b[^>]*>(.*?)</(?:td|th)\s*>~is',$row,$cells);$cells=array_map([__CLASS__,'clean'],$cells[1]);$cells=array_values(array_filter($cells,function($v){return $v!==''&&$v!==':';}));if(count($cells)!==2)continue;$label=strtolower(rtrim($cells[0],': '));if(!isset($aliases[$label]))continue;$k=$aliases[$label];$v=$cells[1];if(in_array(strtolower($v),['-','n/a','null','tidak tersedia','1. -','2. -','1. - 2. -'],true))continue;if(isset($out[$k])&&$out[$k]!==$v)return new WP_Error('ambiguous','Label profil memiliki nilai bertentangan: '.$k);$out[$k]=$v;}
-        if(strtoupper($out['npsn']??'')!==strtoupper($npsn)||empty($out['nama'])||empty($out['jenjang']))return new WP_Error('identity','NPSN, nama atau bentuk pendidikan tidak dapat diverifikasi. Struktur halaman mungkin berubah. Tidak ada data disimpan.');
-        foreach(['provinsi'=>'/^(prov\.|provinsi|propinsi)\s+/i','kecamatan'=>'/^(kec\.|kecamatan)\s+/i'] as $k=>$pat)if(isset($out[$k]))$out[$k]=preg_replace($pat,'',$out[$k]);
-        if(isset($out['kabupaten']))$out['kabupaten']=preg_replace('/^kab\.\s+/i','Kabupaten ',$out['kabupaten']);
-        if(isset($out['luas_tanah'])){if(preg_match('/^(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?\s*(?:m(?:2|²|\^\{2\}))?$/u',$out['luas_tanah'],$m)){ $num=str_replace('.','',$m[1]).(isset($m[2])?'.'.$m[2]:''); if((float)$num>0)$out['luas_tanah']=$num;else unset($out['luas_tanah']);}else unset($out['luas_tanah']);}
-        if(isset($out['email'])&&!is_email($out['email']))unset($out['email']);if(isset($out['website'])&&!preg_match('~^https?://~i',$out['website']))unset($out['website']);
-        // Contact values are excluded from automated imports; public institutional contact may be added via verified dataset.
-        unset($out['telepon'],$out['email']);
-        $out['sumber']='Referensi Data Pendidikan';$out['sumber_url']=self::BASE.rawurlencode(strtoupper($npsn));return SDP_Directory::normalize($out);
-    }
-    public static function fetch_reference($npsn){
-        $npsn=strtoupper(trim($npsn));if(!preg_match('/^[A-Z0-9]{8}$/D',$npsn))return new WP_Error('npsn','NPSN harus 8 karakter alfanumerik.');
-        $response=wp_safe_remote_get(self::BASE.rawurlencode($npsn),['timeout'=>20,'redirection'=>0,'limit_response_size'=>2097153,'headers'=>['Accept'=>'text/html'],'user-agent'=>'SekolahDirectoryPro/2.1']);
-        if(is_wp_error($response))return $response;if(wp_remote_retrieve_response_code($response)!==200)return new WP_Error('http','Portal mengembalikan HTTP '.wp_remote_retrieve_response_code($response).'. Tidak ada upaya melewati pembatasan.');
-        return self::parse_reference(wp_remote_retrieve_body($response),$npsn);
-    }
-    public static function action(){
-        if(!current_user_can('manage_options'))wp_die('Akses ditolak.');check_admin_referer('sdp_sources');$op=sanitize_key($_POST['op']??'');$id=sanitize_key($_POST['id']??'');$uid=get_current_user_id();
-        $r=SDP_Collector::lock(function()use($op,$id,$uid){$sources=self::all();
-            if($op==='delete'){if(!isset($sources[$id]))return new WP_Error('source','Sumber tidak ditemukan.');unset($sources[$id]);update_option(self::OPTION,$sources,false);return 'Konfigurasi dihapus; profil dan antrean lama tetap ada.';}
-            if($op==='run'){if(empty($_POST['authorized']))return new WP_Error('permission','Konfirmasi izin penggunaan data.');return self::run($id,$sources);}
-            if($op==='save'||$op==='preview_dataset'||$op==='upload_dataset'){
-                if(empty($_POST['authorized']))return new WP_Error('permission','Konfirmasi izin penggunaan data.');$c=SDP_Collector::read_config();if(is_wp_error($c))return $c;
-                if($op==='save'){if($id&&!isset($sources[$id]))return new WP_Error('source','Sumber tidak ditemukan.');if(!$id&&count($sources)>=30)return new WP_Error('limit','Maksimal 30 konfigurasi.');$key=$id?:str_replace('-','',wp_generate_uuid4());$sources[$key]=['config'=>$c,'last'=>0,'message'=>'Belum disinkronkan'];update_option(self::OPTION,$sources,false);return 'Sumber tersimpan.';}
-                $file=$_FILES['dataset']??[];if(($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_NO_FILE){if(($file['error']??1)!==UPLOAD_ERR_OK||!is_uploaded_file($file['tmp_name']??'')||($file['size']??0)>SDP_Resource::cap(SDP_Collector::MAX_BYTES,2097152))return new WP_Error('file','File tidak valid / melebihi 5 MB.');$body=file_get_contents($file['tmp_name']);if($body===false)return new WP_Error('file','File tidak terbaca.');}else{$body=SDP_Collector::fetch($c);if(is_wp_error($body))return $body;}
-                if($op==='preview_dataset'){$p=SDP_Collector::parse($body,$c);if(is_wp_error($p))return $p;set_transient('sdp_sources_preview_'.$uid,['seen'=>$p['seen'],'valid'=>count($p['rows']),'skipped'=>$p['skipped'],'errors'=>array_slice($p['errors'],0,5),'samples'=>array_slice($p['rows'],0,3)],300);return 'Pratinjau dataset siap.';}
-                if(SDP_Collector::pending())return new WP_Error('pending','Selesaikan antrean terlebih dahulu.');return SDP_Collector::stage($body,$c);
-            }
-            if($op==='reference_preview'){if(empty($_POST['authorized']))return new WP_Error('permission','Konfirmasi izin penggunaan data.');if(get_transient('sdp_reference_rate'))return new WP_Error('rate','Permintaan profil dibatasi satu setiap 60 detik.');set_transient('sdp_reference_rate',1,60);delete_transient('sdp_reference_preview_'.$uid);$r=self::fetch_reference(sanitize_text_field(wp_unslash($_POST['npsn']??'')));if(is_wp_error($r))return $r;set_transient('sdp_reference_preview_'.$uid,$r,600);return 'Pratinjau profil siap. Periksa sebelum menyimpan.';}
-            if($op==='reference_save'){if(empty($_POST['authorized']))return new WP_Error('permission','Konfirmasi izin publikasi data.');$d=get_transient('sdp_reference_preview_'.$uid);if(!is_array($d))return new WP_Error('preview','Pratinjau kedaluwarsa. Ambil kembali.');$r=SDP_Directory::save($d,false,'fill',['label'=>$d['sumber'],'url'=>$d['sumber_url']]);if(is_wp_error($r))return $r;delete_transient('sdp_reference_preview_'.$uid);return 'Profil disimpan (isi kolom kosong). Profil baru berupa draf; status profil lama dipertahankan.';}
-            return new WP_Error('op','Operasi tidak dikenal.');
-        });if(!is_wp_error($r))SDP_Performance::reconcile();set_transient('sdp_sources_notice_'.$uid,['error'=>is_wp_error($r),'message'=>is_wp_error($r)?$r->get_error_message():$r],120);wp_safe_redirect(admin_url('admin.php?page=sdp-sources'));exit;
-    }
-    private static function form(){echo '<form method="post" enctype="multipart/form-data" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="sdp_sources">';wp_nonce_field('sdp_sources');}
-    private static function consent(){echo '<p><label><input type="checkbox" name="authorized" value="1"> Saya memiliki izin penggunaan dan publikasi data ini.</label></p>';}
-    public static function page(){if(!current_user_can('manage_options'))return;$uid=get_current_user_id();$sources=self::all();$id=sanitize_key($_GET['edit']??'');$c=array_merge(SDP_Collector::defaults(),$sources[$id]['config']??[]);if(!isset($sources[$id]))$id='';$notice=get_transient('sdp_sources_notice_'.$uid);delete_transient('sdp_sources_notice_'.$uid);
-        echo '<div class="wrap"><h1>Integrasi Sumber Resmi — v2.1</h1><p>Kelola beberapa dataset secara terpisah dan lengkapi profil berdasarkan NPSN. Portal rujukan tidak sama dengan URL unduh dataset.</p>';if($notice)echo '<div class="notice '.($notice['error']?'notice-error':'notice-success').'"><p>'.esc_html($notice['message']).'</p></div>';
-        echo '<h2>Ambil satu profil Referensi Data Pendidikan (eksperimental)</h2><p>Hanya halaman profil publik yang diizinkan. Maksimal satu permintaan per 60 detik. Tidak mengambil data siswa individual atau nama operator.</p>';self::form();echo '<input name="npsn" maxlength="8" placeholder="NPSN" required>';self::consent();echo '<button class="button button-primary" name="op" value="reference_preview">Ambil dan pratinjau</button></form>';
-        $d=get_transient('sdp_reference_preview_'.$uid);if(is_array($d)){echo '<h3>Pratinjau profil</h3><pre style="white-space:pre-wrap">'.esc_html(wp_json_encode($d,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE)).'</pre>';self::form();self::consent();echo '<button class="button button-primary" name="op" value="reference_save">Simpan / lengkapi profil</button></form>';}
-        echo '<hr><h2>Daftar sumber ('.count($sources).'/30)</h2><table class="widefat striped"><thead><tr><th>Sumber</th><th>Jenis</th><th>Jadwal</th><th>Hasil terakhir</th><th>Aksi</th></tr></thead><tbody>';foreach($sources as $key=>$s){$v=$s['config'];echo '<tr><td>'.esc_html($v['label']).'</td><td>'.esc_html($v['kind']).'</td><td>'.(!empty($v['schedule'])?'24 jam':'Manual').'</td><td>'.esc_html($s['message']??'').'</td><td><a href="'.esc_url(admin_url('admin.php?page=sdp-sources&edit='.$key)).'">Edit</a> ';self::form();echo '<input type="hidden" name="id" value="'.esc_attr($key).'">';self::consent();echo '<button class="button" name="op" value="run">Ambil sekarang</button> <button class="button" name="op" value="delete">Hapus konfigurasi</button></form></td></tr>';}echo '</tbody></table><h2>'.($id?'Edit sumber':'Tambah sumber').'</h2><p><a href="'.esc_url(admin_url('admin.php?page=sdp-sources')).'">Konfigurasi baru</a></p><p>Rujukan: ';foreach(self::presets() as $p)echo '<a href="'.esc_url($p[1]).'" target="_blank" rel="noopener noreferrer">'.esc_html($p[0]).'</a> | ';echo '</p>';self::form();echo '<input type="hidden" name="id" value="'.esc_attr($id).'"><table class="form-table"><tr><th>Jenis dataset</th><td><select name="cfg[kind]">';foreach(self::presets() as $k=>$p)echo '<option value="'.esc_attr($k).'" '.selected($c['kind'],$k,false).'>'.esc_html($p[0]).'</option>';echo '</select><p>Statistik dan akreditasi hanya memperbarui NPSN yang sudah terdaftar; filter wilayah mengikuti profil yang ada.</p></td></tr>';
-        foreach(['label'=>'Nama sumber','url'=>'URL HTTPS dataset langsung (opsional untuk file)','json_path'=>'Jalur JSON','mapping'=>'Mapping kolom JSON','default_provinsi'=>'Provinsi bawaan','default_jenjang'=>'Jenjang bawaan','provinsi'=>'Filter provinsi','kabupaten'=>'Filter kabupaten/kota','kecamatan'=>'Filter kecamatan','jenjang'=>'Filter jenjang'] as $k=>$label)echo '<tr><th><label for="ss-'.$k.'">'.esc_html($label).'</label></th><td><input class="large-text" id="ss-'.$k.'" name="cfg['.$k.']" value="'.esc_attr($c[$k]).'"></td></tr>';
-        echo '<tr><th>Format</th><td><select name="cfg[format]"><option value="csv" '.selected($c['format'],'csv',false).'>CSV</option><option value="json" '.selected($c['format'],'json',false).'>JSON</option></select></td></tr><tr><th>Mode gabung</th><td><select name="cfg[policy]"><option value="fill" '.selected($c['policy'],'fill',false).'>Isi kolom kosong</option><option value="overwrite" '.selected($c['policy'],'overwrite',false).'>Perbarui kolom (periksa periode data)</option></select></td></tr></table><p><label><input type="checkbox" name="cfg[schedule]" value="1" '.checked($c['schedule'],1,false).'> Jadwalkan setiap 24 jam</label></p><p><label><input type="checkbox" name="cfg[publish]" value="1" '.checked($c['publish'],1,false).'> Terbitkan profil langsung</label></p><p>File CSV/JSON: <input type="file" name="dataset" accept=".csv,.json"></p>';self::consent();echo '<button class="button button-primary" name="op" value="save">Simpan konfigurasi</button> <button class="button" name="op" value="preview_dataset">Pratinjau dataset</button> <button class="button" name="op" value="upload_dataset">Antrekan dataset</button></form>';
-        $p=get_transient('sdp_sources_preview_'.$uid);if($p)echo '<h3>Pratinjau terakhir</h3><pre style="white-space:pre-wrap">'.esc_html(wp_json_encode($p,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE)).'</pre>';echo '<p>Proses dan lihat log di <a href="'.esc_url(admin_url('admin.php?page=sdp-collector')).'">Pengumpul Data</a>. Jadwal berjalan saat WordPress aktif, antrean kosong, dan URL dapat diakses. Tidak ada API EMIS atau BAN-PDM bawaan yang diklaim aktif.</p></div>';
-    }
+	const OPTION = 'sdp_sources_v21';
+	const BASE   = 'https://referensi.data.kemendikdasmen.go.id/pendidikan/npsn/';
+	public static function boot() {
+		add_action( 'admin_menu', array( __CLASS__, 'menu' ), 21 );
+		add_action( 'admin_post_sdp_sources', array( __CLASS__, 'action' ) );}
+	public static function menu() {
+		add_submenu_page( 'sdp-directory', 'Sumber Resmi', 'Sumber Resmi', 'manage_options', 'sdp-sources', array( __CLASS__, 'page' ) );}
+	public static function all() {
+		return (array) get_option( self::OPTION, array() );}
+	public static function presets() {
+		return array(
+			'general'       => array( 'Identitas sekolah / Kemendikdasmen', 'https://data.kemendikdasmen.go.id/data-induk/satpen/daftar' ),
+			'statistics'    => array( 'Statistik per NPSN / Kemendikdasmen', 'https://data.kemendikdasmen.go.id/data-induk/pd/jumlah-per-satuan-pendidikan' ),
+			'accreditation' => array( 'Akreditasi / BAN-PDM', 'https://ban-pdm.id/' ),
+			'madrasah'      => array( 'Madrasah / Satu Data Kemenag', 'https://satudata.kemenag.go.id/' ),
+		);}
+	public static function tick() {
+		$sources = self::all();
+		uasort(
+			$sources,
+			function ( $a, $b ) {
+				return ( $a['last'] ?? 0 ) <=> ( $b['last'] ?? 0 );
+			}
+		);
+		foreach ( $sources as $id => $item ) {
+			$c = $item['config'];
+			if ( empty( $c['schedule'] ) || empty( $c['url'] ) || time() - (int) ( $item['last'] ?? 0 ) < DAY_IN_SECONDS ) {
+				continue;
+			}self::run( $id, $sources );
+			break;}
+	}
+	private static function run( $id, $sources ) {
+		if ( ! isset( $sources[ $id ] ) ) {
+			return new WP_Error( 'source', 'Sumber tidak ditemukan.' );
+		}
+		if ( SDP_Collector::pending() ) {
+			return new WP_Error( 'pending', 'Selesaikan antrean terlebih dahulu.' );
+		}
+		$c                      = $sources[ $id ]['config'];
+		$sources[ $id ]['last'] = time();
+		update_option( self::OPTION, $sources, false );
+		$body                      = SDP_Collector::fetch( $c );
+		$r                         = is_wp_error( $body ) ? $body : SDP_Collector::stage( $body, $c );
+		$sources[ $id ]['message'] = is_wp_error( $r ) ? $r->get_error_message() : $r;
+		update_option( self::OPTION, $sources, false );
+		return $r;
+	}
+	private static function clean( $html ) {
+		return trim( preg_replace( '/\s+/u', ' ', html_entity_decode( strip_tags( preg_replace( '~<br\s*/?>~i', ' ', $html ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) ?? '' );}
+	public static function parse_reference( $html, $npsn ) {
+		if ( strlen( $html ) > 2097152 ) {
+			return new WP_Error( 'size', 'Halaman profil terlalu besar.' );
+		}
+		// Only explicitly labelled table cells, not arbitrary surrounding text or operator details.
+		$aliases = array(
+			'nama'                      => 'nama',
+			'nama satuan pendidikan'    => 'nama',
+			'npsn'                      => 'npsn',
+			'alamat'                    => 'alamat',
+			'desa/kelurahan'            => 'desa',
+			'kecamatan/kota (ln)'       => 'kecamatan',
+			'kecamatan'                 => 'kecamatan',
+			'kab.-kota/negara (ln)'     => 'kabupaten',
+			'kabupaten/kota'            => 'kabupaten',
+			'propinsi/luar negeri (ln)' => 'provinsi',
+			'provinsi'                  => 'provinsi',
+			'status sekolah'            => 'status',
+			'bentuk pendidikan'         => 'jenjang',
+			'kementerian pembina'       => 'naungan',
+			'nomor sk izin operasional' => 'sk_operasional',
+			'tmt sk operasional'        => 'tanggal_operasional',
+			'nomor sk pendirian'        => 'sk_pendirian',
+			'tanggal sk pendirian'      => 'tanggal_pendirian',
+			'akreditasi'                => 'akreditasi',
+			'luas tanah'                => 'luas_tanah',
+			'akses internet'            => 'internet',
+			'sumber listrik'            => 'listrik',
+			'telepon'                   => 'telepon',
+			'email'                     => 'email',
+			'website'                   => 'website',
+		);
+		$out     = array();
+		preg_match_all( '~<tr\b[^>]*>(.*?)</tr\s*>~is', $html, $rows );
+		foreach ( $rows[1] as $row ) {
+			preg_match_all( '~<(?:td|th)\b[^>]*>(.*?)</(?:td|th)\s*>~is', $row, $cells );
+			$cells = array_map( array( __CLASS__, 'clean' ), $cells[1] );
+			$cells = array_values(
+				array_filter(
+					$cells,
+					function ( $v ) {
+						return $v !== '' && $v !== ':';
+					}
+				)
+			);
+			if ( count( $cells ) !== 2 ) {
+				continue;
+			}$label = strtolower( rtrim( $cells[0], ': ' ) );
+			if ( ! isset( $aliases[ $label ] ) ) {
+				continue;
+			}$k = $aliases[ $label ];
+			$v  = $cells[1];
+			if ( in_array( strtolower( $v ), array( '-', 'n/a', 'null', 'tidak tersedia', '1. -', '2. -', '1. - 2. -' ), true ) ) {
+				continue;
+			}if ( isset( $out[ $k ] ) && $out[ $k ] !== $v ) {
+				return new WP_Error( 'ambiguous', 'Label profil memiliki nilai bertentangan: ' . $k );
+			}$out[ $k ] = $v;}
+		if ( strtoupper( $out['npsn'] ?? '' ) !== strtoupper( $npsn ) || empty( $out['nama'] ) || empty( $out['jenjang'] ) ) {
+			return new WP_Error( 'identity', 'NPSN, nama atau bentuk pendidikan tidak dapat diverifikasi. Struktur halaman mungkin berubah. Tidak ada data disimpan.' );
+		}
+		foreach ( array(
+			'provinsi'  => '/^(prov\.|provinsi|propinsi)\s+/i',
+			'kecamatan' => '/^(kec\.|kecamatan)\s+/i',
+		) as $k => $pat ) {
+			if ( isset( $out[ $k ] ) ) {
+				$out[ $k ] = preg_replace( $pat, '', $out[ $k ] );
+			}
+		}
+		if ( isset( $out['kabupaten'] ) ) {
+			$out['kabupaten'] = preg_replace( '/^kab\.\s+/i', 'Kabupaten ', $out['kabupaten'] );
+		}
+		if ( isset( $out['luas_tanah'] ) ) {
+			if ( preg_match( '/^(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?\s*(?:m(?:2|²|\^\{2\}))?$/u', $out['luas_tanah'], $m ) ) {
+				$num = str_replace( '.', '', $m[1] ) . ( isset( $m[2] ) ? '.' . $m[2] : '' );
+				if ( (float) $num > 0 ) {
+					$out['luas_tanah'] = $num;
+				} else {
+					unset( $out['luas_tanah'] );
+				}
+			} else {
+				unset( $out['luas_tanah'] );
+			}
+		}
+		if ( isset( $out['email'] ) && ! is_email( $out['email'] ) ) {
+			unset( $out['email'] );
+		}if ( isset( $out['website'] ) && ! preg_match( '~^https?://~i', $out['website'] ) ) {
+			unset( $out['website'] );
+		}
+		// Contact values are excluded from automated imports; public institutional contact may be added via verified dataset.
+		unset( $out['telepon'], $out['email'] );
+		$out['sumber']     = 'Referensi Data Pendidikan';
+		$out['sumber_url'] = self::BASE . rawurlencode( strtoupper( $npsn ) );
+		return SDP_Directory::normalize( $out );
+	}
+	public static function fetch_reference( $npsn ) {
+		$npsn = strtoupper( trim( $npsn ) );
+		if ( ! preg_match( '/^[A-Z0-9]{8}$/D', $npsn ) ) {
+			return new WP_Error( 'npsn', 'NPSN harus 8 karakter alfanumerik.' );
+		}
+		$response = wp_safe_remote_get(
+			self::BASE . rawurlencode( $npsn ),
+			array(
+				'timeout'             => 20,
+				'redirection'         => 0,
+				'limit_response_size' => 2097153,
+				'headers'             => array( 'Accept' => 'text/html' ),
+				'user-agent'          => 'SekolahDirectoryPro/2.1',
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}if ( wp_remote_retrieve_response_code( $response ) !== 200 ) {
+			return new WP_Error( 'http', 'Portal mengembalikan HTTP ' . wp_remote_retrieve_response_code( $response ) . '. Tidak ada upaya melewati pembatasan.' );
+		}
+		return self::parse_reference( wp_remote_retrieve_body( $response ), $npsn );
+	}
+	public static function action() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'Akses ditolak.' );
+		}check_admin_referer( 'sdp_sources' );
+		$op  = sanitize_key( $_POST['op'] ?? '' );
+		$id  = sanitize_key( $_POST['id'] ?? '' );
+		$uid = get_current_user_id();
+		$r   = SDP_Collector::lock(
+			function () use ( $op, $id, $uid ) {
+				$sources = self::all();
+				if ( $op === 'delete' ) {
+					if ( ! isset( $sources[ $id ] ) ) {
+						return new WP_Error( 'source', 'Sumber tidak ditemukan.' );
+					}unset( $sources[ $id ] );
+					update_option( self::OPTION, $sources, false );
+					return 'Konfigurasi dihapus; profil dan antrean lama tetap ada.';}
+				if ( $op === 'run' ) {
+					if ( empty( $_POST['authorized'] ) ) {
+						return new WP_Error( 'permission', 'Konfirmasi izin penggunaan data.' );
+					}return self::run( $id, $sources );}
+				if ( $op === 'save' || $op === 'preview_dataset' || $op === 'upload_dataset' ) {
+					if ( empty( $_POST['authorized'] ) ) {
+						return new WP_Error( 'permission', 'Konfirmasi izin penggunaan data.' );
+					}$c = SDP_Collector::read_config();
+					if ( is_wp_error( $c ) ) {
+						return $c;
+					}
+					if ( $op === 'save' ) {
+						if ( $id && ! isset( $sources[ $id ] ) ) {
+							return new WP_Error( 'source', 'Sumber tidak ditemukan.' );
+						}if ( ! $id && count( $sources ) >= 30 ) {
+							return new WP_Error( 'limit', 'Maksimal 30 konfigurasi.' );
+						}$key            = $id ?: str_replace( '-', '', wp_generate_uuid4() );
+						$sources[ $key ] = array(
+							'config'  => $c,
+							'last'    => 0,
+							'message' => 'Belum disinkronkan',
+						);
+						update_option( self::OPTION, $sources, false );
+						return 'Sumber tersimpan.';}
+					$file = $_FILES['dataset'] ?? array();
+					if ( ( $file['error'] ?? UPLOAD_ERR_NO_FILE ) !== UPLOAD_ERR_NO_FILE ) {
+						if ( ( $file['error'] ?? 1 ) !== UPLOAD_ERR_OK || ! is_uploaded_file( $file['tmp_name'] ?? '' ) || ( $file['size'] ?? 0 ) > SDP_Resource::cap( SDP_Collector::MAX_BYTES, 2097152 ) ) {
+							return new WP_Error( 'file', 'File tidak valid / melebihi 5 MB.' );
+						}$body = file_get_contents( $file['tmp_name'] );
+						if ( $body === false ) {
+							return new WP_Error( 'file', 'File tidak terbaca.' );
+						}
+					} else {
+						$body = SDP_Collector::fetch( $c );
+						if ( is_wp_error( $body ) ) {
+							return $body;
+						}
+					}
+					if ( $op === 'preview_dataset' ) {
+						$p = SDP_Collector::parse( $body, $c );
+						if ( is_wp_error( $p ) ) {
+							return $p;
+						}set_transient(
+							'sdp_sources_preview_' . $uid,
+							array(
+								'seen'    => $p['seen'],
+								'valid'   => count( $p['rows'] ),
+								'skipped' => $p['skipped'],
+								'errors'  => array_slice( $p['errors'], 0, 5 ),
+								'samples' => array_slice( $p['rows'], 0, 3 ),
+							),
+							300
+						);
+						return 'Pratinjau dataset siap.';}
+					if ( SDP_Collector::pending() ) {
+						return new WP_Error( 'pending', 'Selesaikan antrean terlebih dahulu.' );
+					}return SDP_Collector::stage( $body, $c );
+				}
+				if ( $op === 'reference_preview' ) {
+					if ( empty( $_POST['authorized'] ) ) {
+						return new WP_Error( 'permission', 'Konfirmasi izin penggunaan data.' );
+					}if ( get_transient( 'sdp_reference_rate' ) ) {
+						return new WP_Error( 'rate', 'Permintaan profil dibatasi satu setiap 60 detik.' );
+					}set_transient( 'sdp_reference_rate', 1, 60 );
+					delete_transient( 'sdp_reference_preview_' . $uid );
+					$r = self::fetch_reference( sanitize_text_field( wp_unslash( $_POST['npsn'] ?? '' ) ) );
+					if ( is_wp_error( $r ) ) {
+						return $r;
+					}set_transient( 'sdp_reference_preview_' . $uid, $r, 600 );
+					return 'Pratinjau profil siap. Periksa sebelum menyimpan.';}
+				if ( $op === 'reference_save' ) {
+					if ( empty( $_POST['authorized'] ) ) {
+						return new WP_Error( 'permission', 'Konfirmasi izin publikasi data.' );
+					}$d = get_transient( 'sdp_reference_preview_' . $uid );
+					if ( ! is_array( $d ) ) {
+						return new WP_Error( 'preview', 'Pratinjau kedaluwarsa. Ambil kembali.' );
+					}$r = SDP_Directory::save(
+						$d,
+						false,
+						'fill',
+						array(
+							'label' => $d['sumber'],
+							'url'   => $d['sumber_url'],
+						)
+					);
+					if ( is_wp_error( $r ) ) {
+						return $r;
+					}delete_transient( 'sdp_reference_preview_' . $uid );
+					return 'Profil disimpan (isi kolom kosong). Profil baru berupa draf; status profil lama dipertahankan.';}
+				return new WP_Error( 'op', 'Operasi tidak dikenal.' );
+			}
+		);
+		if ( ! is_wp_error( $r ) ) {
+			SDP_Performance::reconcile();
+		}set_transient(
+			'sdp_sources_notice_' . $uid,
+			array(
+				'error'   => is_wp_error( $r ),
+				'message' => is_wp_error( $r ) ? $r->get_error_message() : $r,
+			),
+			120
+		);
+		wp_safe_redirect( admin_url( 'admin.php?page=sdp-sources' ) );
+		exit;
+	}
+	private static function form() {
+		echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp_sources">';
+		wp_nonce_field( 'sdp_sources' );}
+	private static function consent() {
+		echo '<p><label><input type="checkbox" name="authorized" value="1"> Saya memiliki izin penggunaan dan publikasi data ini.</label></p>';}
+	public static function page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}$uid    = get_current_user_id();
+		$sources = self::all();
+		$id      = sanitize_key( $_GET['edit'] ?? '' );
+		$c       = array_merge( SDP_Collector::defaults(), $sources[ $id ]['config'] ?? array() );
+		if ( ! isset( $sources[ $id ] ) ) {
+			$id = '';
+		}$notice = get_transient( 'sdp_sources_notice_' . $uid );
+		delete_transient( 'sdp_sources_notice_' . $uid );
+		echo '<div class="wrap"><h1>Integrasi Sumber Resmi — v2.1</h1><p>Kelola beberapa dataset secara terpisah dan lengkapi profil berdasarkan NPSN. Portal rujukan tidak sama dengan URL unduh dataset.</p>';
+		if ( $notice ) {
+			echo '<div class="notice ' . ( $notice['error'] ? 'notice-error' : 'notice-success' ) . '"><p>' . esc_html( $notice['message'] ) . '</p></div>';
+		}
+		echo '<h2>Ambil satu profil Referensi Data Pendidikan (eksperimental)</h2><p>Hanya halaman profil publik yang diizinkan. Maksimal satu permintaan per 60 detik. Tidak mengambil data siswa individual atau nama operator.</p>';
+		self::form();
+		echo '<input name="npsn" maxlength="8" placeholder="NPSN" required>';
+		self::consent();
+		echo '<button class="button button-primary" name="op" value="reference_preview">Ambil dan pratinjau</button></form>';
+		$d = get_transient( 'sdp_reference_preview_' . $uid );
+		if ( is_array( $d ) ) {
+			echo '<h3>Pratinjau profil</h3><pre style="white-space:pre-wrap">' . esc_html( wp_json_encode( $d, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) ) . '</pre>';
+			self::form();
+			self::consent();
+			echo '<button class="button button-primary" name="op" value="reference_save">Simpan / lengkapi profil</button></form>';}
+		echo '<hr><h2>Daftar sumber (' . count( $sources ) . '/30)</h2><table class="widefat striped"><thead><tr><th>Sumber</th><th>Jenis</th><th>Jadwal</th><th>Hasil terakhir</th><th>Aksi</th></tr></thead><tbody>';
+		foreach ( $sources as $key => $s ) {
+			$v = $s['config'];
+			echo '<tr><td>' . esc_html( $v['label'] ) . '</td><td>' . esc_html( $v['kind'] ) . '</td><td>' . ( ! empty( $v['schedule'] ) ? '24 jam' : 'Manual' ) . '</td><td>' . esc_html( $s['message'] ?? '' ) . '</td><td><a href="' . esc_url( admin_url( 'admin.php?page=sdp-sources&edit=' . $key ) ) . '">Edit</a> ';
+			self::form();
+			echo '<input type="hidden" name="id" value="' . esc_attr( $key ) . '">';
+			self::consent();
+			echo '<button class="button" name="op" value="run">Ambil sekarang</button> <button class="button" name="op" value="delete">Hapus konfigurasi</button></form></td></tr>';
+		}echo '</tbody></table><h2>' . ( $id ? 'Edit sumber' : 'Tambah sumber' ) . '</h2><p><a href="' . esc_url( admin_url( 'admin.php?page=sdp-sources' ) ) . '">Konfigurasi baru</a></p><p>Rujukan: ';
+		foreach ( self::presets() as $p ) {
+			echo '<a href="' . esc_url( $p[1] ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( $p[0] ) . '</a> | ';
+		}echo '</p>';
+		self::form();
+		echo '<input type="hidden" name="id" value="' . esc_attr( $id ) . '"><table class="form-table"><tr><th>Jenis dataset</th><td><select name="cfg[kind]">';
+		foreach ( self::presets() as $k => $p ) {
+			echo '<option value="' . esc_attr( $k ) . '" ' . selected( $c['kind'], $k, false ) . '>' . esc_html( $p[0] ) . '</option>';
+		}echo '</select><p>Statistik dan akreditasi hanya memperbarui NPSN yang sudah terdaftar; filter wilayah mengikuti profil yang ada.</p></td></tr>';
+		foreach ( array(
+			'label'            => 'Nama sumber',
+			'url'              => 'URL HTTPS dataset langsung (opsional untuk file)',
+			'json_path'        => 'Jalur JSON',
+			'mapping'          => 'Mapping kolom JSON',
+			'default_provinsi' => 'Provinsi bawaan',
+			'default_jenjang'  => 'Jenjang bawaan',
+			'provinsi'         => 'Filter provinsi',
+			'kabupaten'        => 'Filter kabupaten/kota',
+			'kecamatan'        => 'Filter kecamatan',
+			'jenjang'          => 'Filter jenjang',
+		) as $k => $label ) {
+			echo '<tr><th><label for="ss-' . $k . '">' . esc_html( $label ) . '</label></th><td><input class="large-text" id="ss-' . $k . '" name="cfg[' . $k . ']" value="' . esc_attr( $c[ $k ] ) . '"></td></tr>';
+		}
+		echo '<tr><th>Format</th><td><select name="cfg[format]"><option value="csv" ' . selected( $c['format'], 'csv', false ) . '>CSV</option><option value="json" ' . selected( $c['format'], 'json', false ) . '>JSON</option></select></td></tr><tr><th>Mode gabung</th><td><select name="cfg[policy]"><option value="fill" ' . selected( $c['policy'], 'fill', false ) . '>Isi kolom kosong</option><option value="overwrite" ' . selected( $c['policy'], 'overwrite', false ) . '>Perbarui kolom (periksa periode data)</option></select></td></tr></table><p><label><input type="checkbox" name="cfg[schedule]" value="1" ' . checked( $c['schedule'], 1, false ) . '> Jadwalkan setiap 24 jam</label></p><p><label><input type="checkbox" name="cfg[publish]" value="1" ' . checked( $c['publish'], 1, false ) . '> Terbitkan profil langsung</label></p><p>File CSV/JSON: <input type="file" name="dataset" accept=".csv,.json"></p>';
+		self::consent();
+		echo '<button class="button button-primary" name="op" value="save">Simpan konfigurasi</button> <button class="button" name="op" value="preview_dataset">Pratinjau dataset</button> <button class="button" name="op" value="upload_dataset">Antrekan dataset</button></form>';
+		$p = get_transient( 'sdp_sources_preview_' . $uid );
+		if ( $p ) {
+			echo '<h3>Pratinjau terakhir</h3><pre style="white-space:pre-wrap">' . esc_html( wp_json_encode( $p, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) ) . '</pre>';
+		}echo '<p>Proses dan lihat log di <a href="' . esc_url( admin_url( 'admin.php?page=sdp-collector' ) ) . '">Pengumpul Data</a>. Jadwal berjalan saat WordPress aktif, antrean kosong, dan URL dapat diakses. Tidak ada API EMIS atau BAN-PDM bawaan yang diklaim aktif.</p></div>';
+	}
 }

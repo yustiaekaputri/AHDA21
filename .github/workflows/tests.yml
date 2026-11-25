@@ -55,7 +55,10 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p artifacts/reports
-          vendor/bin/phpcs --standard=WordPress --extensions=php --report=summary plugin theme > artifacts/reports/wpcs.txt 2>&1
+          status=0
+          vendor/bin/phpcs --standard=WordPress --extensions=php --report=json plugin theme > artifacts/reports/wpcs.json || status=$?
+          if (( status > 3 )); then exit "$status"; fi
+          python3 scripts/check-wpcs.py artifacts/reports/wpcs.json
       - name: PHPStan
         run: |
           mkdir -p artifacts/reports
@@ -76,5 +79,5 @@ jobs:
       - name: Status WordPress Coding Standards
         if: always() && steps.wpcs.outcome == 'failure'
         run: |
-          echo 'Temuan WPCS masih terbuka. Laporan tersedia sebagai artefak.'
+          echo 'Pemeriksaan baseline WPCS gagal. Laporan lengkap tersedia sebagai artefak.'
           exit 1

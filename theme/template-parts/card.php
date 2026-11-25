@@ -1,2 +1,14 @@
-<?php if(!defined('ABSPATH')) exit; ?>
-<article <?php post_class('sdt-panel sdt-post-card'); ?>><?php if(!post_password_required() && has_post_thumbnail()) the_post_thumbnail('medium_large',['loading'=>'lazy','class'=>'sdt-cover']); ?><h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2><p class="sdt-muted"><?php echo esc_html(get_the_date()); ?></p><?php the_excerpt(); ?></article>
+<?php if ( ! defined( 'ABSPATH' ) ) {
+	exit;} ?>
+<article <?php post_class( 'sdt-panel sdt-post-card' ); ?>>
+<?php
+if ( ! post_password_required() && has_post_thumbnail() ) {
+	the_post_thumbnail(
+		'medium_large',
+		array(
+			'loading' => 'lazy',
+			'class'   => 'sdt-cover',
+		)
+	);}
+?>
+<h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2><p class="sdt-muted"><?php echo esc_html( get_the_date() ); ?></p><?php the_excerpt(); ?></article>
