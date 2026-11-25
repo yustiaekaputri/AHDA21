@@ -70,7 +70,7 @@ with sync_playwright() as p:
             login_url = login_link.get_attribute("href")
             assert login_url and urlsplit(login_url).hostname == "127.0.0.1"
             response = page.goto(login_url, wait_until="domcontentloaded")
-            assert response and response.ok, f"Login page HTTP {response.status if response else 'no response'}"
+            assert response and response.ok, f"Login page HTTP {response.status if response else 'no response'}; requested path={urlsplit(login_url).path}; final path={urlsplit(page.url).path}"
             user_field = page.locator('input[name="log"], #user_login').first
             pass_field = page.locator('input[name="pwd"], #user_pass').first
             if not user_field.count() or not pass_field.count():

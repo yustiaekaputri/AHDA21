@@ -30,15 +30,18 @@ done
 "${wp[@]}" core install --url="$SDP_PREVIEW_URL" --title='Sekolah Directory — DEMO FIKTIF' --admin_user=sdp_preview_admin --admin_password="$(openssl rand -hex 24)" --admin_email=admin@example.invalid --skip-email
 "${wp[@]}" option update blog_public 0
 "${wp[@]}" option update permalink_structure ''
+if [[ "${SDP_LOGIN_PROBE:-0}" == 1 ]]; then bash "$repo/scripts/probe-login.sh" core; fi
 mkdir -p "$root/wp-content/plugins/sekolah-directory-pro" "$root/wp-content/themes/sekolah-directory-theme"
 cp -R "$repo/plugin/." "$root/wp-content/plugins/sekolah-directory-pro/"
 cp -R "$repo/theme/." "$root/wp-content/themes/sekolah-directory-theme/"
 "${wp[@]}" plugin activate sekolah-directory-pro
 "${wp[@]}" theme activate sekolah-directory-theme
+if [[ "${SDP_LOGIN_PROBE:-0}" == 1 ]]; then bash "$repo/scripts/probe-login.sh" active; fi
 "${wp[@]}" core version
 php -v
 "${wp[@]}" eval-file "$repo/tests/localwp/sdp-run-localwp.php" DISPOSABLE-LOCAL-ONLY --user=sdp_preview_admin
 : "${SDP_PREVIEW_MANIFEST:?Set absolute path for preview manifest outside WordPress}"
 export SDP_PREVIEW_MANIFEST
 "${wp[@]}" eval-file "$repo/scripts/seed-preview.php" --user=sdp_preview_admin
+if [[ "${SDP_LOGIN_PROBE:-0}" == 1 ]]; then bash "$repo/scripts/probe-login.sh" seeded; fi
 echo "Ready: $root (loopback only)"

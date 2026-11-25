@@ -1,6 +1,7 @@
 name: WordPress Integration and Preview
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -31,6 +32,7 @@ jobs:
           --health-interval=10s --health-timeout=5s --health-retries=12
     env:
       SDP_DB_PASSWORD: disposable-ci-only
+      SDP_LOGIN_PROBE: '1'
       SDP_PREVIEW_URL: http://127.0.0.1:8080
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +52,13 @@ jobs:
             echo "SDP_PREVIEW_MANIFEST=$RUNNER_TEMP/sdp-preview.json"
             echo "SDP_PREVIEW_AUTH=$RUNNER_TEMP/sdp-preview-auth.json"
           } >> "$GITHUB_ENV"
+      - name: Validate preview configuration
+        run: |
+          for file in scripts/*.sh; do bash -n "$file"; done
+          php -l scripts/seed-preview.php
+          php -l scripts/codespace-https.php
+          python3 -m json.tool .devcontainer/devcontainer.json > /dev/null
+          python3 -m py_compile tests/browser/test_preview.py
       - name: Install WP-CLI
         run: curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$SDP_WP_CLI"
       - name: Actual WordPress and MariaDB smoke test
