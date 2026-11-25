@@ -71,11 +71,11 @@ final class SDP_Discovery {
 		$parts = array();
 		foreach ( array( 'nama', 'kabupaten', 'provinsi' ) as $k ) {
 			$v = self::key( $d[ $k ] ?? '' );
-			if ( $v !== '' ) {
+			if ( '' !== $v ) {
 				$parts[] = '"' . substr( $v, 0, 100 ) . '"';
 			}
 		}
-		if ( $mode === 'npsn' ) {
+		if ( 'npsn' === $mode ) {
 			$parts[] = '"' . $d['npsn'] . '"';
 		}
 		return implode( ' ', $parts ) . ' website resmi sekolah';
@@ -145,7 +145,7 @@ final class SDP_Discovery {
 		if ( is_wp_error( $r ) ) {
 			return new WP_Error( 'network', 'Permintaan pencarian gagal. Tidak ada retry otomatis.' );
 		}$c = wp_remote_retrieve_response_code( $r );
-		if ( $c !== 200 ) {
+		if ( 200 !== $c ) {
 			return new WP_Error( 'http', 'Pencarian HTTP ' . (int) $c . '. Periksa kuota/izin; tidak ada retry otomatis.' );
 		}return self::candidates( wp_remote_retrieve_body( $r ) );
 	}
@@ -159,7 +159,7 @@ final class SDP_Discovery {
 		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
 			$a           = array_map( 'intval', explode( '.', $ip ) );
 			[$x, $y, $z] = $a;
-			return $x > 0 && $x < 224 && ! ( $x === 100 && $y >= 64 && $y <= 127 ) && ! ( $x === 169 && $y === 254 ) && ! ( $x === 192 && ( $y === 0 || ( $y === 88 && $z === 99 ) ) ) && ! ( $x === 198 && ( $y === 18 || $y === 19 || ( $y === 51 && $z === 100 ) ) ) && ! ( $x === 203 && $y === 0 && $z === 113 );
+			return $x > 0 && $x < 224 && ! ( 100 === $x && $y >= 64 && $y <= 127 ) && ! ( 169 === $x && 254 === $y ) && ! ( 192 === $x && ( 0 === $y || ( 88 === $y && 99 === $z ) ) ) && ! ( 198 === $x && ( 18 === $y || 19 === $y || ( 51 === $y && 100 === $z ) ) ) && ! ( 203 === $x && 0 === $y && 113 === $z );
 		}
 		return preg_match( '/^[23][0-9a-f]{3}:/i', $ip ) === 1 && ! preg_match( '/^(?:2001:db8:|2001:0:|2002:)/i', $ip );
 	}
@@ -170,7 +170,7 @@ final class SDP_Discovery {
 		}$found = false;
 		foreach ( $rs as $r ) {
 			$ip = $r['ip'] ?? $r['ipv6'] ?? null;
-			if ( $ip === null ) {
+			if ( null === $ip ) {
 				continue;
 			}$found = true;
 			if ( ! self::public_ip( $ip ) ) {
@@ -182,7 +182,7 @@ final class SDP_Discovery {
 			return new WP_Error( 'body', 'HTML terlalu besar atau bukan UTF-8.' );
 		}
 		$html = preg_replace( '~<!--.*?-->|<(script|style|noscript|template|iframe|svg)\b[^>]*>.*?</\1\s*>~is', ' ', $html );
-		if ( $html === null || preg_match( '~<(?:script|style|template|iframe)\b~i', $html ) ) {
+		if ( null === $html || preg_match( '~<(?:script|style|template|iframe)\b~i', $html ) ) {
 			return new WP_Error( 'body', 'Struktur HTML tidak didukung.' );
 		}
 		$plain    = html_entity_decode( strip_tags( preg_replace( '~<[^>]+>~', ' ', $html ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
@@ -238,7 +238,7 @@ final class SDP_Discovery {
 		if ( is_wp_error( $r ) ) {
 			return new WP_Error( 'network', 'Koneksi gagal; bukan bukti situs tutup.' );
 		}$c = wp_remote_retrieve_response_code( $r );
-		if ( $c !== 200 ) {
+		if ( 200 !== $c ) {
 			return new WP_Error( 'http', 'HTTP ' . (int) $c . '. Tidak mengikuti pengalihan; periksa alamat secara manual.' );
 		}
 		$t = wp_remote_retrieve_header( $r, 'content-type' );
@@ -273,7 +273,7 @@ final class SDP_Discovery {
 		$id  = strtoupper( self::input( 'npsn' ) );
 		$r   = SDP_Collector::lock(
 			function () use ( $key, $op, $id ) {
-				if ( $op === 'clear' ) {
+				if ( 'clear' === $op ) {
 					delete_transient( $key );
 					return 'Pratinjau dihapus.';}
 				$d = self::load( $id );
@@ -281,20 +281,20 @@ final class SDP_Discovery {
 					return $d;
 				}$fp = self::fingerprint( $d );
 				$p   = get_transient( $key );
-				if ( $op === 'load' ) {
+				if ( 'load' === $op ) {
 					delete_transient( $key );
 					return 'Profil ditemukan.';}
 				if ( self::input( 'authorized' ) !== '1' ) {
 					return new WP_Error( 'permission', 'Konfirmasi izin penggunaan dan akses sumber.' );
 				}
-				if ( $op === 'search' || $op === 'verify' ) {
+				if ( 'search' === $op || 'verify' === $op ) {
 					$u    = self::url( self::input( 'url' ) );
 					$mode = self::input( 'mode' ) === 'npsn' ? 'npsn' : 'identity';
-					if ( is_array( $p ) && ( $p['fingerprint'] ?? '' ) === $fp && ( $p['op'] ?? '' ) === $op && ( $op === 'verify' ? ( $p['url'] ?? '' ) === $u : ( $p['mode'] ?? '' ) === $mode ) ) {
+					if ( is_array( $p ) && ( $p['fingerprint'] ?? '' ) === $fp && ( $p['op'] ?? '' ) === $op && ( 'verify' === $op ? ( $p['url'] ?? '' ) === $u : ( $p['mode'] ?? '' ) === $mode ) ) {
 						return 'Menggunakan pratinjau tersimpan (maksimal 15 menit).';
 					}
 					delete_transient( $key );
-					$v = $op === 'search' ? self::search( $d, $mode ) : self::verify( $u, $d );
+					$v = 'search' === $op ? self::search( $d, $mode ) : self::verify( $u, $d );
 					if ( is_wp_error( $v ) ) {
 						return $v;
 					}
@@ -304,13 +304,13 @@ final class SDP_Discovery {
 						'npsn'        => $id,
 						'url'         => $u,
 						'mode'        => $mode,
-						$op === 'search' ? 'candidates' : 'assessment' => $v,
+						'search' === $op ? 'candidates' : 'assessment' => $v,
 					);
 					if ( ! set_transient( $key, $p, self::limits()['ttl'] ) ) {
 						return new WP_Error( 'database', 'Pratinjau gagal disimpan.' );
 					}return 'Pratinjau tersedia; belum ada perubahan profil.';
 				}
-				if ( $op === 'save' ) {
+				if ( 'save' === $op ) {
 					if ( self::input( 'reviewed' ) !== '1' ) {
 						return new WP_Error( 'review', 'Periksa bukti kepemilikan resmi sebelum menyimpan.' );
 					}$add = self::approval( $p, $d );
@@ -368,7 +368,7 @@ final class SDP_Discovery {
 			echo '<div class="notice ' . ( $n['error'] ? 'notice-warning' : 'notice-success' ) . '"><p>' . esc_html( $n['text'] ) . '</p></div>';
 		}
 		echo '<form method="get"><input type="hidden" name="page" value="sdp-discovery"><label>NPSN <input name="npsn" required maxlength="8" value="' . esc_attr( $id ) . '"></label> <button class="button">Tampilkan sekolah</button></form>';
-		if ( $id === '' ) {
+		if ( '' === $id ) {
 			echo '</div>';
 			return;
 		}$d = self::load( $id );

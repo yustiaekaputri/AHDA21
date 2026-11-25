@@ -95,7 +95,7 @@ final class SDP_Analytics {
 		$stats = array();
 		foreach ( self::STATS as $k => $label ) {
 			$v = SDP_Portal::num( $clean, $k );
-			if ( $v !== null ) {
+			if ( null !== $v ) {
 				$stats[ $k ] = $v;
 			}
 		}
@@ -150,7 +150,7 @@ final class SDP_Analytics {
 	public static function ratio( $d, $denom ) {
 		$a = SDP_Portal::num( $d, 'jumlah_siswa' );
 		$b = SDP_Portal::num( $d, $denom );
-		return $a !== null && $b !== null && $b > 0 ? $a / $b : null;}
+		return null !== $a && null !== $b && $b > 0 ? $a / $b : null;}
 	public static function distance( $a, $b ) {
 		$lat = deg2rad( $b[0] - $a[0] );
 		$lon = deg2rad( $b[1] - $a[1] );
@@ -223,8 +223,8 @@ final class SDP_Analytics {
 			foreach ( $rows as $r ) {
 				$d = array_merge( json_decode( $r['payload'], true ) ?: array(), array_intersect_key( $r, array_flip( array( 'npsn', 'jenjang', 'status', 'akreditasi', 'kecamatan', 'kabupaten', 'provinsi' ) ) ) );
 				if ( str_starts_with( $k, 'ratio_' ) ) {
-					$v     = self::ratio( $d, $k === 'ratio_guru' ? 'jumlah_guru' : 'ruang_kelas' );
-					$value = $v === null ? '—' : number_format_i18n( $v, 1 );
+					$v     = self::ratio( $d, 'ratio_guru' === $k ? 'jumlah_guru' : 'ruang_kelas' );
+					$value = null === $v ? '—' : number_format_i18n( $v, 1 );
 				} else {
 					$value = SDP_SEO::present( $d, $k ) ? $d[ $k ] . SDP_Intelligence::period_note( $d, $k ) : '—';
 				}$html .= '<td>' . nl2br( esc_html( $value ) ) . '</td>';
@@ -246,7 +246,7 @@ final class SDP_Analytics {
 			$html .= '<tr><th scope="row">' . esc_html( $r['period'] ) . '</th>';
 			foreach ( array( 'jumlah_siswa', 'jumlah_guru', 'jumlah_rombel', 'ruang_kelas' ) as $k ) {
 				$v     = SDP_Portal::num( $d, $k );
-				$html .= '<td>' . esc_html( $v === null ? '—' : number_format_i18n( $v ) ) . '</td>';
+				$html .= '<td>' . esc_html( null === $v ? '—' : number_format_i18n( $v ) ) . '</td>';
 			}$html .= '<td>' . esc_html( $r['source'] . ' · ' . $r['recorded_at'] ) . '</td></tr>';}
 		return $html . '</tbody></table></div></section>';
 	}
@@ -291,14 +291,14 @@ final class SDP_Analytics {
 	public static function report_form( $d ) {
 		$html = '<section class="sdp41-report"><h2>Usulkan koreksi data</h2>';
 		if ( isset( $_GET['sdp41_sent'] ) ) {
-			$html .= '<p role="status">' . ( $_GET['sdp41_sent'] === '1' ? 'Laporan diterima untuk pemeriksaan.' : 'Laporan gagal. Coba lagi nanti.' ) . '</p>';
+			$html .= '<p role="status">' . ( '1' === $_GET['sdp41_sent'] ? 'Laporan diterima untuk pemeriksaan.' : 'Laporan gagal. Coba lagi nanti.' ) . '</p>';
 		}
 		if ( ! is_user_logged_in() ) {
 			return $html . '<p><a href="' . esc_url( wp_login_url( get_permalink() ) ) . '">Masuk untuk mengusulkan koreksi</a>. Laporan diperiksa administrator.</p></section>';
 		}
 		$html .= '<p>Jangan sertakan NIK, NISN, nomor pribadi atau data individual siswa. Koreksi tidak langsung mengubah profil.</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp41_report"><input type="hidden" name="npsn" value="' . esc_attr( $d['npsn'] ) . '">' . wp_nonce_field( 'sdp41_report_' . $d['npsn'], '_wpnonce', true, false ) . '<label>Atribut <select name="field">';
 		foreach ( SDP_Directory::labels() as $k => $v ) {
-			if ( $k !== 'npsn' ) {
+			if ( 'npsn' !== $k ) {
 				$html .= '<option value="' . esc_attr( $k ) . '">' . esc_html( $v ) . '</option>';
 			}
 		}
@@ -321,7 +321,7 @@ final class SDP_Analytics {
 		$url   = is_string( $raw ) ? esc_url_raw( $raw, array( 'http', 'https' ) ) : '';
 		$key   = 'sdp41_report_' . get_current_user_id();
 		$ok    = false;
-		if ( self::install() && ! get_transient( $key ) && $field !== 'npsn' && isset( SDP_Directory::labels()[ $field ] ) && strlen( $msg ) >= 10 && strlen( $msg ) <= 6000 && strlen( $url ) <= 1000 && ( ! $url || preg_match( '~^https?://~i', $url ) ) ) {
+		if ( self::install() && ! get_transient( $key ) && 'npsn' !== $field && isset( SDP_Directory::labels()[ $field ] ) && strlen( $msg ) >= 10 && strlen( $msg ) <= 6000 && strlen( $url ) <= 1000 && ( ! $url || preg_match( '~^https?://~i', $url ) ) ) {
 			global $wpdb;
 			$ok = $wpdb->insert(
 				self::reports_table(),

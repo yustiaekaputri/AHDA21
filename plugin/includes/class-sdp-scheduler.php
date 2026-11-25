@@ -50,7 +50,7 @@ final class SDP_Scheduler {
 		return min( 1800, 60 * ( 2 ** max( 0, min( 5, (int) $attempt ) ) ) );}
 	public static function mem_bytes( $v ) {
 		$v = trim( (string) $v );
-		if ( $v === '-1' ) {
+		if ( '-1' === $v ) {
 			return -1;
 		}if ( ! preg_match( '/^(\d+)\s*([KMG]?)$/iD', $v, $m ) ) {
 			return 0;
@@ -83,19 +83,19 @@ final class SDP_Scheduler {
 		);
 	}
 	public static function guard( $cfg, $m ) {
-		if ( $m['limit'] === 0 ) {
+		if ( 0 === $m['limit'] ) {
 			return 'Batas memori PHP tidak dapat dibaca.';
 		}
 		if ( $m['limit'] > 0 && $m['limit'] - $m['used'] < SDP_Resource::cap( 33554432, 16777216 ) ) {
 			return 'Sisa memori PHP terlalu rendah.';
 		}
-		if ( $m['load'] !== null && $m['load'] > min( $cfg['load'], SDP_Resource::cap( 160, 10 ) ) / 10 ) {
+		if ( null !== $m['load'] && $m['load'] > min( $cfg['load'], SDP_Resource::cap( 160, 10 ) ) / 10 ) {
 			return 'Load average melebihi ambang.';
 		}
-		if ( $m['available'] !== null && $m['available'] < SDP_Resource::cap( 268435456, 134217728 ) ) {
+		if ( null !== $m['available'] && $m['available'] < SDP_Resource::cap( 268435456, 134217728 ) ) {
 			return 'MemAvailable terlalu rendah.';
 		}
-		if ( ( $m['load'] === null || $m['available'] === null ) && ! $cfg['unknown'] ) {
+		if ( ( null === $m['load'] || null === $m['available'] ) && ! $cfg['unknown'] ) {
 			return 'Metrik OS tidak tersedia; gunakan langkah manual biasa atau izinkan mode tanpa metrik OS.';
 		}
 		return '';
@@ -105,11 +105,11 @@ final class SDP_Scheduler {
 	public static function network_step( $c, $d ) {
 		$p = $c['phase'] ?? '';
 		$n = SDP_Automation::needs( $d );
-		return ( $p === 'reference' && ! empty( $n['reference'] ) ) || ( $p === 'crawler' && ! empty( $n['website'] ) && is_array( $c['crawler'] ?? null ) );}
+		return ( 'reference' === $p && ! empty( $n['reference'] ) ) || ( 'crawler' === $p && ! empty( $n['website'] ) && is_array( $c['crawler'] ?? null ) );}
 	public static function needs_consent( $c, $d ) {
 		$p = $c['phase'] ?? '';
 		$n = SDP_Automation::needs( $d );
-		return ( $p === 'reference' && ! empty( $n['reference'] ) ) || ( $p === 'crawler' && ! empty( $n['website'] ) );}
+		return ( 'reference' === $p && ! empty( $n['reference'] ) ) || ( 'crawler' === $p && ! empty( $n['website'] ) );}
 	public static function reset_day( $s, $now ) {
 		$day = gmdate( 'Y-m-d', $now );
 		if ( ( $s['day'] ?? '' ) !== $day ) {
@@ -140,7 +140,7 @@ final class SDP_Scheduler {
 		);
 	}
 	public static function schedule( $s, $seconds ) {
-		if ( $s['cfg']['mode'] !== 'scheduled' ) {
+		if ( 'scheduled' !== $s['cfg']['mode'] ) {
 			return true;
 		}
 		$args = array( $s['token'] );
@@ -197,7 +197,7 @@ final class SDP_Scheduler {
 				return self::finish( $s, 'Gagal menjadwalkan kembali.' );
 			}return $s['note'];}
 		$guard = self::guard( $cfg, $metrics ?? self::metrics() );
-		if ( $guard !== '' ) {
+		if ( '' !== $guard ) {
 			return self::defer( $s, $guard );
 		}
 		if ( SDP_Collector::pending() ) {
@@ -290,24 +290,24 @@ final class SDP_Scheduler {
 				if ( self::input( 'token' ) !== ( $s['token'] ?? '' ) ) {
 					return new WP_Error( 'stale', 'Formulir lama. Muat ulang.' );
 				}
-				if ( $op === 'stop' ) {
+				if ( 'stop' === $op ) {
 					if ( ! self::active( $s ) ) {
 						return 'Tidak ada sesi aktif.';
 					}return self::finish( $s, 'Dihentikan administrator.' );}
 				if ( self::disabled() ) {
 					return new WP_Error( 'disabled', 'Scheduler dinonaktifkan melalui wp-config.php.' );
 				}
-				if ( $op === 'run' ) {
-					if ( ! self::active( $s ) || $s['cfg']['mode'] !== 'manual' ) {
+				if ( 'run' === $op ) {
+					if ( ! self::active( $s ) || 'manual' !== $s['cfg']['mode'] ) {
 						return new WP_Error( 'state', 'Hanya sesi manual yang dapat dijalankan di sini.' );
 					}return self::run( $s, time() );}
-				if ( $op === 'recover' ) {
-					if ( ! self::active( $s ) || $s['cfg']['mode'] !== 'scheduled' ) {
+				if ( 'recover' === $op ) {
+					if ( ! self::active( $s ) || 'scheduled' !== $s['cfg']['mode'] ) {
 						return new WP_Error( 'state', 'Tidak ada sesi terjadwal.' );
 					}if ( time() >= $s['expires'] ) {
 						return self::finish( $s, 'Sesi kedaluwarsa.' );
 					}return self::schedule( $s, max( 60, ( $s['next'] ?? 0 ) - time() ) ) ? 'Jadwal tersedia.' : new WP_Error( 'cron', 'Gagal memulihkan jadwal.' );}
-				if ( $op !== 'start' || self::active( $s ) ) {
+				if ( 'start' !== $op || self::active( $s ) ) {
 					return new WP_Error( 'state', 'Hentikan sesi aktif terlebih dahulu.' );
 				}$cfg = self::settings( wp_unslash( $_POST['cfg'] ?? array() ) );
 				if ( is_wp_error( $cfg ) ) {
@@ -355,7 +355,7 @@ final class SDP_Scheduler {
 		wp_nonce_field( 'sdp_scheduler' );
 		if ( self::active( $s ) ) {
 			echo '<p>Jadwal berikut: ' . esc_html( ( $t = wp_next_scheduled( self::HOOK, array( $s['token'] ) ) ) ? wp_date( 'Y-m-d H:i:s', $t ) : 'Tidak terjadwal' ) . '</p>';
-			if ( $s['cfg']['mode'] === 'manual' ) {
+			if ( 'manual' === $s['cfg']['mode'] ) {
 				echo '<button class="button" name="op" value="run">Proses satu langkah</button> ';
 			} else {
 				echo '<button class="button" name="op" value="recover">Pulihkan jadwal jika hilang</button> ';

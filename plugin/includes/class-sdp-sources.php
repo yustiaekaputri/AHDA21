@@ -93,7 +93,7 @@ final class SDP_Sources {
 				array_filter(
 					$cells,
 					function ( $v ) {
-						return $v !== '' && $v !== ':';
+						return '' !== $v && ':' !== $v;
 					}
 				)
 			);
@@ -178,24 +178,24 @@ final class SDP_Sources {
 		$r   = SDP_Collector::lock(
 			function () use ( $op, $id, $uid ) {
 				$sources = self::all();
-				if ( $op === 'delete' ) {
+				if ( 'delete' === $op ) {
 					if ( ! isset( $sources[ $id ] ) ) {
 						return new WP_Error( 'source', 'Sumber tidak ditemukan.' );
 					}unset( $sources[ $id ] );
 					update_option( self::OPTION, $sources, false );
 					return 'Konfigurasi dihapus; profil dan antrean lama tetap ada.';}
-				if ( $op === 'run' ) {
+				if ( 'run' === $op ) {
 					if ( empty( $_POST['authorized'] ) ) {
 						return new WP_Error( 'permission', 'Konfirmasi izin penggunaan data.' );
 					}return self::run( $id, $sources );}
-				if ( $op === 'save' || $op === 'preview_dataset' || $op === 'upload_dataset' ) {
+				if ( 'save' === $op || 'preview_dataset' === $op || 'upload_dataset' === $op ) {
 					if ( empty( $_POST['authorized'] ) ) {
 						return new WP_Error( 'permission', 'Konfirmasi izin penggunaan data.' );
 					}$c = SDP_Collector::read_config();
 					if ( is_wp_error( $c ) ) {
 						return $c;
 					}
-					if ( $op === 'save' ) {
+					if ( 'save' === $op ) {
 						if ( $id && ! isset( $sources[ $id ] ) ) {
 							return new WP_Error( 'source', 'Sumber tidak ditemukan.' );
 						}if ( ! $id && count( $sources ) >= 30 ) {
@@ -213,7 +213,7 @@ final class SDP_Sources {
 						if ( ( $file['error'] ?? 1 ) !== UPLOAD_ERR_OK || ! is_uploaded_file( $file['tmp_name'] ?? '' ) || ( $file['size'] ?? 0 ) > SDP_Resource::cap( SDP_Collector::MAX_BYTES, 2097152 ) ) {
 							return new WP_Error( 'file', 'File tidak valid / melebihi 5 MB.' );
 						}$body = file_get_contents( $file['tmp_name'] );
-						if ( $body === false ) {
+						if ( false === $body ) {
 							return new WP_Error( 'file', 'File tidak terbaca.' );
 						}
 					} else {
@@ -222,7 +222,7 @@ final class SDP_Sources {
 							return $body;
 						}
 					}
-					if ( $op === 'preview_dataset' ) {
+					if ( 'preview_dataset' === $op ) {
 						$p = SDP_Collector::parse( $body, $c );
 						if ( is_wp_error( $p ) ) {
 							return $p;
@@ -242,7 +242,7 @@ final class SDP_Sources {
 						return new WP_Error( 'pending', 'Selesaikan antrean terlebih dahulu.' );
 					}return SDP_Collector::stage( $body, $c );
 				}
-				if ( $op === 'reference_preview' ) {
+				if ( 'reference_preview' === $op ) {
 					if ( empty( $_POST['authorized'] ) ) {
 						return new WP_Error( 'permission', 'Konfirmasi izin penggunaan data.' );
 					}if ( get_transient( 'sdp_reference_rate' ) ) {
@@ -254,7 +254,7 @@ final class SDP_Sources {
 						return $r;
 					}set_transient( 'sdp_reference_preview_' . $uid, $r, 600 );
 					return 'Pratinjau profil siap. Periksa sebelum menyimpan.';}
-				if ( $op === 'reference_save' ) {
+				if ( 'reference_save' === $op ) {
 					if ( empty( $_POST['authorized'] ) ) {
 						return new WP_Error( 'permission', 'Konfirmasi izin publikasi data.' );
 					}$d = get_transient( 'sdp_reference_preview_' . $uid );

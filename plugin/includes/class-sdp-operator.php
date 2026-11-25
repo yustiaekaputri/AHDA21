@@ -97,7 +97,7 @@ final class SDP_Operator {
 		if ( ! isset( self::fields( $d )[ $f ] ) || strlen( $raw['value'] ) > 6000 || strlen( $raw['note'] ) > 1000 || strlen( $raw['period'] ) > 40 || strlen( $raw['url'] ) > 1000 ) {
 			return new WP_Error( 'invalid', 'Atribut atau panjang isian tidak valid.' );
 		}
-		if ( $f === 'media_request' ) {
+		if ( 'media_request' === $f ) {
 			$url   = SDP_Media::evidence_url( trim( $raw['value'] ) );
 			$proof = SDP_Media::evidence_url( trim( $raw['url'] ) );
 			$note  = sanitize_textarea_field( $raw['note'] );
@@ -118,7 +118,7 @@ final class SDP_Operator {
 		if ( is_wp_error( $c ) ) {
 			return $c;
 		}
-		if ( in_array( $f, SDP_Intelligence::STATS, true ) && $c['period'] === '' ) {
+		if ( in_array( $f, SDP_Intelligence::STATS, true ) && '' === $c['period'] ) {
 			return new WP_Error( 'period', 'Periode wajib untuk statistik.' );
 		}
 		return $c;
@@ -144,7 +144,7 @@ final class SDP_Operator {
 		}return $r;}
 	public static function sitemap( $args, $type ) {
 		$id = (int) get_option( self::PAGE );
-		if ( $type === 'page' && $id ) {
+		if ( 'page' === $type && $id ) {
 			$args['post__not_in'] = array_values( array_unique( array_merge( (array) ( $args['post__not_in'] ?? array() ), array( $id ) ) ) );
 		}return $args;}
 	public static function registration_open() {
@@ -223,13 +223,13 @@ final class SDP_Operator {
 			echo '<p>Belum ada klaim.</p>';
 		}foreach ( $rows as $r ) {
 			echo '<p>' . esc_html( $r['npsn'] ) . ' — ' . esc_html( $r['status'] );
-			if ( $r['status'] === 'approved' ) {
+			if ( 'approved' === $r['status'] ) {
 				echo ' · <a href="' . esc_url( add_query_arg( 'sdp_operator_npsn', $r['npsn'], self::page_url() ?: get_permalink() ) ) . '">Ajukan perubahan</a>';
 			}echo '</p>';}
 		if ( is_array( $d ) ) {
 			echo '<h3>' . esc_html( $d['nama'] ) . ' — ' . esc_html( $n ) . '</h3><details><summary>Data profil saat ini</summary><dl>';
 			foreach ( self::fields( $d ) as $k => $l ) {
-				if ( $k === 'media_request' ) {
+				if ( 'media_request' === $k ) {
 					continue;
 				}echo '<dt>' . esc_html( $l ) . '</dt><dd>' . esc_html( $d[ $k ] ?? 'Belum tersedia' ) . esc_html( SDP_Intelligence::period_note( $d, $k ) ) . '</dd>';
 			}echo '</dl></details>';
@@ -238,7 +238,7 @@ final class SDP_Operator {
 			foreach ( self::fields( $d ) as $k => $l ) {
 				echo '<option value="' . esc_attr( $k ) . '">' . esc_html( $l ) . '</option>';
 			}echo '</select></label></p><p><label>Nilai yang diusulkan<textarea name="candidate[value]" rows="5" maxlength="6000" required></textarea></label></p><p><label>URL bukti publik<input name="candidate[url]" type="url" maxlength="1000" required></label></p><p><label>Periode (wajib untuk statistik)<input name="candidate[period]" placeholder="2025/2026 ganjil" maxlength="40"></label></p><p><label>Catatan (privat untuk peninjauan)<textarea name="candidate[note]" maxlength="1000" rows="3"></textarea></label></p><p>Usulan media: masukkan URL HTTPS gambar sebagai nilai, URL bukti izin, dan catatan izin. Gambar tidak diunduh otomatis.</p><p><label><input type="checkbox" name="candidate[authorized]" value="1"> Saya berhak mengusulkan publikasi media ini (khusus media).</label></p><button type="submit">Kirim usulan</button></form>';
-		} elseif ( $n !== '' ) {
+		} elseif ( '' !== $n ) {
 			$public = SDP_Engine::valid_npsn( $n ) ? SDP_Analytics::public_rows( array( $n ) ) : array();
 			if ( $public ) {
 				echo '<p><a href="' . esc_url( get_permalink( (int) $public[0]['post_id'] ) ) . '">Buka profil publik dan ajukan klaim</a>. Akses pengajuan perubahan memerlukan klaim aktif.</p>';
@@ -278,7 +278,7 @@ final class SDP_Operator {
 			$count  = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $t WHERE user_id=%d AND status='pending'", $uid ) );
 			$recent = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $t WHERE user_id=%d AND created_at >= %s", $uid, gmdate( 'Y-m-d H:i:s', time() - 3600 ) ) );
 			$claim  = self::claim( $n, $uid );
-			if ( is_wp_error( $claim ) || $count === null || $recent === null || ! empty( $wpdb->last_error ) || (int) $count >= 20 || (int) $recent >= 10 ) {
+			if ( is_wp_error( $claim ) || null === $count || null === $recent || ! empty( $wpdb->last_error ) || (int) $count >= 20 || (int) $recent >= 10 ) {
 				$error = 'Klaim berubah, database bermasalah atau batas usulan tercapai.';
 			} elseif ( $wpdb->insert(
 				$t,
@@ -320,10 +320,10 @@ final class SDP_Operator {
 		}$error = '';
 		try {
 			$r = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $t WHERE id=%d", $id ), ARRAY_A );
-			if ( ! $r || $r['status'] !== 'pending' || ! empty( $wpdb->last_error ) ) {
+			if ( ! $r || 'pending' !== $r['status'] || ! empty( $wpdb->last_error ) ) {
 				$error = 'Usulan tidak tersedia.';} else {
 				$to = 'rejected';
-				if ( $op !== 'reject' ) {
+				if ( 'reject' !== $op ) {
 					$d         = self::school( $r['npsn'] );
 					$claim     = self::claim( $r['npsn'], (int) $r['user_id'] );
 					$c         = json_decode( $r['candidate'], true );
@@ -332,9 +332,9 @@ final class SDP_Operator {
 					$snap      = wp_unslash( $_POST['snapshot'] ?? '' );
 					if ( ! self::reviewable( $r, $claim, $d ) || is_wp_error( $validated ) || ( $validated['field'] ?? null ) !== $r['field'] || ! is_string( $snap ) || ! hash_equals( SDP_Intelligence::snapshot( $d ), $snap ) ) {
 						$error = 'Klaim atau profil berubah; muat ulang dan periksa bukti.';
-					} elseif ( $op === 'handled' && $r['field'] === 'media_request' ) {
+					} elseif ( 'handled' === $op && 'media_request' === $r['field'] ) {
 						$to = 'handled';
-					} elseif ( $op === 'approve' && $r['field'] !== 'media_request' ) {
+					} elseif ( 'approve' === $op && 'media_request' !== $r['field'] ) {
 						$c   = $validated;
 						$res = SDP_Directory::save(
 							array(
@@ -375,7 +375,7 @@ final class SDP_Operator {
 							'status' => 'pending',
 						)
 					);
-					if ( $ok !== 1 ) {
+					if ( 1 !== $ok ) {
 						$error = 'Gagal mencatat status; periksa profil sebelum mencoba lagi.';
 					} else {
 						SDP_National::log( 'operator_' . $to, (string) $id );
@@ -418,14 +418,14 @@ final class SDP_Operator {
 			echo '<hr><h3>#' . $id . ' · ' . esc_html( $r['npsn'] ) . ' · ' . esc_html( $r['field'] ) . '</h3><p>Pengusul #' . (int) $r['user_id'] . ' · ' . esc_html( $r['created_at'] ) . ' UTC</p>';
 			if ( is_array( $c ) ) {
 				echo '<p>Nilai saat ini: ' . esc_html( is_array( $d ) ? ( $d[ $r['field'] ] ?? '—' ) : '—' ) . '</p><p>Usulan: ' . nl2br( esc_html( $c['value'] ?? '' ) ) . '</p><p>Periode: ' . esc_html( $c['period'] ?? '' ) . '</p><p>Bukti: <a rel="noopener noreferrer" target="_blank" href="' . esc_url( $c['url'] ?? '' ) . '">' . esc_html( $c['url'] ?? '' ) . '</a></p><p>Catatan: ' . nl2br( esc_html( $c['note'] ?? '' ) ) . '</p>';
-				if ( $r['field'] === 'media_request' ) {
+				if ( 'media_request' === $r['field'] ) {
 					echo '<p>Media: <a rel="noopener noreferrer" target="_blank" href="' . esc_url( $c['value'] ?? '' ) . '">Buka URL gambar</a> (tidak diunduh plugin).</p>';
 				}
 			}self::form( 'sdp71_review', 'sdp71_review_' . $id );
 			echo '<input type="hidden" name="id" value="' . $id . '"><p><label><input type="checkbox" name="confirm" value="1" required> Saya telah memeriksa bukti dan keputusan ini.</label></p>';
 			if ( $can ) {
 				echo '<input type="hidden" name="snapshot" value="' . esc_attr( SDP_Intelligence::snapshot( $d ) ) . '">';
-				echo $r['field'] === 'media_request' ? '<button class="button" name="decision" value="handled">Tandai media ditinjau (tanpa impor)</button>' : '<button class="button button-primary" name="decision" value="approve">Setujui dan kunci atribut</button>';
+				echo 'media_request' === $r['field'] ? '<button class="button" name="decision" value="handled">Tandai media ditinjau (tanpa impor)</button>' : '<button class="button button-primary" name="decision" value="approve">Setujui dan kunci atribut</button>';
 			} else {
 				echo '<p>Klaim atau profil tidak aktif; usulan tidak dapat disetujui.</p>';
 			}echo ' <button class="button" name="decision" value="reject">Tolak</button></form>';}

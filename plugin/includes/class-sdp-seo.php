@@ -48,13 +48,13 @@ final class SDP_SEO {
 			return $old;
 		}if ( self::demo( $d ) && ! ( wp_get_environment_type() === 'local' && ! get_option( 'blog_public' ) ) ) {
 			return 'draft';
-		}if ( $old === 'future' ) {
+		}if ( 'future' === $old ) {
 			return $old;
 		}if ( ! $publish ) {
 			return $old ?: 'draft';
-		}if ( $old === 'publish' ) {
+		}if ( 'publish' === $old ) {
 			return 'publish';
-		}return self::config()['guard'] && ! self::ready( $d ) ? ( $old && $old !== 'future' ? $old : 'draft' ) : 'publish';}
+		}return self::config()['guard'] && ! self::ready( $d ) ? ( $old && 'future' !== $old ? $old : 'draft' ) : 'publish';}
 	public static function sync( $id, $d ) {
 		update_post_meta( $id, '_sdp_seo_ready', self::ready( $d ) ? '1' : '0' );
 		update_post_meta( $id, '_sdp_seo_score', self::score( $d ) );}
@@ -95,7 +95,7 @@ final class SDP_SEO {
 			'luas_tanah'   => 'Luas tanah',
 		) as $k => $label ) {
 			if ( self::present( $d, $k ) ) {
-				$facts[] = $label . ': ' . $d[ $k ] . ( $k === 'luas_tanah' ? ' m²' : '' ) . SDP_Intelligence::period_note( $d, $k );
+				$facts[] = $label . ': ' . $d[ $k ] . ( 'luas_tanah' === $k ? ' m²' : '' ) . SDP_Intelligence::period_note( $d, $k );
 			}
 		}if ( $facts ) {
 			$s .= ' ' . implode( '; ', $facts ) . '.';
@@ -118,12 +118,12 @@ final class SDP_SEO {
 		) as $k => $q ) {
 			if ( self::present( $d, $k ) ) {
 				$a = (string) $d[ $k ];
-				if ( $k === 'luas_tanah' ) {
+				if ( 'luas_tanah' === $k ) {
 					$a .= ' m²';
 				}$note = SDP_Intelligence::period_note( $d, $k );
-				if ( $note !== '' ) {
+				if ( '' !== $note ) {
 					$a .= $note;
-				} elseif ( $k === 'akreditasi' && self::present( $d, 'tahun_akreditasi' ) ) {
+				} elseif ( 'akreditasi' === $k && self::present( $d, 'tahun_akreditasi' ) ) {
 					$a .= ' (tahun umum tercatat ' . $d['tahun_akreditasi'] . ')';
 				} elseif ( in_array( $k, array( 'jumlah_siswa', 'jumlah_guru' ), true ) && self::present( $d, 'tahun_data' ) ) {
 					$a .= ' (periode umum tercatat ' . $d['tahun_data'] . ')';
@@ -192,7 +192,7 @@ final class SDP_SEO {
 		$thin = is_singular( SDP_Directory::TYPE ) && ! self::ready( $d );
 		if ( self::is_directory() ) {
 			foreach ( array( 'q', 'provinsi', 'kabupaten', 'kecamatan', 'jenjang', 'status', 'akreditasi', 'fasilitas', 'jurusan', 'p' ) as $k ) {
-				if ( isset( $_GET[ 'sdp_' . $k ] ) && $_GET[ 'sdp_' . $k ] !== '' ) {
+				if ( isset( $_GET[ 'sdp_' . $k ] ) && '' !== $_GET[ 'sdp_' . $k ] ) {
 					$thin = true;
 				}
 			}$scope = self::scope( get_queried_object_id() );
@@ -222,7 +222,7 @@ final class SDP_SEO {
 		$where  = array( "p.post_status='publish'", "p.post_password=''", "p.post_type='" . SDP_Directory::TYPE . "'" );
 		$params = array();
 		foreach ( self::SCOPE as $k ) {
-			if ( isset( $scope[ $k ] ) && $scope[ $k ] !== '' ) {
+			if ( isset( $scope[ $k ] ) && '' !== $scope[ $k ] ) {
 				$where[]  = "s.$k=%s";
 				$params[] = $scope[ $k ];
 			}
@@ -250,7 +250,7 @@ final class SDP_SEO {
 			return $content;
 		}$c    = self::config();
 		$extra = '<section class="sdp-profile sdp-seo"><h2>Ringkasan profil</h2><p>' . esc_html( self::summary( $d ) ) . '</p><p class="sdp-note">Kelengkapan data inti: ' . self::score( $d ) . '% (bukan penilaian mutu sekolah).</p>';
-		if ( $c['faq'] && $c['style'] === 'full' ) {
+		if ( $c['faq'] && 'full' === $c['style'] ) {
 			$faq = self::faq( $d );
 			if ( $faq ) {
 				$extra .= '<h2>Pertanyaan umum</h2>';
@@ -302,14 +302,14 @@ final class SDP_SEO {
 			wp_die( 'Akses ditolak.' );
 		}check_admin_referer( 'sdp_seo' );
 		$op = sanitize_key( $_POST['op'] ?? '' );
-		if ( $op === 'settings' ) {
+		if ( 'settings' === $op ) {
 			$c = array();
 			foreach ( array( 'guard', 'faq', 'related', 'schema' ) as $k ) {
 				$c[ $k ] = isset( $_POST[ $k ] ) ? 1 : 0;
 			}$c['style'] = ( $_POST['style'] ?? '' ) === 'compact' ? 'compact' : 'full';
 			update_option( 'sdp_seo_config', $c, false );
 			self::report( 'Pengaturan disimpan.' );}
-		if ( $op === 'reindex' ) {
+		if ( 'reindex' === $op ) {
 			global $wpdb;
 			$cursor = isset( $_POST['reset'] ) ? '' : (string) get_option( 'sdp_seo_cursor', '' );
 			$rows   = $wpdb->get_results( $wpdb->prepare( 'SELECT npsn,post_id,payload FROM ' . SDP_Directory::table() . ' WHERE npsn>%s ORDER BY npsn LIMIT 100', $cursor ), ARRAY_A );
@@ -324,11 +324,11 @@ final class SDP_SEO {
 				}$cursor = $r['npsn'];
 			}update_option( 'sdp_seo_cursor', $cursor, false );
 			self::report( "$n profil diindeks ulang. " . ( count( $rows ) < 100 ? 'Sampai akhir. Centang mulai ulang untuk memeriksa semuanya lagi.' : 'Klik ulang untuk 100 berikutnya.' ) );}
-		if ( $op === 'region' ) {
+		if ( 'region' === $op ) {
 			$scope = array();
 			foreach ( self::SCOPE as $k ) {
 				$v = sanitize_text_field( wp_unslash( $_POST[ $k ] ?? '' ) );
-				if ( $v !== '' ) {
+				if ( '' !== $v ) {
 					$scope[ $k ] = $v;
 				}
 			}if ( ! self::valid_scope( $scope ) ) {
@@ -354,7 +354,7 @@ final class SDP_SEO {
 			if ( is_wp_error( $id ) ) {
 				self::report( $id->get_error_message(), true );
 			}self::report( 'Draf halaman wilayah dibuat. Periksa dan terbitkan melalui Pages.' );}
-		if ( $op === 'ai' ) {
+		if ( 'ai' === $op ) {
 			if ( empty( $_POST['consent'] ) ) {
 				self::report( 'Konfirmasi izin pemrosesan data terlebih dahulu.', true );
 			}$npsn = strtoupper( sanitize_text_field( wp_unslash( $_POST['npsn'] ?? '' ) ) );
@@ -419,7 +419,7 @@ final class SDP_SEO {
 		echo '</form><h2>Halaman wilayah</h2><p>Gunakan nama wilayah persis seperti database. Minimal 3 sekolah terbit. Halaman dibuat sebagai draf.</p>';
 		self::start( 'region' );
 		foreach ( self::SCOPE as $k ) {
-			echo '<p><label>' . esc_html( ucfirst( $k ) ) . ' <input name="' . esc_attr( $k ) . '" ' . ( $k === 'provinsi' ? 'required' : '' ) . '></label></p>';
+			echo '<p><label>' . esc_html( ucfirst( $k ) ) . ' <input name="' . esc_attr( $k ) . '" ' . ( 'provinsi' === $k ? 'required' : '' ) . '></label></p>';
 		}submit_button( 'Buat draf halaman wilayah', 'secondary' );
 		echo '</form><h2>Asisten narasi AI (opsional)</h2><p>Hanya mengirim fakta institusi yang dipilih ke penyedia. Hasil berupa pratinjau privat, tidak disimpan dalam artikel dan wajib diperiksa. API berbayar dapat menimbulkan biaya. Kunci disediakan melalui wp-config.php (SDP_OPENAI_API_KEY / SDP_GEMINI_API_KEY); Ollama memakai 127.0.0.1:11434.</p>';
 		self::start( 'ai' );

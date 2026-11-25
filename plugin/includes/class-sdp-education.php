@@ -42,10 +42,10 @@ final class SDP_Education {
 			if ( ! is_string( $v ) || strlen( $v ) > 120 ) {
 				return new WP_Error( 'scope', 'Filter tidak valid.' );
 			}$f[ $k ] = sanitize_text_field( trim( $v ) );}
-		if ( ( $f['kabupaten'] !== '' && $f['provinsi'] === '' ) || ( $f['kecamatan'] !== '' && $f['kabupaten'] === '' ) ) {
+		if ( ( '' !== $f['kabupaten'] && '' === $f['provinsi'] ) || ( '' !== $f['kecamatan'] && '' === $f['kabupaten'] ) ) {
 			return new WP_Error( 'scope', 'Pilih wilayah dari provinsi ke kabupaten lalu kecamatan.' );
 		}
-		if ( $f['jenjang'] !== '' && ! in_array( $f['jenjang'], SDP_Directory::levels(), true ) ) {
+		if ( '' !== $f['jenjang'] && ! in_array( $f['jenjang'], SDP_Directory::levels(), true ) ) {
 			return new WP_Error( 'scope', 'Jenjang tidak valid.' );
 		}
 		if ( ! self::period_key( $f['period'] ) ) {
@@ -58,9 +58,9 @@ final class SDP_Education {
 		$v = SDP_Intelligence::period( $p );
 		if ( ! $v ) {
 			return '';
-		}return (string) $v['year'] . ( $v['kind'] === 'academic' ? '/' . ( $v['year'] + 1 ) . ( $v['semester'] === 1 ? ' ganjil' : ( $v['semester'] === 2 ? ' genap' : '' ) ) : '' );}
+		}return (string) $v['year'] . ( 'academic' === $v['kind'] ? '/' . ( $v['year'] + 1 ) . ( 1 === $v['semester'] ? ' ganjil' : ( 2 === $v['semester'] ? ' genap' : '' ) ) : '' );}
 	public static function group_field( $f ) {
-		return $f['provinsi'] === '' ? 'provinsi' : ( $f['kabupaten'] === '' ? 'kabupaten' : ( $f['kecamatan'] === '' ? 'kecamatan' : 'jenjang' ) );}
+		return '' === $f['provinsi'] ? 'provinsi' : ( '' === $f['kabupaten'] ? 'kabupaten' : ( '' === $f['kecamatan'] ? 'kecamatan' : 'jenjang' ) );}
 	public static function blank() {
 		return array(
 			'schools'        => 0,
@@ -113,7 +113,7 @@ final class SDP_Education {
 		foreach ( self::STATS as $k => $label ) {
 			$n = SDP_Portal::num( $d, $k );
 			$p = self::period_key( SDP_Intelligence::field_period( $d, $k ) );
-			if ( $n !== null && $p !== '' && $p === $period ) {
+			if ( null !== $n && '' !== $p && $p === $period ) {
 				++$a['known'][ $k ];
 				$a['sum'][ $k ] += $n;
 				$vals[ $k ]      = $n;}
@@ -124,7 +124,7 @@ final class SDP_Education {
 			$a['ratio_teachers'] += $vals['jumlah_guru'];}
 		foreach ( self::FAC as $k => $label ) {
 			$n = SDP_Portal::num( $d, $k );
-			if ( $n !== null ) {
+			if ( null !== $n ) {
 				++$a['facility'][ $k ]['known'];
 				if ( $n > 0 ) {
 					++$a['facility'][ $k ]['positive'];
@@ -243,9 +243,9 @@ final class SDP_Education {
 	public static function completeness( $a ) {
 		return $a['possible'] > 0 ? 100 * $a['filled'] / $a['possible'] : null;}
 	public static function fmt( $n, $digits = 0 ) {
-		return $n === null ? '—' : number_format( $n, $digits, ',', '.' );}
+		return null === $n ? '—' : number_format( $n, $digits, ',', '.' );}
 	public static function scope( $f ) {
-		$s = array_filter( array( $f['provinsi'], $f['kabupaten'], $f['kecamatan'], $f['jenjang'] ), static fn( $v )=>$v !== '' );
+		$s = array_filter( array( $f['provinsi'], $f['kabupaten'], $f['kecamatan'], $f['jenjang'] ), static fn( $v )=>'' !== $v );
 		return $s ? implode( ' / ', $s ) : 'Seluruh cakupan direktori';}
 	public static function render( $s ) {
 		$a  = $s['total'];
@@ -258,8 +258,8 @@ final class SDP_Education {
 			'Guru tercatat (' . $a['known']['jumlah_guru'] . ' sekolah)' => $a['known']['jumlah_guru'] ? $a['sum']['jumlah_guru'] : null,
 			'Kelengkapan atribut relevan' => self::completeness( $a ),
 		) as $label => $v ) {
-			$pct = $label === 'Kelengkapan atribut relevan';
-			$h  .= '<div class="sdp80-card"><span>' . esc_html( $label ) . '</span><strong>' . esc_html( self::fmt( $v, $pct ? 1 : 0 ) . ( $pct && $v !== null ? '%' : '' ) ) . '</strong></div>';
+			$pct = 'Kelengkapan atribut relevan' === $label;
+			$h  .= '<div class="sdp80-card"><span>' . esc_html( $label ) . '</span><strong>' . esc_html( self::fmt( $v, $pct ? 1 : 0 ) . ( $pct && null !== $v ? '%' : '' ) ) . '</strong></div>';
 		}$h .= '</div><p>Rasio siswa/guru: ' . esc_html( self::fmt( self::ratio( $a ), 1 ) ) . ' (' . $a['ratio_n'] . ' sekolah dengan kedua nilai pada periode yang sama dan guru &gt; 0). Data tanpa periode per atribut tidak dihitung dalam total siswa/guru.</p>';
 		foreach ( array(
 			'levels'        => 'Jenjang',
@@ -311,11 +311,11 @@ final class SDP_Education {
 			unset( $f['period'] );
 			if ( ! $p || isset( $periods[ $key ] ) ) {
 				return new WP_Error( 'compare', 'Periode harus valid dan berbeda.' );
-			}if ( $base === null ) {
+			}if ( null === $base ) {
 				$base = $f;
 				$kind = $p['kind'];
-				$sem  = $p['semester'] !== 0;
-			} elseif ( $base !== $f || $kind !== $p['kind'] || $sem !== ( $p['semester'] !== 0 ) ) {
+				$sem  = 0 !== $p['semester'];
+			} elseif ( $base !== $f || $kind !== $p['kind'] || $sem !== ( 0 !== $p['semester'] ) ) {
 				return new WP_Error( 'compare', 'Cakupan dan jenis periode harus sama.' );
 			}$periods[ $key ] = $s;}
 		ksort( $periods, SORT_STRING );
@@ -353,7 +353,7 @@ final class SDP_Education {
 				$known = $a['known'][ $k ];
 				$v     = $known ? $a['sum'][ $k ] : null;
 				$h    .= '<div class="sdp80-bar"><span>' . esc_html( $period . ' — ' . self::fmt( $v ) . ' (' . $known . '/' . $a['schools'] . ' sekolah)' ) . '</span>';
-				if ( $v !== null ) {
+				if ( null !== $v ) {
 					$h .= '<progress max="' . esc_attr( (string) max( 1, $max ) ) . '" value="' . esc_attr( (string) $v ) . '" aria-label="' . esc_attr( $label . ' ' . $period ) . '"></progress>';
 				}$h .= '</div>';}
 		}
@@ -379,7 +379,7 @@ final class SDP_Education {
 			}
 		}fputcsv( $fp, $head, ',', '"', '' );
 		foreach ( array( 'total' => $s['total'] ) + $s['groups'] as $k => $a ) {
-			$row = array( self::scope( $s['filter'] ), $s['filter']['period'], $s['start'], $s['end'], $k === 'total' ? 'TOTAL' : substr( $k, 2 ), $a['schools'], $a['known']['jumlah_siswa'] ? $a['sum']['jumlah_siswa'] : '', $a['known']['jumlah_siswa'], $a['known']['jumlah_guru'] ? $a['sum']['jumlah_guru'] : '', $a['known']['jumlah_guru'], self::ratio( $a ) ?? '', $a['ratio_n'], $a['filled'], $a['possible'] );
+			$row = array( self::scope( $s['filter'] ), $s['filter']['period'], $s['start'], $s['end'], 'total' === $k ? 'TOTAL' : substr( $k, 2 ), $a['schools'], $a['known']['jumlah_siswa'] ? $a['sum']['jumlah_siswa'] : '', $a['known']['jumlah_siswa'], $a['known']['jumlah_guru'] ? $a['sum']['jumlah_guru'] : '', $a['known']['jumlah_guru'], self::ratio( $a ) ?? '', $a['ratio_n'], $a['filled'], $a['possible'] );
 			foreach ( self::FAC as $field => $label ) {
 				$row[] = $a['facility'][ $field ]['positive'];
 				$row[] = $a['facility'][ $field ]['known'];
@@ -395,15 +395,15 @@ final class SDP_Education {
 		}check_admin_referer( 'sdp80_action' );
 		$op   = $_POST['op'] ?? '';
 		$slot = self::slot( $_POST['slot'] ?? 1 );
-		if ( $op === 'start' ) {
+		if ( 'start' === $op ) {
 			$r = self::start( wp_unslash( $_POST['filter'] ?? array() ), $slot );
-		} elseif ( $op === 'step' ) {
+		} elseif ( 'step' === $op ) {
 			$r = self::step();
-		} elseif ( $op === 'cancel' ) {
+		} elseif ( 'cancel' === $op ) {
 			$r = self::lock( static fn()=>self::store( self::JOB, array() ) );
-		} elseif ( $op === 'delete' && $slot ) {
+		} elseif ( 'delete' === $op && $slot ) {
 			$r = self::lock( static fn()=>self::store( self::key( $slot ), array() ) );
-		} elseif ( $op === 'export' && $slot ) {
+		} elseif ( 'export' === $op && $slot ) {
 			$s = get_option( self::key( $slot ), array() );
 			if ( ( $s['status'] ?? '' ) !== 'complete' ) {
 				wp_die( 'Snapshot belum tersedia.' );
@@ -443,7 +443,7 @@ final class SDP_Education {
 				'jenjang'   => 'Jenjang (kosong = semua)',
 				'period'    => 'Periode siswa / guru',
 			) as $k => $label ) {
-				echo '<p><label>' . esc_html( $label ) . ' <input name="filter[' . esc_attr( $k ) . ']" value="" ' . ( $k === 'period' ? 'required placeholder="2025/2026 ganjil"' : 'placeholder="Nama persis / kosong"' ) . '></label></p>';
+				echo '<p><label>' . esc_html( $label ) . ' <input name="filter[' . esc_attr( $k ) . ']" value="" ' . ( 'period' === $k ? 'required placeholder="2025/2026 ganjil"' : 'placeholder="Nama persis / kosong"' ) . '></label></p>';
 			}echo '<button class="button button-primary" name="op" value="start">Mulai</button></form>';}
 		echo '<h2>Snapshot selesai</h2>';for ( $i = 1;$i <= self::SLOTS;$i++ ) {
 			$s = get_option( self::key( $i ), array() );
@@ -463,7 +463,7 @@ final class SDP_Education {
 			if ( is_wp_error( $r ) ) {
 				WP_CLI::error( $r->get_error_message() );
 			}WP_CLI::log( $r['status'] . ' | dipindai ' . $r['scanned'] );
-			if ( $r['status'] === 'complete' ) {
+			if ( 'complete' === $r['status'] ) {
 				break;
 			}
 		}}

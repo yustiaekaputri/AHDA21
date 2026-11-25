@@ -121,7 +121,7 @@ final class SDP_Collector {
 			}
 		}
 		$mapping = array();
-		if ( $c['mapping'] !== '' ) {
+		if ( '' !== $c['mapping'] ) {
 			$mapping = json_decode( $c['mapping'], true );
 			if ( ! is_array( $mapping ) ) {
 				return new WP_Error( 'mapping', 'Mapping JSON tidak valid.' );
@@ -134,7 +134,7 @@ final class SDP_Collector {
 				continue;
 			}
 			// Explicit mapping overrides aliases; prefer specific school form over broad education level.
-			$keys = isset( $mapping[ $k ] ) ? array( self::key( $mapping[ $k ] ) ) : ( $k === 'jenjang' ? array_merge( $aliases[ $k ], array( $k ) ) : array_merge( array( $k ), $aliases[ $k ] ?? array() ) );
+			$keys = isset( $mapping[ $k ] ) ? array( self::key( $mapping[ $k ] ) ) : ( 'jenjang' === $k ? array_merge( $aliases[ $k ], array( $k ) ) : array_merge( array( $k ), $aliases[ $k ] ?? array() ) );
 			foreach ( $keys as $a ) {
 				if ( ! isset( $r[ $a ] ) || in_array( strtolower( $r[ $a ] ), array( '', '-', 'null', 'n/a', 'tidak tersedia' ), true ) ) {
 					continue;
@@ -142,7 +142,7 @@ final class SDP_Collector {
 				break;}
 		}
 		foreach ( array( 'provinsi', 'jenjang' ) as $k ) {
-			if ( empty( $out[ $k ] ) && $c[ 'default_' . $k ] !== '' ) {
+			if ( empty( $out[ $k ] ) && '' !== $c[ 'default_' . $k ] ) {
 				$out[ $k ] = $c[ 'default_' . $k ];
 			}
 		}
@@ -158,24 +158,24 @@ final class SDP_Collector {
 				return null;
 			}
 			foreach ( array( 'provinsi', 'kabupaten', 'kecamatan', 'jenjang' ) as $k ) {
-				if ( $c[ $k ] !== '' && ! self::region_match( $existing[ $k ] ?? '', $c[ $k ], $k ) ) {
+				if ( '' !== $c[ $k ] && ! self::region_match( $existing[ $k ] ?? '', $c[ $k ], $k ) ) {
 					return null;
 				}
 			}
-			$allowed = $kind === 'statistics' ? array( 'npsn', 'tahun_data', 'jumlah_siswa', 'siswa_laki_laki', 'siswa_perempuan', 'jumlah_guru', 'jumlah_tendik', 'guru_sertifikasi', 'jumlah_rombel', 'tanggal_data' ) : array( 'npsn', 'akreditasi', 'tahun_akreditasi', 'nomor_sk_akreditasi', 'sertifikat_url' );
+			$allowed = 'statistics' === $kind ? array( 'npsn', 'tahun_data', 'jumlah_siswa', 'siswa_laki_laki', 'siswa_perempuan', 'jumlah_guru', 'jumlah_tendik', 'guru_sertifikasi', 'jumlah_rombel', 'tanggal_data' ) : array( 'npsn', 'akreditasi', 'tahun_akreditasi', 'nomor_sk_akreditasi', 'sertifikat_url' );
 			$out     = array_intersect_key( $out, array_flip( $allowed ) );
 			if ( count( array_diff( array_keys( $out ), array( 'npsn', 'tahun_data', 'tanggal_data' ) ) ) === 0 ) {
 				return new WP_Error( 'empty_fields', 'Tidak ada atribut pelengkap yang dikenali.' );
 			}
 		} else {
 			foreach ( array( 'provinsi', 'kabupaten', 'kecamatan', 'jenjang' ) as $k ) {
-				if ( $c[ $k ] !== '' && ! self::region_match( $out[ $k ] ?? '', $c[ $k ], $k ) ) {
+				if ( '' !== $c[ $k ] && ! self::region_match( $out[ $k ] ?? '', $c[ $k ], $k ) ) {
 							return null;
 				}
 			}
 		}
 		$out['sumber'] = $c['label'];
-		if ( $c['url'] !== '' ) {
+		if ( '' !== $c['url'] ) {
 			$out['sumber_url'] = $c['url'];
 		}
 		return SDP_Directory::normalize( $out );
@@ -183,11 +183,11 @@ final class SDP_Collector {
 	public static function region_match( $a, $b, $k ) {
 		$norm = function ( $v ) use ( $k ) {
 			$v = strtolower( trim( $v ) );
-			if ( $k === 'provinsi' ) {
+			if ( 'provinsi' === $k ) {
 				$v = preg_replace( '/^(provinsi|propinsi|prov\.)\s+/', '', $v );
-			}if ( $k === 'kecamatan' ) {
+			}if ( 'kecamatan' === $k ) {
 				$v = preg_replace( '/^(kecamatan|kec\.)\s+/', '', $v );
-			}if ( $k === 'kabupaten' ) {
+			}if ( 'kabupaten' === $k ) {
 				$v = preg_replace( '/^(kabupaten|kab\.)\s+/', 'kab ', $v );
 			}return preg_replace( '/\s+/', ' ', $v );
 		};
@@ -209,7 +209,7 @@ final class SDP_Collector {
 				$errors[] = "Rekaman $seen bukan objek.";
 				return true;}
 			$r = self::map_row( $raw, $c );
-			if ( $r === null ) {
+			if ( null === $r ) {
 				++$skipped;
 				return true;
 			}if ( is_wp_error( $r ) ) {
@@ -218,7 +218,7 @@ final class SDP_Collector {
 			}$rows[] = $r;
 			return true;
 		};
-		if ( $c['format'] === 'json' ) {
+		if ( 'json' === $c['format'] ) {
 			$data = json_decode( preg_replace( '/^\xEF\xBB\xBF/', '', $body ), true, 64, JSON_BIGINT_AS_STRING );
 			if ( ! is_array( $data ) ) {
 				return new WP_Error( 'json', 'JSON tidak valid.' );
@@ -283,14 +283,14 @@ final class SDP_Collector {
 				'timeout'             => 25,
 				'redirection'         => 0,
 				'limit_response_size' => SDP_Resource::cap( self::MAX_BYTES, 2097152 ) + 1,
-				'headers'             => array( 'Accept' => $c['format'] === 'json' ? 'application/json' : 'text/csv, text/plain, application/octet-stream' ),
+				'headers'             => array( 'Accept' => 'json' === $c['format'] ? 'application/json' : 'text/csv, text/plain, application/octet-stream' ),
 				'user-agent'          => 'SekolahDirectoryPro/2.0',
 			)
 		);
 		if ( is_wp_error( $res ) ) {
 			return $res;
 		}$status = wp_remote_retrieve_response_code( $res );
-		if ( $status !== 200 ) {
+		if ( 200 !== $status ) {
 			return new WP_Error( 'http', 'Sumber mengembalikan HTTP ' . $status . '.' );
 		}
 		$type = wp_remote_retrieve_header( $res, 'content-type' );
@@ -335,7 +335,7 @@ final class SDP_Collector {
 				array_push( $params, $r['npsn'], wp_json_encode( $r, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE ), $c['label'], $c['url'], $c['publish'], $c['policy'], 'pending', '', $now, $now );
 			} $sql = "INSERT INTO $t (npsn,payload,source_label,source_url,publish,policy,status,message,created_at,updated_at) VALUES " . implode( ',', $values );
 			$ok    = $wpdb->query( $wpdb->prepare( $sql, $params ) );
-			if ( $ok === false ) {
+			if ( false === $ok ) {
 				++$failed;
 				break;
 			}$count += (int) $ok;}
@@ -382,7 +382,7 @@ final class SDP_Collector {
 				),
 				array( 'id' => $j['id'] )
 			);
-			if ( $ok === false ) {
+			if ( false === $ok ) {
 				break;
 			}++$done;}
 		return "$done rekaman diproses.";
@@ -420,23 +420,23 @@ final class SDP_Collector {
 		}
 		$original_url = $c['url'];
 		$c['url']     = esc_url_raw( $c['url'], array( 'https' ) );
-		if ( $original_url !== '' && $c['url'] === '' ) {
+		if ( '' !== $original_url && '' === $c['url'] ) {
 			return new WP_Error( 'url', 'URL HTTPS tidak valid.' );
-		}if ( $c['url'] !== '' && ( ! preg_match( '~^https://~i', $c['url'] ) || ! wp_http_validate_url( $c['url'] ) || strlen( $c['url'] ) > 1000 ) ) {
+		}if ( '' !== $c['url'] && ( ! preg_match( '~^https://~i', $c['url'] ) || ! wp_http_validate_url( $c['url'] ) || strlen( $c['url'] ) > 1000 ) ) {
 			return new WP_Error( 'url', 'URL HTTPS publik tidak valid.' );
 		}
 		if ( trim( $c['label'] ) === '' || strlen( $c['label'] ) > 191 ) {
 			return new WP_Error( 'label', 'Nama sumber wajib, maksimal 191 byte.' );
 		}
 		$c['kind']     = in_array( $c['kind'], array( 'general', 'statistics', 'accreditation', 'madrasah' ), true ) ? $c['kind'] : 'general';
-		$c['format']   = $c['format'] === 'json' ? 'json' : 'csv';
-		$c['policy']   = $c['policy'] === 'overwrite' ? 'overwrite' : 'fill';
+		$c['format']   = 'json' === $c['format'] ? 'json' : 'csv';
+		$c['policy']   = 'overwrite' === $c['policy'] ? 'overwrite' : 'fill';
 		$c['publish']  = ! empty( $raw['publish'] ) && current_user_can( 'publish_posts' ) ? 1 : 0;
 		$c['schedule'] = ! empty( $raw['schedule'] ) ? 1 : 0;
 		if ( $c['schedule'] && ! $c['url'] ) {
 			return new WP_Error( 'schedule', 'Jadwal membutuhkan URL dataset.' );
 		}
-		if ( $c['mapping'] !== '' ) {
+		if ( '' !== $c['mapping'] ) {
 			$m = json_decode( $c['mapping'], true );
 			if ( ! is_array( $m ) ) {
 				return new WP_Error( 'mapping', 'Mapping harus objek JSON.' );
@@ -457,23 +457,23 @@ final class SDP_Collector {
 			function () use ( $op ) {
 				global $wpdb;
 				$t = self::table();
-				if ( $op === 'process' ) {
+				if ( 'process' === $op ) {
 					return self::process();
 				}
-				if ( $op === 'retry' ) {
+				if ( 'retry' === $op ) {
 					$n = $wpdb->query( "UPDATE $t SET status='pending', attempts=0 WHERE status='failed'" );
-					return $n === false ? new WP_Error( 'db', 'Gagal mengulang.' ) : "$n rekaman gagal diantrekan ulang.";}
-				if ( $op === 'clear' ) {
+					return false === $n ? new WP_Error( 'db', 'Gagal mengulang.' ) : "$n rekaman gagal diantrekan ulang.";}
+				if ( 'clear' === $op ) {
 					$n = $wpdb->query( "DELETE FROM $t WHERE status IN ('done','failed')" );
-					return $n === false ? new WP_Error( 'db', 'Gagal membersihkan log.' ) : "$n log selesai/gagal dihapus.";}
-				if ( $op === 'cancel' ) {
+					return false === $n ? new WP_Error( 'db', 'Gagal membersihkan log.' ) : "$n log selesai/gagal dihapus.";}
+				if ( 'cancel' === $op ) {
 					$n = $wpdb->query( "DELETE FROM $t WHERE status='pending'" );
-					return $n === false ? new WP_Error( 'db', 'Gagal membatalkan.' ) : "$n antrean dibatalkan; profil yang sudah tersimpan tidak dihapus.";}
+					return false === $n ? new WP_Error( 'db', 'Gagal membatalkan.' ) : "$n antrean dibatalkan; profil yang sudah tersimpan tidak dihapus.";}
 				$c = self::read_config();
 				if ( is_wp_error( $c ) ) {
 					return $c;
 				}
-				if ( $op === 'save' ) {
+				if ( 'save' === $op ) {
 					if ( $c['schedule'] && empty( $_POST['authorized'] ) ) {
 						return new WP_Error( 'permission', 'Konfirmasi izin penggunaan dataset sebelum mengaktifkan jadwal.' );
 					}update_option( 'sdp_collector_config', $c, false );
@@ -484,16 +484,16 @@ final class SDP_Collector {
 				if ( empty( $_POST['authorized'] ) ) {
 					return new WP_Error( 'permission', 'Konfirmasi izin penggunaan dataset terlebih dahulu.' );
 				}
-				if ( $op !== 'preview' && self::pending() ) {
+				if ( 'preview' !== $op && self::pending() ) {
 					return new WP_Error( 'pending', 'Selesaikan atau batalkan antrean saat ini sebelum menambah dataset.' );
 				}
 				$f       = $_FILES['dataset'] ?? array();
 				$hasfile = isset( $f['error'] ) && (int) $f['error'] !== UPLOAD_ERR_NO_FILE;
-				if ( $op === 'upload' || ( $op === 'preview' && $hasfile ) ) {
+				if ( 'upload' === $op || ( 'preview' === $op && $hasfile ) ) {
 					if ( ( $f['error'] ?? 1 ) !== UPLOAD_ERR_OK || ! is_uploaded_file( $f['tmp_name'] ?? '' ) || ( $f['size'] ?? 0 ) > SDP_Resource::cap( self::MAX_BYTES, 2097152 ) ) {
 						return new WP_Error( 'file', 'File tidak valid atau melebihi batas mode aktif.' );
 					}$body = file_get_contents( $f['tmp_name'] );
-					if ( $body === false ) {
+					if ( false === $body ) {
 						return new WP_Error( 'file', 'Gagal membaca file.' );
 					}
 				} else {
@@ -502,7 +502,7 @@ final class SDP_Collector {
 						return $body;
 					}
 				}
-				if ( $op === 'preview' ) {
+				if ( 'preview' === $op ) {
 					$p = self::parse( $body, $c );
 					if ( is_wp_error( $p ) ) {
 						return $p;
@@ -518,7 +518,7 @@ final class SDP_Collector {
 						300
 					);
 					return 'Pratinjau siap; belum ada profil yang diubah.';}
-				if ( $op === 'remote' ) {
+				if ( 'remote' === $op ) {
 					update_option( 'sdp_collector_last_attempt', time(), false );
 				}return self::stage( $body, $c );
 			}

@@ -183,11 +183,11 @@ final class SDP_Production {
 		if ( ( $_SERVER['REQUEST_METHOD'] ?? '' ) === 'POST' ) {
 			check_admin_referer( 'sdp90_readiness' );
 			$op = $_POST['op'] ?? '';
-			if ( $op === 'audit' ) {
+			if ( 'audit' === $op ) {
 				$result = self::audit( is_string( $_POST['after'] ?? null ) ? wp_unslash( $_POST['after'] ) : '' );
-			} elseif ( $op === 'repair' && ( $_POST['backup'] ?? '' ) === '1' && self::safe() ) {
+			} elseif ( 'repair' === $op && ( $_POST['backup'] ?? '' ) === '1' && self::safe() ) {
 				$r   = SDP_Collector::lock( fn()=>SDP_Directory::install_schema() );
-				$msg = $r === true ? 'Schema inti diperiksa dan marker diperbarui.' : 'Pemeriksaan/perbaikan gagal atau kolektor sedang sibuk.';
+				$msg = true === $r ? 'Schema inti diperiksa dan marker diperbarui.' : 'Pemeriksaan/perbaikan gagal atau kolektor sedang sibuk.';
 			} else {
 				$msg = 'Tindakan tidak valid, mode darurat belum aktif, atau konfirmasi cadangan belum diisi.';
 			}

@@ -33,17 +33,17 @@ final class SDP_Engine {
 				return new WP_Error( 'filter', 'Filter terlalu panjang.' );
 			}
 		}
-		if ( $f['provinsi'] === '' ) {
+		if ( '' === $f['provinsi'] ) {
 			return new WP_Error( 'filter', 'Pilih minimal satu provinsi (nama persis di database).' );
 		}
-		if ( $f['kecamatan'] !== '' && $f['kabupaten'] === '' ) {
+		if ( '' !== $f['kecamatan'] && '' === $f['kabupaten'] ) {
 			return new WP_Error( 'filter', 'Kecamatan memerlukan kabupaten/kota.' );
 		}
-		if ( $f['jenjang'] !== '' && ! in_array( $f['jenjang'], SDP_Directory::levels(), true ) ) {
+		if ( '' !== $f['jenjang'] && ! in_array( $f['jenjang'], SDP_Directory::levels(), true ) ) {
 			return new WP_Error( 'filter', 'Jenjang tidak valid.' );
 		}
 		$f['after'] = strtoupper( $f['after'] );
-		if ( $f['after'] !== '' && ! self::valid_npsn( $f['after'] ) ) {
+		if ( '' !== $f['after'] && ! self::valid_npsn( $f['after'] ) ) {
 			return new WP_Error( 'filter', 'Cursor NPSN tidak valid.' );
 		}
 		$limit = $raw['limit'] ?? 20;
@@ -58,11 +58,11 @@ final class SDP_Engine {
 		$sql  = "SELECT s.npsn,s.nama,s.jenjang,s.kabupaten,s.kecamatan FROM $t s JOIN {$wpdb->posts} p ON p.ID=s.post_id WHERE p.post_type=%s AND p.post_status IN ('publish','draft','pending') AND p.post_password='' AND s.npsn NOT LIKE %s AND s.npsn NOT LIKE %s AND s.npsn NOT LIKE %s";
 		$args = array( SDP_Directory::TYPE, 'DEMO%', 'SIMU%', 'TEST%' );
 		foreach ( array( 'provinsi', 'kabupaten', 'kecamatan', 'jenjang' ) as $k ) {
-			if ( $f[ $k ] !== '' ) {
+			if ( '' !== $f[ $k ] ) {
 				$sql   .= " AND s.$k=%s";
 				$args[] = $f[ $k ];}
 		}
-		if ( $f['after'] !== '' ) {
+		if ( '' !== $f['after'] ) {
 			$sql   .= ' AND s.npsn>%s';
 			$args[] = $f['after'];}
 		$sql   .= ' ORDER BY s.npsn LIMIT %d';
@@ -131,7 +131,7 @@ final class SDP_Engine {
 		}
 		$out = array( 'npsn' => $old['npsn'] );
 		foreach ( self::FIELDS as $k ) {
-			if ( ( ! isset( $old[ $k ] ) || $old[ $k ] === '' ) && SDP_SEO::present( $remote, $k ) ) {
+			if ( ( ! isset( $old[ $k ] ) || '' === $old[ $k ] ) && SDP_SEO::present( $remote, $k ) ) {
 				$out[ $k ] = $remote[ $k ];
 			}
 		}return $out;
@@ -143,11 +143,11 @@ final class SDP_Engine {
 		if ( ! empty( $wpdb->last_error ) ) {
 			return new WP_Error( 'database', 'Gagal membaca profil.' );
 		}
-		if ( ! $r || $r['post_type'] !== SDP_Directory::TYPE || ! in_array( $r['post_status'], array( 'publish', 'draft', 'pending' ), true ) || $r['post_password'] !== '' ) {
+		if ( ! $r || $r['post_type'] !== SDP_Directory::TYPE || ! in_array( $r['post_status'], array( 'publish', 'draft', 'pending' ), true ) || '' !== $r['post_password'] ) {
 			return null;
 		}
 		foreach ( array( 'provinsi', 'kabupaten', 'kecamatan', 'jenjang' ) as $k ) {
-			if ( $f[ $k ] !== '' && self::name_key( $r[ $k ] ) !== self::name_key( $f[ $k ] ) ) {
+			if ( '' !== $f[ $k ] && self::name_key( $r[ $k ] ) !== self::name_key( $f[ $k ] ) ) {
 				return null;
 			}
 		}
@@ -162,14 +162,14 @@ final class SDP_Engine {
 		if ( empty( $s['ids'] ) || ! isset( $s['pos'], $s['status'] ) ) {
 			return new WP_Error( 'campaign', 'Belum ada kampanye.' );
 		}
-		if ( $op === 'pause' && $s['status'] === 'running' ) {
+		if ( 'pause' === $op && 'running' === $s['status'] ) {
 			$s['status'] = 'paused';
-		} elseif ( $op === 'resume' && $s['status'] === 'paused' ) {
+		} elseif ( 'resume' === $op && 'paused' === $s['status'] ) {
 			$s['status'] = 'running';
 			$s['error']  = '';
-		} elseif ( $op === 'skip' && $s['status'] === 'paused' ) {
+		} elseif ( 'skip' === $op && 'paused' === $s['status'] ) {
 			$s = self::advance( $s, 'skipped', 'Dilewati administrator.' );
-		} elseif ( $op === 'cancel' && in_array( $s['status'], array( 'running', 'paused' ), true ) ) {
+		} elseif ( 'cancel' === $op && in_array( $s['status'], array( 'running', 'paused' ), true ) ) {
 			$s['status'] = 'cancelled';
 			$s['auto']   = false;
 		} else {
@@ -212,7 +212,7 @@ final class SDP_Engine {
 		if ( is_wp_error( $old ) ) {
 			return self::halt( $s, $old );
 		}
-		if ( $old === null ) {
+		if ( null === $old ) {
 			$r = self::store( self::advance( $s, 'skipped', 'Profil sudah tidak memenuhi filter atau bukan profil terbuka.' ) );
 			return is_wp_error( $r ) ? $r : 'Profil dilewati.';}
 		if ( get_transient( 'sdp_reference_rate' ) ) {
@@ -271,7 +271,7 @@ final class SDP_Engine {
 		$r   = SDP_Collector::lock(
 			function () use ( $op, $key ) {
 				$s = self::state();
-				if ( $op === 'preview' ) {
+				if ( 'preview' === $op ) {
 					$f = self::filters( wp_unslash( $_POST['filter'] ?? array() ) );
 					if ( is_wp_error( $f ) ) {
 						return $f;
@@ -284,7 +284,7 @@ final class SDP_Engine {
 				if ( in_array( $op, array( 'start', 'resume', 'step' ), true ) && empty( $_POST['authorized'] ) ) {
 					return new WP_Error( 'permission', 'Konfirmasi bahwa akses otomatis dan penggunaan ulang data diizinkan sumber.' );
 				}
-				if ( $op === 'start' ) {
+				if ( 'start' === $op ) {
 					if ( in_array( $s['status'] ?? '', array( 'running', 'paused' ), true ) ) {
 						return new WP_Error( 'active', 'Selesaikan atau batalkan kampanye lama.' );
 					}$p = get_transient( $key );
@@ -298,7 +298,7 @@ final class SDP_Engine {
 						return $saved;
 					}delete_transient( $key );
 					return 'Kampanye dibuat. Proses manual atau jadwal yang dipilih.';}
-				if ( $op === 'step' ) {
+				if ( 'step' === $op ) {
 					return self::step();
 				}
 				if ( in_array( $op, array( 'pause', 'resume', 'skip', 'cancel' ), true ) ) {
@@ -350,7 +350,7 @@ final class SDP_Engine {
 			'kecamatan' => 'Kecamatan',
 			'after'     => 'Mulai setelah NPSN (opsional)',
 		) as $k => $v ) {
-			echo '<p><label>' . esc_html( $v ) . ' <input name="filter[' . esc_attr( $k ) . ']" value="' . esc_attr( $f[ $k ] ?? '' ) . '" ' . ( $k === 'provinsi' ? 'required' : '' ) . '></label></p>';
+			echo '<p><label>' . esc_html( $v ) . ' <input name="filter[' . esc_attr( $k ) . ']" value="' . esc_attr( $f[ $k ] ?? '' ) . '" ' . ( 'provinsi' === $k ? 'required' : '' ) . '></label></p>';
 		}
 		echo '<p><label>Jenjang <select name="filter[jenjang]"><option value="">Semua</option>';
 		foreach ( SDP_Directory::levels() as $v ) {
@@ -382,7 +382,7 @@ final class SDP_Engine {
 		if ( in_array( $s['status'], array( 'running', 'paused' ), true ) ) {
 			self::form();
 			self::consent();
-			if ( $s['status'] === 'running' ) {
+			if ( 'running' === $s['status'] ) {
 				echo '<button class="button button-primary" name="op" value="step">Proses 1 profil</button> <button class="button" name="op" value="pause">Jeda</button>';
 			} else {
 				echo '<button class="button button-primary" name="op" value="resume">Lanjutkan / coba ulang</button> <button class="button" name="op" value="skip">Lewati kandidat</button>';

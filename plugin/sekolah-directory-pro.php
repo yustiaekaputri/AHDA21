@@ -223,7 +223,7 @@ final class SDP_Directory {
 				continue;
 			}
 			$v = trim( (string) $raw[ $key ] );
-			if ( $v === '' ) {
+			if ( '' === $v ) {
 				continue;
 			}
 			if ( in_array( $key, self::integers(), true ) ) {
@@ -236,7 +236,7 @@ final class SDP_Directory {
 					return new WP_Error( 'invalid', "$label harus berupa angka dengan titik desimal." );
 				}
 				$num = (float) $v;
-				if ( ( $key === 'latitude' && abs( $num ) > 90 ) || ( $key === 'longitude' && abs( $num ) > 180 ) || ( str_starts_with( $key, 'luas_' ) && $num < 0 ) ) {
+				if ( ( 'latitude' === $key && abs( $num ) > 90 ) || ( 'longitude' === $key && abs( $num ) > 180 ) || ( str_starts_with( $key, 'luas_' ) && $num < 0 ) ) {
 					return new WP_Error( 'invalid', "$label di luar rentang yang valid." );
 				}
 			} elseif ( in_array( $key, array( 'website', 'sumber_url', 'sertifikat_url' ), true ) ) {
@@ -244,33 +244,33 @@ final class SDP_Directory {
 				if ( ! $v || ! preg_match( '~^https?://~i', $v ) ) {
 					return new WP_Error( 'invalid', "$label harus berupa URL HTTP/HTTPS." );
 				}
-			} elseif ( $key === 'email' ) {
+			} elseif ( 'email' === $key ) {
 				if ( ! is_email( $v ) ) {
 					return new WP_Error( 'invalid', 'Email tidak valid.' );
 				} $v = sanitize_email( $v );
 			} else {
 				$v = in_array( $key, $long, true ) ? sanitize_textarea_field( $v ) : sanitize_text_field( $v ); }
-			if ( $key === 'jenjang' ) {
+			if ( 'jenjang' === $key ) {
 				$levels = array_combine( array_map( 'strtoupper', self::levels() ), self::levels() );
 				$v      = $levels[ strtoupper( $v ) ] ?? $v; }
-			if ( $key === 'status' ) {
+			if ( 'status' === $key ) {
 				$v = ucfirst( strtolower( $v ) ); }
-			if ( $key === 'akreditasi' ) {
+			if ( 'akreditasi' === $key ) {
 				$v = strtoupper( $v ); }
 			$max = in_array( $key, $long, true ) ? 10000 : 1000;
-			if ( $key === 'nama' ) {
+			if ( 'nama' === $key ) {
 				$max = 191;
 			} elseif ( in_array( $key, array( 'provinsi', 'kabupaten', 'kecamatan' ), true ) ) {
 				$max = 120;
 			} elseif ( in_array( $key, array( 'jenjang', 'akreditasi' ), true ) ) {
 				$max = 32;
-			} elseif ( $key === 'status' ) {
+			} elseif ( 'status' === $key ) {
 				$max = 24;
 			}
 			if ( strlen( $v ) > $max ) {
 				return new WP_Error( 'invalid', "$label terlalu panjang (maksimum $max byte)." );
 			}
-			if ( $v !== '' ) {
+			if ( '' !== $v ) {
 				$data[ $key ] = $v;
 			}
 		}
@@ -287,7 +287,7 @@ final class SDP_Directory {
 		return get_post_type( $post ?: null ) === self::TYPE ? self::literal_text( $html ) : $html;
 	}
 	public static function value( $d, $key ) {
-		return isset( $d[ $key ] ) && $d[ $key ] !== '' ? (string) $d[ $key ] : 'Data belum tersedia'; }
+		return isset( $d[ $key ] ) && '' !== $d[ $key ] ? (string) $d[ $key ] : 'Data belum tersedia'; }
 	public static function profile( $d ) {
 		$name  = self::value( $d, 'nama' );
 		$place = implode( ', ', array_filter( array( $d['kecamatan'] ?? '', $d['kabupaten'] ?? '', $d['provinsi'] ?? '' ) ) );
@@ -367,7 +367,7 @@ final class SDP_Directory {
 				return $relation;
 			}
 			// Enrichment may only update a still-existing, unchanged identity; never recreate a deleted profile.
-			if ( $expected !== null ) {
+			if ( null !== $expected ) {
 				if ( ! $existing || empty( $existing['post_id'] ) || get_post_type( (int) $existing['post_id'] ) !== self::TYPE ) {
 					return new WP_Error( 'identity', 'Profil asal sudah tidak tersedia.' );
 				}
@@ -377,7 +377,7 @@ final class SDP_Directory {
 					}
 				}
 				$p = get_post( (int) $existing['post_id'] );
-				if ( ! $p || ! in_array( $p->post_status, array( 'publish', 'draft', 'pending' ), true ) || $p->post_password !== '' ) {
+				if ( ! $p || ! in_array( $p->post_status, array( 'publish', 'draft', 'pending' ), true ) || '' !== $p->post_password ) {
 					return new WP_Error( 'identity', 'Status atau privasi profil berubah saat diproses.' );
 				}
 			}
@@ -388,10 +388,10 @@ final class SDP_Directory {
 			$d       = $old;
 			$sources = is_array( $old['_field_sources'] ?? null ) ? $old['_field_sources'] : array();
 			foreach ( $clean as $k => $v ) {
-				if ( $policy === 'fill' && isset( $old[ $k ] ) && $old[ $k ] !== '' ) {
+				if ( 'fill' === $policy && isset( $old[ $k ] ) && '' !== $old[ $k ] ) {
 					continue;
 				}
-				if ( $k !== 'npsn' && ! in_array( $k, array( 'sumber', 'sumber_url', 'tanggal_data' ), true ) && ( ! isset( $old[ $k ] ) || $old[ $k ] !== $v || ! isset( $sources[ $k ] ) ) ) {
+				if ( 'npsn' !== $k && ! in_array( $k, array( 'sumber', 'sumber_url', 'tanggal_data' ), true ) && ( ! isset( $old[ $k ] ) || $old[ $k ] !== $v || ! isset( $sources[ $k ] ) ) ) {
 					$sources[ $k ] = array(
 						'label'     => $provenance['label'] ?? ( $clean['sumber'] ?? 'Input admin / CSV' ),
 						'url'       => $provenance['url'] ?? ( $clean['sumber_url'] ?? '' ),
@@ -410,14 +410,14 @@ final class SDP_Directory {
 			$id         = (int) ( $existing['post_id'] ?? 0 );
 			$old_status = $id ? get_post_status( $id ) : '';
 			$status     = SDP_SEO::status( $d, in_array( $old_status, array( 'publish', 'draft', 'pending', 'private', 'future', 'trash' ), true ) ? $old_status : 'draft', $publish );
-			if ( $provenance !== null && $existing && $id && $id === (int) $existing['post_id'] && $old === $d && $old_status === $status ) {
+			if ( null !== $provenance && $existing && $id && $id === (int) $existing['post_id'] && $old === $d && $old_status === $status ) {
 				SDP_SEO::sync( $id, $d );
 				SDP_Analytics::record( $clean, $provenance );
 				return array(
 					'id'        => $id,
 					'updated'   => true,
 					'unchanged' => true,
-					'held'      => ( $publish && $status !== 'publish' ),
+					'held'      => ( $publish && 'publish' !== $status ),
 				); }
 			$post = array(
 				'post_type'    => self::TYPE,
@@ -453,7 +453,7 @@ final class SDP_Directory {
 				return new WP_Error( 'database', 'Artikel tersimpan tetapi indeks gagal. Jangan impor ulang sebelum audit dan pemulihan.' );
 			}
 			// Never publish a new post before the index write succeeds.
-			if ( ! $id && $status !== 'draft' ) {
+			if ( ! $id && 'draft' !== $status ) {
 				$published = wp_update_post(
 					array(
 						'ID'          => (int) $result,
@@ -474,7 +474,7 @@ final class SDP_Directory {
 			return array(
 				'id'      => $result,
 				'updated' => (bool) $id,
-				'held'    => ( $publish && $status !== 'publish' ),
+				'held'    => ( $publish && 'publish' !== $status ),
 			);
 		} finally {
 			$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock ) ); }
@@ -589,7 +589,7 @@ final class SDP_Directory {
 		}
 		try {
 			$first = fgets( $fp );
-			if ( $first === false ) {
+			if ( false === $first ) {
 				return new WP_Error( 'empty', 'CSV kosong.' );
 			} rewind( $fp );
 			$first     = preg_replace( '/^\xEF\xBB\xBF/', '', $first );
@@ -671,7 +671,7 @@ final class SDP_Directory {
 		} global $wpdb;
 		$npsn = sanitize_text_field( wp_unslash( $_GET['npsn'] ?? '' ) );
 		$d    = array();
-		if ( $npsn !== '' ) {
+		if ( '' !== $npsn ) {
 			$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::table() . ' WHERE npsn=%s', strtoupper( $npsn ) ), ARRAY_A );
 			if ( $row ) {
 				$d = json_decode( $row['payload'], true ) ?: array();
@@ -684,13 +684,13 @@ final class SDP_Directory {
 		foreach ( self::fields() as $section => $fields ) {
 			echo '<h2>' . esc_html( $section ) . '</h2><table class="form-table">';
 			foreach ( $fields as $key => $label ) {
-				$v  = $d[ $key ] ?? ( $key === 'npsn' ? $npsn : '' );
+				$v  = $d[ $key ] ?? ( 'npsn' === $key ? $npsn : '' );
 				$id = 'sdp-' . $key;
 				echo '<tr><th><label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label></th><td>';
 				if ( in_array( $key, array( 'visi', 'misi', 'sejarah', 'tujuan', 'prestasi', 'spmb', 'ekstrakurikuler', 'jurusan', 'mitra_industri', 'biaya', 'beasiswa' ), true ) ) {
 					echo '<textarea class="large-text" rows="3" id="' . esc_attr( $id ) . '" name="school[' . esc_attr( $key ) . ']">' . esc_textarea( $v ) . '</textarea>';
 				} else {
-					echo '<input class="regular-text" id="' . esc_attr( $id ) . '" name="school[' . esc_attr( $key ) . ']" value="' . esc_attr( $v ) . '" ' . ( in_array( $key, array( 'npsn', 'nama' ), true ) ? 'required' : '' ) . ( $key === 'npsn' && ! empty( $d ) ? ' readonly' : '' ) . '>';
+					echo '<input class="regular-text" id="' . esc_attr( $id ) . '" name="school[' . esc_attr( $key ) . ']" value="' . esc_attr( $v ) . '" ' . ( in_array( $key, array( 'npsn', 'nama' ), true ) ? 'required' : '' ) . ( 'npsn' === $key && ! empty( $d ) ? ' readonly' : '' ) . '>';
 				}
 				echo '</td></tr>';
 			} echo '</table>'; }

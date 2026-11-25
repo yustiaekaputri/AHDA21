@@ -60,7 +60,7 @@ function sdtheme_ready() {
 	return shortcode_exists( 'direktori_sekolah' ); }
 function sdtheme_public_page( $id, $shortcodes = array() ) {
 	$p = get_post( (int) $id );
-	if ( ! $p || $p->post_type !== 'page' || $p->post_status !== 'publish' || $p->post_password !== '' ) {
+	if ( ! $p || 'page' !== $p->post_type || 'publish' !== $p->post_status || '' !== $p->post_password ) {
 		return 0;
 	}
 	if ( ! $shortcodes ) {

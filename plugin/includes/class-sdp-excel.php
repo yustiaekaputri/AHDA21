@@ -35,7 +35,7 @@ final class SDP_Excel {
 		}return $v;}
 	private static function part( $zip, $name, $max, $optional = false ) {
 		$s = $zip->statName( $name );
-		if ( $s === false ) {
+		if ( false === $s ) {
 			if ( $optional ) {
 				return null;
 			}throw new RuntimeException( 'Bagian XLSX tidak ditemukan: ' . $name );
@@ -86,7 +86,7 @@ final class SDP_Excel {
 			}
 		}return self::check_text( $v );}
 	private static function strings( $xml, $max ) {
-		if ( $xml === null ) {
+		if ( null === $xml ) {
 			return array();
 		}return self::scan(
 			$xml,
@@ -120,7 +120,7 @@ final class SDP_Excel {
 		if ( $formula || in_array( $type, array( 'e', 'str' ), true ) ) {
 			throw new RuntimeException( 'Formula atau sel error tidak didukung. Salin sebagai nilai di Excel sebelum impor.' );
 		}
-		if ( $type === 's' ) {
+		if ( 's' === $type ) {
 			if ( ! preg_match( '/^\d{1,9}$/D', $value ) || ! array_key_exists( (int) $value, $strings ) ) {
 				throw new RuntimeException( 'Indeks shared string tidak valid.' );
 			}$value = $strings[ (int) $value ];
@@ -171,7 +171,7 @@ final class SDP_Excel {
 						}$a = self::row( $r, $strings );
 						if ( ! array_filter( $a, fn( $v )=>trim( $v ) !== '' ) ) {
 								continue;
-						}if ( $keys === null ) {
+						}if ( null === $keys ) {
 							$line = self::dense( $a, max( array_keys( $a ) ) + 1 );
 							while ( count( $line ) && trim( end( $line ) ) === '' ) {
 								array_pop( $line );
@@ -241,7 +241,7 @@ final class SDP_Excel {
 					$target = null;
 					while ( $r->read() ) {
 						if ( self::element( $r, 'Relationship', 'http://schemas.openxmlformats.org/package/2006/relationships' ) && $r->getAttribute( 'Id' ) === $id ) {
-							if ( $target !== null || $r->getAttribute( 'TargetMode' ) === 'External' || $r->getAttribute( 'Type' ) !== 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet' ) {
+							if ( null !== $target || $r->getAttribute( 'TargetMode' ) === 'External' || $r->getAttribute( 'Type' ) !== 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet' ) {
 								throw new RuntimeException( 'Relasi sheet tidak aman.' );
 							}$target = $r->getAttribute( 'Target' );
 						}
@@ -250,7 +250,7 @@ final class SDP_Excel {
 			);
 			if ( ! is_string( $target ) || ! preg_match( '~^(?:/xl/)?worksheets/[A-Za-z0-9_.-]+\.xml$~D', $target ) ) {
 				throw new RuntimeException( 'Lokasi worksheet tidak didukung.' );
-			}$target = $target[0] === '/' ? substr( $target, 1 ) : 'xl/' . $target;
+			}$target = '/' === $target[0] ? substr( $target, 1 ) : 'xl/' . $target;
 			$shared  = self::strings( self::part( $zip, 'xl/sharedStrings.xml', $limits['xml'], true ), $limits['strings'] );
 			return self::worksheet( self::part( $zip, $target, $limits['xml'] ), $shared, $limits );
 		} catch ( Throwable $e ) {
@@ -283,7 +283,7 @@ final class SDP_Excel {
 				),
 			)
 		);
-		if ( empty( $_POST['authorized'] ) || ( $f['error'] ?? 1 ) !== UPLOAD_ERR_OK || ! is_string( $path ) || ! is_string( $name ) || $sheet === false || ! is_uploaded_file( $path ) || strtolower( pathinfo( $name, PATHINFO_EXTENSION ) ) !== 'xlsx' ) {
+		if ( empty( $_POST['authorized'] ) || ( $f['error'] ?? 1 ) !== UPLOAD_ERR_OK || ! is_string( $path ) || ! is_string( $name ) || false === $sheet || ! is_uploaded_file( $path ) || strtolower( pathinfo( $name, PATHINFO_EXTENSION ) ) !== 'xlsx' ) {
 			wp_die( 'Izin atau file XLSX tidak valid.' );
 		}
 		$body = self::convert( $path, $sheet );

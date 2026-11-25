@@ -13,7 +13,7 @@ final class SDP_Missing {
 	public static function filters( $raw ) {
 		return SDP_Engine::filters( $raw );}
 	public static function blank( $d, $k ) {
-		return ! isset( $d[ $k ] ) || $d[ $k ] === '';}
+		return ! isset( $d[ $k ] ) || '' === $d[ $k ];}
 	public static function inspect( $row, $now ) {
 		$d  = json_decode( $row['payload'] ?? '', true );
 		$id = $row['npsn'] ?? null;
@@ -88,11 +88,11 @@ final class SDP_Missing {
 		$sql  = "SELECT s.npsn,s.nama,s.jenjang,s.kabupaten,s.kecamatan,s.payload,s.updated_at FROM $t s JOIN {$wpdb->posts} p ON p.ID=s.post_id WHERE p.post_type=%s AND p.post_status IN ('publish','draft','pending') AND p.post_password='' AND s.npsn NOT LIKE %s AND s.npsn NOT LIKE %s AND s.npsn NOT LIKE %s";
 		$args = array( SDP_Directory::TYPE, 'DEMO%', 'SIMU%', 'TEST%' );
 		foreach ( array( 'provinsi', 'kabupaten', 'kecamatan', 'jenjang' ) as $k ) {
-			if ( $f[ $k ] !== '' ) {
+			if ( '' !== $f[ $k ] ) {
 				$sql   .= " AND s.$k=%s";
 				$args[] = $f[ $k ];
 			}
-		}if ( $f['after'] !== '' ) {
+		}if ( '' !== $f['after'] ) {
 			$sql   .= ' AND s.npsn>%s';
 			$args[] = $f['after'];
 		}$sql  .= ' ORDER BY s.npsn LIMIT %d';
@@ -104,7 +104,7 @@ final class SDP_Missing {
 		$more = count( $raw ) > $f['limit'];
 		$raw  = array_slice( $raw, 0, $f['limit'] );
 		$next = $more ? end( $raw )['npsn'] : '';
-		if ( $next !== '' && ! SDP_Engine::valid_npsn( $next ) ) {
+		if ( '' !== $next && ! SDP_Engine::valid_npsn( $next ) ) {
 			return new WP_Error( 'identity', 'Cursor tidak valid. Periksa indeks.' );
 		}
 		$rows    = array();
@@ -119,7 +119,7 @@ final class SDP_Missing {
 			if ( is_wp_error( $a ) ) {
 				++$invalid;
 				continue;
-			}if ( $a === null ) {
+			}if ( null === $a ) {
 				++$demo;
 				continue;
 			}$rows[] = $a;
@@ -127,7 +127,7 @@ final class SDP_Missing {
 				++$counts[ $k ];
 			}foreach ( $a['groups'] as $k => $n ) {
 				$groups[ $k ] += $n;
-			}if ( $a['age'] === null ) {
+			}if ( null === $a['age'] ) {
 				++$unknown;
 			} elseif ( $a['age'] >= 180 ) {
 				++$stale;
@@ -179,7 +179,7 @@ final class SDP_Missing {
 		if ( is_wp_error( $p ) ) {
 			wp_die( esc_html( $p->get_error_message() ) );
 		}$op = $_POST['op'] ?? '';
-		if ( $op === 'csv' ) {
+		if ( 'csv' === $op ) {
 			nocache_headers();
 			header( 'Content-Type: text/csv; charset=UTF-8' );
 			header( 'Content-Disposition: attachment; filename="sdp-kelengkapan.csv"' );
@@ -188,7 +188,7 @@ final class SDP_Missing {
 			self::csv( $fp, $p );
 			fclose( $fp );
 			exit;}
-		if ( $op === 'engine' ) {
+		if ( 'engine' === $op ) {
 			$v = self::engine_preview( $p );
 			if ( is_wp_error( $v ) ) {
 				wp_die( esc_html( $v->get_error_message() ) );
@@ -217,7 +217,7 @@ final class SDP_Missing {
 			'after'     => 'Mulai setelah NPSN',
 		) as $k => $label ) {
 			$v = $input[ $k ] ?? '';
-			echo '<p><label>' . esc_html( $label ) . ' <input name="filter[' . esc_attr( $k ) . ']" value="' . esc_attr( is_scalar( $v ) ? (string) $v : '' ) . '" ' . ( $k === 'provinsi' ? 'required' : '' ) . '></label></p>';}
+			echo '<p><label>' . esc_html( $label ) . ' <input name="filter[' . esc_attr( $k ) . ']" value="' . esc_attr( is_scalar( $v ) ? (string) $v : '' ) . '" ' . ( 'provinsi' === $k ? 'required' : '' ) . '></label></p>';}
 		echo '<p><label>Jenjang <select name="filter[jenjang]"><option value="">Semua</option>';
 		foreach ( SDP_Directory::levels() as $v ) {
 			echo '<option value="' . esc_attr( $v ) . '" ' . selected( $input['jenjang'] ?? '', $v, false ) . '>' . esc_html( $v ) . '</option>';
@@ -251,7 +251,7 @@ final class SDP_Missing {
 				} else {
 					echo '<br><a href="' . esc_url( add_query_arg( 'npsn', $r['npsn'], admin_url( 'admin.php?page=sdp-discovery' ) ) ) . '">Temukan website</a>';
 				}
-				echo '</td><td>' . esc_html( $r['age'] === null ? 'Tidak diketahui' : $r['age'] . ' hari' ) . '</td></tr>';
+				echo '</td><td>' . esc_html( null === $r['age'] ? 'Tidak diketahui' : $r['age'] . ' hari' ) . '</td></tr>';
 			}echo '</tbody></table>';}
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp_missing">';
 		wp_nonce_field( 'sdp_missing' );
@@ -260,7 +260,7 @@ final class SDP_Missing {
 		if ( ! is_wp_error( self::engine_preview( $p ) ) ) {
 			echo '<button class="button" name="op" value="engine">Kirim kandidat ke pratinjau Mesin Pengayaan</button>';
 		}echo '</p></form><p>Ekspor dan pratinjau membaca ulang batch. Tidak memulai kampanye atau mengubah profil.</p>';
-		if ( $p['next'] !== '' ) {
+		if ( '' !== $p['next'] ) {
 			$next          = $f;
 			$next['after'] = $p['next'];
 			echo '<form method="get" action="' . esc_url( admin_url( 'admin.php' ) ) . '"><input type="hidden" name="page" value="sdp-missing">';

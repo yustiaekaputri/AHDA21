@@ -62,7 +62,7 @@ final class SDP_Intelligence {
 		return is_string( $p ) && self::period( $p ) ? $p : '';}
 	public static function period_note( $d, $k ) {
 		$p = self::field_period( $d, $k );
-		if ( $p !== '' ) {
+		if ( '' !== $p ) {
 			return ' (periode atribut: ' . $p . ')';
 		}if ( isset( self::state( $d )['locks'][ $k ] ) && in_array( $k, array_merge( self::STATS, self::ACC ), true ) ) {
 			return ' (periode atribut belum diketahui)';
@@ -72,15 +72,15 @@ final class SDP_Intelligence {
 			return 0;
 		}
 		if ( in_array( $field, self::ACC, true ) ) {
-			return $type === 'akreditasi' ? 3 : ( in_array( $type, array( 'referensi', 'madrasah' ), true ) ? 2 : 1 );
+			return 'akreditasi' === $type ? 3 : ( in_array( $type, array( 'referensi', 'madrasah' ), true ) ? 2 : 1 );
 		}
 		if ( in_array( $field, self::STATS, true ) ) {
-			return $type === 'statistik' ? 3 : ( in_array( $type, array( 'referensi', 'madrasah' ), true ) ? 2 : 1 );
+			return 'statistik' === $type ? 3 : ( in_array( $type, array( 'referensi', 'madrasah' ), true ) ? 2 : 1 );
 		}
 		if ( in_array( $field, SDP_Website::FIELDS, true ) ) {
 			return in_array( $type, array( 'website', 'operator' ), true ) ? 3 : 1;
 		}
-		return in_array( $type, array( 'referensi', 'madrasah' ), true ) ? 3 : ( $type === 'operator' ? 2 : 1 );
+		return in_array( $type, array( 'referensi', 'madrasah' ), true ) ? 3 : ( 'operator' === $type ? 2 : 1 );
 	}
 	public static function relevant( $d ) {
 		$fields = SDP_Directory::labels();
@@ -134,7 +134,7 @@ final class SDP_Intelligence {
 			return new WP_Error( 'review', 'URL bukti HTTP/HTTPS wajib tanpa kredensial.' );
 		}
 		$p = trim( $raw['period'] );
-		if ( $p !== '' && ! self::period( $p ) ) {
+		if ( '' !== $p && ! self::period( $p ) ) {
 			return new WP_Error( 'review', 'Gunakan YYYY atau YYYY/YYYY ganjil/genap; kosongkan bila tidak diketahui.' );
 		}
 		$note = sanitize_textarea_field( $raw['note'] );
@@ -174,7 +174,7 @@ final class SDP_Intelligence {
 	/** Called only under the existing per-NPSN SQL lock. */
 	public static function guard( $old, $clean, $policy, $review ) {
 		$s = self::state( $old );
-		if ( $review !== null ) {
+		if ( null !== $review ) {
 			if ( ! is_array( $review ) || ! isset( $review['snapshot'], $review['candidate'] ) || ! hash_equals( self::snapshot( $old ), (string) $review['snapshot'] ) ) {
 				return new WP_Error( 'review', 'Profil berubah; pratinjau ulang.' );
 			}$c = $review['candidate'];
@@ -182,7 +182,7 @@ final class SDP_Intelligence {
 			if ( count( $clean ) !== 2 || ! isset( $clean[ $f ] ) || $clean[ $f ] !== $c['value'] ) {
 				return new WP_Error( 'review', 'Kandidat tidak sesuai.' );
 			}return true;}
-		if ( $policy === 'fill' ) {
+		if ( 'fill' === $policy ) {
 			return true;
 		}
 		foreach ( array(
@@ -258,7 +258,7 @@ final class SDP_Intelligence {
 					}
 				}
 			}unset( $e );}
-		if ( ! $review && $policy === 'fill' ) {
+		if ( ! $review && 'fill' === $policy ) {
 			foreach ( self::fields() as $k => $label ) {
 				if ( ! isset( $clean[ $k ] ) || ! SDP_SEO::present( $old, $k ) || $old[ $k ] === $clean[ $k ] || ! SDP_SEO::present( $clean, $k ) ) {
 					continue;
@@ -316,7 +316,7 @@ final class SDP_Intelligence {
 			wp_die( esc_html( $d->get_error_message() ) );
 		}$key = 'sdp63_review_' . get_current_user_id();
 		$op   = $_POST['op'] ?? '';
-		if ( $op === 'preview' ) {
+		if ( 'preview' === $op ) {
 			$c = self::validate( wp_unslash( $_POST['candidate'] ?? array() ), $id );
 			if ( is_wp_error( $c ) ) {
 				wp_die( esc_html( $c->get_error_message() ) );
@@ -332,7 +332,7 @@ final class SDP_Intelligence {
 			) ) {
 				wp_die( 'Gagal menyimpan pratinjau.' );
 			}
-		} elseif ( $op === 'approve' ) {
+		} elseif ( 'approve' === $op ) {
 			$p = get_transient( $key );
 			if ( ! is_array( $p ) || ( $p['id'] ?? null ) !== $id || empty( $_POST['confirm'] ) || ! is_string( $_POST['token'] ?? null ) || ! hash_equals( $p['token'] ?? '', $_POST['token'] ) ) {
 				wp_die( 'Pratinjau kedaluwarsa atau konfirmasi belum dicentang.' );
@@ -354,7 +354,7 @@ final class SDP_Intelligence {
 			if ( is_wp_error( $r ) ) {
 				wp_die( esc_html( $r->get_error_message() ) );
 			}delete_transient( $key );
-		} elseif ( $op === 'discard' ) {
+		} elseif ( 'discard' === $op ) {
 			delete_transient( $key );
 		} else {
 			wp_die( 'Operasi tidak dikenal.' );
@@ -370,7 +370,7 @@ final class SDP_Intelligence {
 			return;
 		}$id = wp_unslash( $_GET['npsn'] ?? '' );
 		echo '<div class="wrap"><h1>Validasi &amp; Konflik — v6.3</h1><p>Bandingkan bukti per atribut. Prioritas kategori sumber bukan verifikasi independen. conflict_fill = kandidat berbeda, tidak disimpan sebagai nilai profil. update = perubahan impor biasa; review = persetujuan admin. Periode statistik per atribut tidak otomatis mengubah periode global. Tidak ada akses jaringan atau keputusan otomatis.</p><form method="get"><input type="hidden" name="page" value="sdp-intelligence"><label>NPSN <input name="npsn" maxlength="8" required value="' . esc_attr( is_string( $id ) ? $id : '' ) . '"></label> <button class="button">Buka profil</button></form>';
-		if ( $id === '' ) {
+		if ( '' === $id ) {
 			echo '</div>';
 			return;
 		}$d = self::load( $id );

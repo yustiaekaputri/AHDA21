@@ -106,8 +106,8 @@ final class SDP_Portal {
 			if ( isset( $scope[ $k ] ) ) {
 				$out[ $k ] = array( $scope[ $k ] );
 				continue;}
-			$parents  = $k === 'kabupaten' ? array( 'provinsi' ) : ( $k === 'kecamatan' ? array( 'provinsi', 'kabupaten' ) : array() );
-			$required = $k === 'kabupaten' ? 'provinsi' : ( $k === 'kecamatan' ? 'kabupaten' : '' );
+			$parents  = 'kabupaten' === $k ? array( 'provinsi' ) : ( 'kecamatan' === $k ? array( 'provinsi', 'kabupaten' ) : array() );
+			$required = 'kabupaten' === $k ? 'provinsi' : ( 'kecamatan' === $k ? 'kabupaten' : '' );
 			if ( $required && empty( $state[ $required ] ) ) {
 				$out[ $k ] = ! empty( $state[ $k ] ) ? array( $state[ $k ] ) : array();
 				continue;}
@@ -123,7 +123,7 @@ final class SDP_Portal {
 					return empty( $wpdb->last_error ) && is_array( $v ) ? $v : null;
 				}
 			) ?? array();
-			if ( $state[ $k ] !== '' && ! in_array( $state[ $k ], $out[ $k ], true ) ) {
+			if ( '' !== $state[ $k ] && ! in_array( $state[ $k ], $out[ $k ], true ) ) {
 				$out[ $k ][] = $state[ $k ];
 			}
 		}
@@ -169,7 +169,7 @@ final class SDP_Portal {
 		}
 		$lat = (float) $d['latitude'];
 		$lon = (float) $d['longitude'];
-		if ( ! is_finite( $lat ) || ! is_finite( $lon ) || abs( $lat ) > 90 || abs( $lon ) > 180 || ( $lat == 0 && $lon == 0 ) ) {
+		if ( ! is_finite( $lat ) || ! is_finite( $lon ) || abs( $lat ) > 90 || abs( $lon ) > 180 || ( 0 == $lat && 0 == $lon ) ) {
 			return null;
 		}
 		return array( $lat, $lon );
@@ -249,8 +249,8 @@ final class SDP_Portal {
 				'jumlah_siswa' => 'Siswa',
 				'jumlah_guru'  => 'Guru',
 			) as $k => $label ) {
-				$v     = $k === 'akreditasi' ? ( $r['akreditasi'] ?: null ) : self::num( $d, $k );
-				$html .= '<div><small>' . esc_html( $label ) . '</small><strong>' . esc_html( $v === null ? '—' : ( is_int( $v ) ? number_format_i18n( $v ) : $v ) ) . '</strong></div>';}
+				$v     = 'akreditasi' === $k ? ( $r['akreditasi'] ?: null ) : self::num( $d, $k );
+				$html .= '<div><small>' . esc_html( $label ) . '</small><strong>' . esc_html( null === $v ? '—' : ( is_int( $v ) ? number_format_i18n( $v ) : $v ) ) . '</strong></div>';}
 			$html .= '</div><p class="sdp4-muted">Periode umum tercatat: ' . esc_html( $d['tahun_data'] ?? 'belum tersedia' ) . '</p><a class="sdp4-link" href="' . esc_url( $url ) . '">Lihat profil lengkap →</a>' . SDP_Analytics::controls( $r ) . '</article>';}
 		$html .= '</div><details class="sdp4-map"><summary>Jelajahi lokasi sekolah pada halaman ini</summary>' . self::map( $data['rows'] ) . '</details>';
 		if ( $data['pages'] > 1 ) {
@@ -265,7 +265,7 @@ final class SDP_Portal {
 	}
 	public static function context( $id ) {
 		$p = $id ? get_post( $id ) : null;
-		return $p && $p->post_status === 'publish' && $p->post_password === '' && is_post_type_viewable( $p->post_type );}
+		return $p && 'publish' === $p->post_status && '' === $p->post_password && is_post_type_viewable( $p->post_type );}
 	public static function api( $request ) {
 		$id = absint( $request->get_param( 'context' ) );
 		if ( $id && ! self::context( $id ) ) {
@@ -336,7 +336,7 @@ final class SDP_Portal {
 				<?php
 else :
 	?>
-	<select name="sdp_<?php echo esc_attr( $k ); ?>"><option value=""><?php echo $k === 'kabupaten' && ! $state['provinsi'] ? 'Pilih provinsi dahulu' : ( $k === 'kecamatan' && ! $state['kabupaten'] ? 'Pilih kabupaten dahulu' : 'Semua' ); ?></option>
+	<select name="sdp_<?php echo esc_attr( $k ); ?>"><option value=""><?php echo 'kabupaten' === $k && ! $state['provinsi'] ? 'Pilih provinsi dahulu' : ( 'kecamatan' === $k && ! $state['kabupaten'] ? 'Pilih kabupaten dahulu' : 'Semua' ); ?></option>
 	<?php
 	foreach ( $opts[ $k ] as $v ) :
 		?>
@@ -424,7 +424,7 @@ else :
 			$nums = array();
 			foreach ( $fields as $k => $label ) {
 				$v = self::num( $d, $k );
-				if ( $v !== null ) {
+				if ( null !== $v ) {
 					$nums[ $label ] = $v;
 				}
 			}if ( ! $nums ) {
@@ -437,10 +437,10 @@ else :
 		}
 		$s = self::num( $d, 'jumlah_siswa' );
 		$g = self::num( $d, 'jumlah_guru' );
-		if ( $s !== null && $g !== null && $g > 0 ) {
+		if ( null !== $s && null !== $g && $g > 0 ) {
 			$html .= '<p>Rasio siswa per guru: <strong>' . esc_html( number_format_i18n( $s / $g, 1 ) ) . '</strong> (berdasarkan angka tercatat; periode dapat berbeda).</p>';
 		}
-		if ( $s === null && $g === null && ! array_filter( array( 'siswa_laki_laki', 'siswa_perempuan', 'ruang_kelas', 'laboratorium', 'perpustakaan', 'toilet' ), static fn( $k )=>self::num( $d, $k ) !== null ) ) {
+		if ( null === $s && null === $g && ! array_filter( array( 'siswa_laki_laki', 'siswa_perempuan', 'ruang_kelas', 'laboratorium', 'perpustakaan', 'toilet' ), static fn( $k )=>self::num( $d, $k ) !== null ) ) {
 			$html .= '<p>Statistik belum tersedia.</p>';
 		}
 		return $html . '</section>';
@@ -468,7 +468,7 @@ else :
 		$html = '<div class="sdp-profile sdp4-profile">' . $nav . '<div class="sdp4-profilehead"><p class="sdp4-kicker">PROFIL SEKOLAH</p><h2>' . esc_html( $d['nama'] ) . '</h2><p>NPSN ' . esc_html( $d['npsn'] ) . ' · ' . esc_html( self::place( $d ) ) . '</p><div class="sdp-tags">';
 		foreach ( array( 'jenjang', 'status', 'akreditasi' ) as $k ) {
 			if ( SDP_SEO::present( $d, $k ) ) {
-				$html .= '<span>' . esc_html( $k === 'akreditasi' ? 'Akreditasi ' . $d[ $k ] : $d[ $k ] ) . '</span>';
+				$html .= '<span>' . esc_html( 'akreditasi' === $k ? 'Akreditasi ' . $d[ $k ] : $d[ $k ] ) . '</span>';
 			}
 		}$html .= '</div></div>' . self::chart( $d );
 		$geo    = self::geo( $d );

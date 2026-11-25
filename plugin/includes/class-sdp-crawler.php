@@ -38,7 +38,7 @@ final class SDP_Crawler {
 		if ( ! is_string( $href ) || strlen( $href ) > 1000 ) {
 			return '';
 		}$h = trim( html_entity_decode( $href, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
-		if ( $h === '' || str_starts_with( $h, '//' ) || strpbrk( $h, '?#%' ) !== false ) {
+		if ( '' === $h || str_starts_with( $h, '//' ) || strpbrk( $h, '?#%' ) !== false ) {
 			return '';
 		}
 		if ( preg_match( '~^[a-z][a-z0-9+.-]*:~i', $h ) ) {
@@ -62,7 +62,7 @@ final class SDP_Crawler {
 		);
 		foreach ( preg_split( '/\r\n|\n|\r/', $body ) as $line ) {
 			$line = trim( explode( '#', $line, 2 )[0] );
-			if ( $line === '' ) {
+			if ( '' === $line ) {
 				continue;
 			}
 			if ( ! preg_match( '/^([a-z-]+)\s*:\s*(.*)$/i', $line, $m ) ) {
@@ -70,7 +70,7 @@ final class SDP_Crawler {
 			}
 			$k = strtolower( $m[1] );
 			$v = trim( $m[2] );
-			if ( $k === 'user-agent' ) {
+			if ( 'user-agent' === $k ) {
 				if ( $g['has'] ) {
 					$groups[] = $g;
 					$g        = array(
@@ -90,19 +90,19 @@ final class SDP_Crawler {
 			if ( ! $g['agents'] ) {
 				return new WP_Error( 'robots', 'Aturan tanpa user-agent.' );
 			}$g['has'] = true;
-			if ( $k === 'crawl-delay' ) {
+			if ( 'crawl-delay' === $k ) {
 				if ( ! preg_match( '/^\d{1,4}(?:\.\d{1,3})?$/D', $v ) || (float) $v > 3600 ) {
 					return new WP_Error( 'robots', 'Crawl-delay tidak didukung; hentikan.' );
 				}$g['delay'] = max( $g['delay'], (int) ceil( (float) $v ) );
 				continue;}
-			if ( $v === '' ) {
+			if ( '' === $v ) {
 				continue;
 			}
 			// Unsupported encodings/query patterns fail closed rather than risk bypass.
 			if ( strlen( $v ) > 512 || ! preg_match( '~^/[A-Za-z0-9_./*\-]*\$?$~D', $v ) || substr_count( $v, '*' ) > 8 ) {
 				return new WP_Error( 'robots', 'Pola robots.txt tidak didukung; hentikan.' );
 			}
-			$g['rules'][] = array( $k === 'allow', $v );
+			$g['rules'][] = array( 'allow' === $k, $v );
 			if ( count( $g['rules'] ) > 500 ) {
 				return new WP_Error( 'robots', 'Terlalu banyak aturan.' );
 			}
@@ -142,7 +142,7 @@ final class SDP_Crawler {
 			$p     = $end ? substr( $pattern, 0, -1 ) : $pattern;
 			$regex = '~^' . str_replace( '\\*', '.*', preg_quote( $p, '~' ) ) . ( $end ? '$' : '' ) . '~D';
 			$match = preg_match( $regex, $path );
-			if ( $match === false ) {
+			if ( false === $match ) {
 				return false;
 			}if ( ! $match ) {
 				continue;
@@ -158,7 +158,7 @@ final class SDP_Crawler {
 			return array();
 		}
 		$html = preg_replace( '~<!--.*?-->|<(script|style|template|iframe|noscript|svg)\b[^>]*>.*?</\1\s*>~is', ' ', $html );
-		if ( $html === null || preg_match( '~<(script|style|template|iframe|noscript|svg)\b~i', $html ) ) {
+		if ( null === $html || preg_match( '~<(script|style|template|iframe|noscript|svg)\b~i', $html ) ) {
 			return array();
 		}
 		$out = array();
@@ -235,7 +235,7 @@ final class SDP_Crawler {
 			return self::halted( $job, 'HTML tidak didukung atau konflik NPSN.' );
 		}
 		// Every page must independently show the school name or exact NPSN. Root needs stronger discovery evidence.
-		if ( ( $q['depth'] === 0 && ! $a['eligible'] ) || ( ! $a['name'] && ! $a['npsn'] ) ) {
+		if ( ( 0 === $q['depth'] && ! $a['eligible'] ) || ( ! $a['name'] && ! $a['npsn'] ) ) {
 			return self::halted( $job, 'Bukti identitas halaman tidak cukup.' );
 		}
 		if ( preg_match( '~<meta\b[^>]*(?:noindex|nofollow|noarchive|nosnippet)[^>]*>~i', $html ) ) {
@@ -276,7 +276,7 @@ final class SDP_Crawler {
 			return new WP_Error( 'dns', 'DNS tidak tersedia.' );
 		}foreach ( $rr as $r ) {
 			$ip = $r['ip'] ?? $r['ipv6'] ?? null;
-			if ( $ip === null ) {
+			if ( null === $ip ) {
 				continue;
 			}$found = true;
 			if ( ! SDP_Discovery::public_ip( $ip ) ) {
@@ -315,7 +315,7 @@ final class SDP_Crawler {
 				'nofollow' => false,
 			);
 		}
-		if ( $c !== 200 ) {
+		if ( 200 !== $c ) {
 			return new WP_Error( 'http', 'HTTP ' . $c . '. Tidak mengikuti redirect atau retry.' );
 		}
 		$type = wp_remote_retrieve_header( $r, 'content-type' );
@@ -332,10 +332,10 @@ final class SDP_Crawler {
 		);
 	}
 	public static function step( $job, $d ) {
-		if ( ! self::current( $job, $d ) || $job['state'] !== 'ready' ) {
+		if ( ! self::current( $job, $d ) || 'ready' !== $job['state'] ) {
 			return new WP_Error( 'state', 'Pekerjaan kedaluwarsa, identitas berubah, atau sudah berhenti.' );
 		}
-		if ( $job['policy'] === null ) {
+		if ( null === $job['policy'] ) {
 			$u = 'https://' . parse_url( $job['website'], PHP_URL_HOST ) . '/robots.txt';
 			$r = self::fetch( $u, $job, true );
 			if ( is_wp_error( $r ) ) {
@@ -371,7 +371,7 @@ final class SDP_Crawler {
 		if ( ! self::current( $job, $d ) || ! isset( $job['results'][ $url ] ) || ! self::url( $url, $d['website'] ) ) {
 			return new WP_Error( 'review', 'Usulan tidak tersedia atau identitas berubah.' );
 		}
-		if ( $job['state'] === 'stopped' ) {
+		if ( 'stopped' === $job['state'] ) {
 			return new WP_Error( 'review', 'Pekerjaan dihentikan; periksa penyebab sebelum mengambil ulang.' );
 		}
 		return SDP_Website::preview( $d, $url, $job['results'][ $url ] );
@@ -388,22 +388,22 @@ final class SDP_Crawler {
 		$op  = self::input( 'op' );
 		$r   = SDP_Collector::lock(
 			function () use ( $key, $op, $uid ) {
-				if ( $op === 'discard' ) {
+				if ( 'discard' === $op ) {
 					delete_transient( $key );
 					return 'Pekerjaan dibuang.';}
 				if ( self::input( 'authorized' ) !== '1' ) {
 					return new WP_Error( 'permission', 'Konfirmasi izin akses dan penggunaan data.' );
 				}
 				$j  = get_transient( $key );
-				$id = $op === 'start' ? strtoupper( self::input( 'npsn' ) ) : ( $j['npsn'] ?? '' );
+				$id = 'start' === $op ? strtoupper( self::input( 'npsn' ) ) : ( $j['npsn'] ?? '' );
 				$d  = SDP_Website::load( $id );
 				if ( is_wp_error( $d ) ) {
 					return $d;
 				}
-				if ( $op === 'start' ) {
+				if ( 'start' === $op ) {
 					$j = self::initial( $d );
-				} elseif ( $op === 'step' ) {
-					$j = self::step( $j, $d );} elseif ( $op === 'review' ) {
+				} elseif ( 'step' === $op ) {
+					$j = self::step( $j, $d );} elseif ( 'review' === $op ) {
 								$p = self::review( $j, $d, self::input( 'url' ) );
 					if ( is_wp_error( $p ) ) {
 						return $p;
@@ -455,10 +455,10 @@ final class SDP_Crawler {
 		echo '<button class="button button-primary" name="op" value="start">Buat / ganti pekerjaan</button></form>';
 		if ( is_array( $j ) ) {
 			echo '<h2>Pekerjaan ' . esc_html( $j['npsn'] ) . '</h2><p>' . esc_html( $j['state'] . ' — ' . $j['note'] ) . '</p><p>Halaman diperiksa: ' . esc_html( (string) $j['pages'] ) . '; antrean: ' . esc_html( (string) count( $j['queue'] ) ) . '; robots.txt: ' . ( $j['policy'] === null ? 'belum' : 'diperiksa' ) . '.</p>';
-			if ( $j['state'] === 'ready' ) {
+			if ( 'ready' === $j['state'] ) {
 				self::form();
 				self::consent();
-				echo '<button class="button button-primary" name="op" value="step">' . ( $j['policy'] === null ? 'Periksa robots.txt' : 'Proses 1 halaman' ) . '</button></form>';}
+				echo '<button class="button button-primary" name="op" value="step">' . ( null === $j['policy'] ? 'Periksa robots.txt' : 'Proses 1 halaman' ) . '</button></form>';}
 			if ( $j['seen'] ) {
 				echo '<h3>Log halaman</h3><ul>';
 				foreach ( $j['seen'] as $u => $status ) {
@@ -468,7 +468,7 @@ final class SDP_Crawler {
 				echo '<h3>Usulan per halaman</h3><p>Tinjau satu sumber per pengajuan agar URL sumber tetap tepat. Tidak ada publikasi otomatis.</p>';
 				foreach ( $j['results'] as $u => $vals ) {
 					echo '<p><a href="' . esc_url( $u ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( $u ) . '</a> — ' . esc_html( implode( ', ', array_keys( $vals ) ) ) . '</p>';
-					if ( $j['state'] !== 'stopped' ) {
+					if ( 'stopped' !== $j['state'] ) {
 						self::form();
 						echo '<input type="hidden" name="url" value="' . esc_attr( $u ) . '">';
 						self::consent();

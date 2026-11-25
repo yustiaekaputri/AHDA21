@@ -40,7 +40,7 @@ final class SDP_Automation {
 			}
 		}
 		// Do not store raw website excerpts in the campaign option.
-		if ( $newkey !== '' ) {
+		if ( '' !== $newkey ) {
 			$s['crawler_key'] = $newkey;
 		} elseif ( empty( $s['crawler_expired'] ) && ! is_array( $s['crawler'] ?? null ) ) {
 			unset( $s['crawler_key'] );
@@ -51,10 +51,10 @@ final class SDP_Automation {
 		$s['crawler'] = null;
 		unset( $s['crawler_expired'] );
 		if ( ! update_option( self::OPTION, $s, false ) ) {
-			if ( $newkey !== '' ) {
+			if ( '' !== $newkey ) {
 				delete_transient( $newkey );
 			}return new WP_Error( 'database', 'Checkpoint gagal disimpan. Muat ulang dan periksa profil sebelum melanjutkan.' );}
-		if ( $oldkey !== '' && $oldkey !== ( $s['crawler_key'] ?? '' ) ) {
+		if ( '' !== $oldkey && $oldkey !== ( $s['crawler_key'] ?? '' ) ) {
 			delete_transient( $oldkey );
 		}return true;
 	}
@@ -145,15 +145,15 @@ final class SDP_Automation {
 		}return $s;}
 	public static function transition( $s, $op ) {
 		$status = $s['status'] ?? '';
-		if ( $op === 'pause' && $status === 'running' ) {
+		if ( 'pause' === $op && 'running' === $status ) {
 			$s['status'] = 'paused';
 			$s['note']   = 'Dijeda administrator.';
-		} elseif ( $op === 'resume' && $status === 'paused' ) {
+		} elseif ( 'resume' === $op && 'paused' === $status ) {
 			$s['status'] = 'running';
 			$s['note']   = 'Dilanjutkan; tidak ada permintaan otomatis.';
-		} elseif ( $op === 'skip' && in_array( $status, array( 'running', 'paused' ), true ) ) {
+		} elseif ( 'skip' === $op && in_array( $status, array( 'running', 'paused' ), true ) ) {
 			$s = self::advance( $s, 'Dilewati administrator.' );
-		} elseif ( $op === 'cancel' && in_array( $status, array( 'running', 'paused' ), true ) ) {
+		} elseif ( 'cancel' === $op && in_array( $status, array( 'running', 'paused' ), true ) ) {
 			$s['status']      = 'cancelled';
 				$s['crawler'] = null;
 				$s['note']    = 'Dibatalkan.';
@@ -171,7 +171,7 @@ final class SDP_Automation {
 		}
 		$phase = $s['phase'];
 		$n     = self::needs( $d );
-		if ( $phase === 'reference' ) {
+		if ( 'reference' === $phase ) {
 			if ( ! $n['reference'] ) {
 				return self::route_website( $s, $d );
 			}
@@ -218,7 +218,7 @@ final class SDP_Automation {
 		if ( in_array( $phase, array( 'website_route', 'discovery' ), true ) ) {
 			return self::route_website( $s, $d );
 		}
-		if ( $phase === 'crawler' ) {
+		if ( 'crawler' === $phase ) {
 			if ( ! $n['website'] ) {
 				$s['phase']   = 'handoff';
 				$s['crawler'] = null;
@@ -233,7 +233,7 @@ final class SDP_Automation {
 			if ( ! empty( $s['crawler_expired'] ) ) {
 				return self::pause( $s, 'Checkpoint crawler kedaluwarsa. Lewati sumber atau sekolah.' );
 			}
-			if ( $s['crawler'] === null ) {
+			if ( null === $s['crawler'] ) {
 				$j = SDP_Crawler::initial( $d );
 				if ( is_wp_error( $j ) ) {
 					return self::pause( $s, $j->get_error_message() );
@@ -246,17 +246,17 @@ final class SDP_Automation {
 			}
 			$s['crawler'] = $j;
 			$s['note']    = $j['note'];
-			if ( $j['state'] === 'stopped' ) {
+			if ( 'stopped' === $j['state'] ) {
 				return self::pause( $s, $j['note'] );
 			}
-			if ( $j['state'] === 'done' ) {
+			if ( 'done' === $j['state'] ) {
 				$s['phase'] = $j['results'] ? 'review' : 'handoff';
 			}return $s;
 		}
-		if ( $phase === 'review' ) {
+		if ( 'review' === $phase ) {
 			return new WP_Error( 'review', 'Tinjau usulan per halaman, lalu klik Selesai tinjau.' );
 		}
-		if ( $phase === 'handoff' ) {
+		if ( 'handoff' === $phase ) {
 			return self::advance( $s, 'Pemeriksaan selesai. Dataset statistik/akreditasi dan kekurangan lain tetap perlu ditangani bila tersedia.' );
 		}
 		return new WP_Error( 'phase', 'Tahap tidak dikenal.' );
@@ -276,7 +276,7 @@ final class SDP_Automation {
 				if ( self::input( 'rev' ) !== ( $s['rev'] ?? '' ) ) {
 					return new WP_Error( 'stale', 'Formulir lama. Muat ulang dashboard.' );
 				}
-				if ( $op === 'start' ) {
+				if ( 'start' === $op ) {
 					if ( in_array( $s['status'] ?? '', array( 'running', 'paused' ), true ) ) {
 						return new WP_Error( 'busy', 'Selesaikan atau batalkan kampanye dahulu.' );
 					}
@@ -298,8 +298,8 @@ final class SDP_Automation {
 					}if ( ! self::matches( $d, $s['filters'] ) ) {
 						return new WP_Error( 'identity', 'Wilayah atau jenjang berubah. Lewati atau batalkan.' );
 					}
-					if ( $op === 'review' ) {
-						if ( $s['phase'] !== 'review' || self::input( 'authorized' ) !== '1' ) {
+					if ( 'review' === $op ) {
+						if ( 'review' !== $s['phase'] || self::input( 'authorized' ) !== '1' ) {
 							return new WP_Error( 'review', 'Konfirmasi izin dan tahap tinjau diperlukan.' );
 						}
 						if ( ! is_array( $s['crawler'] ) ) {
@@ -316,20 +316,20 @@ final class SDP_Automation {
 							return new WP_Error( 'database', 'Gagal menyimpan pratinjau.' );
 						}return 'Usulan tersedia di Website Sekolah selama 15 menit. Kembali ke sini setelah ditinjau.';
 					}
-					if ( $op === 'finish_review' && $s['phase'] === 'review' ) {
+					if ( 'finish_review' === $op && 'review' === $s['phase'] ) {
 						if ( get_transient( 'sdp61_preview_' . $uid ) ) {
 							return new WP_Error( 'review', 'Selesaikan atau buang pratinjau yang masih aktif.' );
 						}$s['phase']  = 'handoff';
 						$s['crawler'] = null;
 						$s['note']    = 'Tahap tinjau ditutup oleh administrator; tidak berarti semua usulan disetujui.';
-					} elseif ( $op === 'skip_source' && in_array( $s['phase'], array( 'reference', 'discovery', 'crawler' ), true ) ) {
-						if ( $s['phase'] === 'reference' ) {
+					} elseif ( 'skip_source' === $op && in_array( $s['phase'], array( 'reference', 'discovery', 'crawler' ), true ) ) {
+						if ( 'reference' === $s['phase'] ) {
 							$s = self::route_website( $s, $d );
 						} else {
 							$s['phase']                   = 'handoff';
 											$s['crawler'] = null;
 											$s['note']    = 'Sumber website dilewati.';}
-					} elseif ( $op === 'step' ) {
+					} elseif ( 'step' === $op ) {
 						if ( SDP_Collector::pending() ) {
 									return new WP_Error( 'pending', 'Selesaikan antrean dataset dahulu.' );
 						}$engine = SDP_Engine::state();
@@ -385,7 +385,7 @@ final class SDP_Automation {
 				'jenjang'   => 'Jenjang',
 				'after'     => 'Setelah NPSN (cursor)',
 			) as $k => $label ) {
-				echo '<p><label>' . esc_html( $label ) . ' <input name="filter[' . esc_attr( $k ) . ']" maxlength="120" value="' . esc_attr( $k === 'after' ? ( $s['next'] ?? '' ) : ( $s['filters'][ $k ] ?? '' ) ) . '" ' . ( $k === 'provinsi' ? 'required' : '' ) . '></label></p>';
+				echo '<p><label>' . esc_html( $label ) . ' <input name="filter[' . esc_attr( $k ) . ']" maxlength="120" value="' . esc_attr( 'after' === $k ? ( $s['next'] ?? '' ) : ( $s['filters'][ $k ] ?? '' ) ) . '" ' . ( 'provinsi' === $k ? 'required' : '' ) . '></label></p>';
 			}
 			echo '<p><label>Batas <input type="number" name="filter[limit]" min="1" max="' . esc_attr( (string) self::cap() ) . '" value="' . esc_attr( (string) self::cap() ) . '"></label></p>';
 			self::button( 'start', 'Buat kampanye (tanpa jaringan)' );
@@ -415,17 +415,17 @@ final class SDP_Automation {
 				echo '<p>' . esc_html( $d->get_error_message() ) . '</p>';
 			}
 				self::form( $s );
-			if ( $s['status'] === 'paused' ) {
+			if ( 'paused' === $s['status'] ) {
 				self::button( 'resume', 'Lanjutkan' );
 			} else {
 				self::button( 'pause', 'Jeda' );
 			}self::button( 'skip', 'Lewati sekolah' );
 				self::button( 'cancel', 'Batalkan kampanye' );
 				echo '</form>';
-			if ( $s['status'] === 'running' && ! is_wp_error( $d ) ) {
+			if ( 'running' === $s['status'] && ! is_wp_error( $d ) ) {
 				self::form( $s );
 				self::consent();
-				if ( $s['phase'] === 'review' ) {
+				if ( 'review' === $s['phase'] ) {
 					self::button( 'finish_review', 'Selesai tinjau' );
 				} else {
 					self::button( 'step', 'Proses satu langkah' );
@@ -433,7 +433,7 @@ final class SDP_Automation {
 				if ( in_array( $s['phase'], array( 'reference', 'discovery', 'crawler' ), true ) ) {
 					self::button( 'skip_source', 'Lewati sumber ini' );
 				}echo '</form>';
-				if ( $s['phase'] === 'review' ) {
+				if ( 'review' === $s['phase'] ) {
 					foreach ( ( $s['crawler']['results'] ?? array() ) as $url => $values ) {
 						self::form( $s );
 							echo '<p>' . esc_html( $url ) . ' — ' . esc_html( implode( ', ', array_keys( $values ) ) ) . '</p><input type="hidden" name="url" value="' . esc_attr( $url ) . '">';

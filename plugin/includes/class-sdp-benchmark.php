@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Opt-in local WP-CLI benchmark. No public endpoints, cron or persistent reports. */
 final class SDP_Benchmark {
 	public static function allowed( $env, $enabled ) {
-		return $env === 'local' && $enabled === true;}
+		return 'local' === $env && true === $enabled;}
 	public static function limits( $low ) {
 		return array(
 			'repeats' => $low ? 3 : 10,

@@ -10,7 +10,7 @@ final class SDP_Pilot {
 		'accreditation' => array( 'npsn', 'akreditasi', 'tahun_akreditasi', 'nomor_sk_akreditasi' ),
 	);
 	public static function allowed( $env, $public, $admin ) {
-		return $env === 'local' && ! $public && $admin;}
+		return 'local' === $env && ! $public && $admin;}
 	public static function parse( $raw, $kind, $sha ) {
 		if ( ! isset( self::FIELDS[ $kind ] ) || ! is_string( $raw ) || strlen( $raw ) > 2097152 || ! preg_match( '/^[a-f0-9]{64}$/D', $sha ) || ! hash_equals( $sha, hash( 'sha256', $raw ) ) || ! preg_match( '//u', $raw ) ) {
 			return new WP_Error( 'input', 'Jenis, ukuran, encoding atau checksum salah.' );
@@ -28,7 +28,7 @@ final class SDP_Pilot {
 				if ( count( $rows ) >= 100 || count( $line ) !== count( $head ) ) {
 					return new WP_Error( 'limit', 'Batas 100 baris atau kolom tidak cocok.' );
 				}
-				$r = array_filter( array_combine( $head, $line ), fn( $v )=>$v !== '' );
+				$r = array_filter( array_combine( $head, $line ), fn( $v )=>'' !== $v );
 				$n = $r['npsn'] ?? '';
 				if ( ! SDP_Engine::valid_npsn( $n ) || isset( $rows[ $n ] ) || SDP_SEO::demo( $r ) ) {
 					return new WP_Error( 'identity', 'NPSN tidak valid, uji, atau duplikat.' );
@@ -38,19 +38,19 @@ final class SDP_Pilot {
 						return new WP_Error( 'value', 'Formula atau karakter kontrol.' );
 					}
 				}
-				$required = $kind === 'identity' ? array( 'nama', 'jenjang', 'status', 'provinsi', 'kabupaten', 'kecamatan' ) : ( $kind === 'statistics' ? array( 'tahun_data' ) : array( 'akreditasi', 'tahun_akreditasi', 'nomor_sk_akreditasi' ) );
+				$required = 'identity' === $kind ? array( 'nama', 'jenjang', 'status', 'provinsi', 'kabupaten', 'kecamatan' ) : ( 'statistics' === $kind ? array( 'tahun_data' ) : array( 'akreditasi', 'tahun_akreditasi', 'nomor_sk_akreditasi' ) );
 				foreach ( $required as $k ) {
 					if ( ! isset( $r[ $k ] ) ) {
 						return new WP_Error( 'value', 'Atribut wajib kosong: ' . $k );
 					}
 				}
-				if ( $kind === 'identity' && ( ! in_array( strtoupper( $r['jenjang'] ), array_map( 'strtoupper', SDP_Directory::levels() ), true ) || ! in_array( strtoupper( $r['status'] ), array( 'NEGERI', 'SWASTA' ), true ) ) ) {
+				if ( 'identity' === $kind && ( ! in_array( strtoupper( $r['jenjang'] ), array_map( 'strtoupper', SDP_Directory::levels() ), true ) || ! in_array( strtoupper( $r['status'] ), array( 'NEGERI', 'SWASTA' ), true ) ) ) {
 					return new WP_Error( 'value', 'Bentuk atau status tidak didukung.' );
 				}
-				if ( $kind === 'statistics' && ( ! SDP_Intelligence::period( $r['tahun_data'] ) || count( $r ) < 3 ) ) {
+				if ( 'statistics' === $kind && ( ! SDP_Intelligence::period( $r['tahun_data'] ) || count( $r ) < 3 ) ) {
 					return new WP_Error( 'period', 'Periode statistik atau angka tidak valid.' );
 				}
-				if ( $kind === 'accreditation' && ( ! preg_match( '/^(19|20)\d\d$/D', $r['tahun_akreditasi'] ) || ! in_array( strtoupper( $r['akreditasi'] ), array( 'A', 'B', 'C', 'D', 'TERAKREDITASI', 'TIDAK TERAKREDITASI', 'TIDAK TERAKREDITASI SEMENTARA' ), true ) ) ) {
+				if ( 'accreditation' === $kind && ( ! preg_match( '/^(19|20)\d\d$/D', $r['tahun_akreditasi'] ) || ! in_array( strtoupper( $r['akreditasi'] ), array( 'A', 'B', 'C', 'D', 'TERAKREDITASI', 'TIDAK TERAKREDITASI', 'TIDAK TERAKREDITASI SEMENTARA' ), true ) ) ) {
 					return new WP_Error( 'value', 'Akreditasi atau tahun tidak valid.' );
 				}
 				$clean = SDP_Directory::normalize( $r );
@@ -63,8 +63,8 @@ final class SDP_Pilot {
 		return $rows ?: new WP_Error( 'empty', 'Tidak ada rekaman.' );
 	}
 	public static function classify( $kind, $new, $old, $post_status, $locked = array() ) {
-		if ( $old === null ) {
-			return $kind === 'identity' ? 'new_identity' : 'missing_identity';
+		if ( null === $old ) {
+			return 'identity' === $kind ? 'new_identity' : 'missing_identity';
 		}
 		if ( ! is_array( $old ) || ( $old['npsn'] ?? '' ) !== $new['npsn'] || empty( $old['nama'] ) ) {
 			return 'broken_profile';
@@ -74,9 +74,9 @@ final class SDP_Pilot {
 		}
 		$fill = false;
 		foreach ( $new as $k => $v ) {
-			if ( $k === 'npsn' ) {
+			if ( 'npsn' === $k ) {
 				continue;
-			}if ( isset( $old[ $k ] ) && $old[ $k ] !== '' ) {
+			}if ( isset( $old[ $k ] ) && '' !== $old[ $k ] ) {
 				if ( (string) $old[ $k ] !== $v ) {
 						return 'conflict_review';
 				}
@@ -85,18 +85,18 @@ final class SDP_Pilot {
 					return 'locked_review';
 				}$fill = true;}
 		}
-		if ( $kind === 'statistics' ) {
+		if ( 'statistics' === $kind ) {
 			foreach ( SDP_Intelligence::STATS as $k ) {
-				if ( $k === 'tahun_data' || ! isset( $old[ $k ] ) || $old[ $k ] === '' ) {
+				if ( 'tahun_data' === $k || ! isset( $old[ $k ] ) || '' === $old[ $k ] ) {
 					continue;
 				}if ( SDP_Intelligence::field_period( $old, $k ) !== $new['tahun_data'] ) {
 					return 'period_review';
 				}
 			}
 		}
-		if ( $kind === 'accreditation' ) {
+		if ( 'accreditation' === $kind ) {
 			foreach ( SDP_Intelligence::ACC as $k ) {
-				if ( ! isset( $old[ $k ] ) || $old[ $k ] === '' ) {
+				if ( ! isset( $old[ $k ] ) || '' === $old[ $k ] ) {
 					continue;
 				}if ( SDP_Intelligence::field_period( $old, $k ) !== $new['tahun_akreditasi'] ) {
 					return 'period_review';
@@ -141,7 +141,7 @@ final class SDP_Pilot {
 					)
 				);
 				$state  = $orphan ? 'broken_profile' : self::classify( $kind, $r, null, '' );
-			} elseif ( ! is_array( $old ) || $rec['post_type'] !== SDP_Directory::TYPE || $rec['post_password'] !== '' ) {
+			} elseif ( ! is_array( $old ) || $rec['post_type'] !== SDP_Directory::TYPE || '' !== $rec['post_password'] ) {
 				$state = 'broken_profile';
 			} else {
 				$state = self::classify( $kind, $r, $old, $rec['post_status'], SDP_Intelligence::state( $old )['locks'] );

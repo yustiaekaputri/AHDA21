@@ -65,10 +65,10 @@ final class SDP_Media {
 		if ( ! $alt || ! $credit || ! $proof || ! is_string( $source ) || ! is_string( $url ) ) {
 			return new WP_Error( 'input', 'Isi alt text, kredit pencipta dan catatan izin.' );
 		}
-		if ( $source !== '' && ! self::evidence_url( $source ) ) {
+		if ( '' !== $source && ! self::evidence_url( $source ) ) {
 			return new WP_Error( 'source', 'URL referensi harus HTTPS tanpa kredensial.' );
 		}
-		if ( $mode === 'url' && ! self::evidence_url( $url ) ) {
+		if ( 'url' === $mode && ! self::evidence_url( $url ) ) {
 			return new WP_Error( 'source', 'URL gambar harus HTTPS.' );
 		}
 		$licenses = array(
@@ -77,7 +77,7 @@ final class SDP_Media {
 			'cc-by-sa' => 'https://creativecommons.org/licenses/by-sa/4.0/',
 		);
 		$license  = $licenses[ $rights ] ?? '';
-		if ( $license && ( $source === '' || ( $raw['license_confirm'] ?? '' ) !== '1' ) ) {
+		if ( $license && ( '' === $source || ( $raw['license_confirm'] ?? '' ) !== '1' ) ) {
 			return new WP_Error( 'source', 'Creative Commons membutuhkan URL sumber dan konfirmasi versi lisensi yang tepat (CC0 1.0 atau CC BY/BY-SA 4.0).' );
 		}
 		return array(
@@ -88,8 +88,8 @@ final class SDP_Media {
 			'alt'     => $alt,
 			'credit'  => $credit,
 			'proof'   => $proof,
-			'source'  => $source === '' ? '' : self::evidence_url( $source ),
-			'url'     => $mode === 'url' ? $url : '',
+			'source'  => '' === $source ? '' : self::evidence_url( $source ),
+			'url'     => 'url' === $mode ? $url : '',
 			'date'    => gmdate( 'Y-m-d H:i:s' ),
 		);
 	}
@@ -117,7 +117,7 @@ final class SDP_Media {
 			return new WP_Error( 'file', 'File tidak dapat dibaca.' );
 		}
 		$size = filesize( $path );
-		if ( $size === false || $size < 1 || $size > SDP_Resource::cap( self::MAX_BYTES, 1048576 ) ) {
+		if ( false === $size || $size < 1 || $size > SDP_Resource::cap( self::MAX_BYTES, 1048576 ) ) {
 			return new WP_Error( 'size', 'Ukuran file melebihi batas mode aktif.' );
 		}
 		$info    = @getimagesize( $path );
@@ -134,7 +134,7 @@ final class SDP_Media {
 		}
 		// Reject animated PNG/WebP; no multi-frame image processing.
 		$bytes = file_get_contents( $path );
-		if ( $bytes === false ) {
+		if ( false === $bytes ) {
 			return new WP_Error( 'file', 'File tidak dapat dibaca.' );
 		}
 		if ( ( $info[2] === IMAGETYPE_PNG && strpos( $bytes, 'acTL' ) !== false ) || ( $info[2] === IMAGETYPE_WEBP && ( strpos( $bytes, 'ANIM' ) !== false || strpos( $bytes, 'ANMF' ) !== false ) ) ) {
@@ -148,7 +148,7 @@ final class SDP_Media {
 		);
 	}
 	public static function dimensions( $w, $h, $role ) {
-		$edge  = $role === 'logo' ? SDP_Resource::cap( 800, 400 ) : SDP_Resource::cap( 1600, 1000 );
+		$edge  = 'logo' === $role ? SDP_Resource::cap( 800, 400 ) : SDP_Resource::cap( 1600, 1000 );
 		$ratio = min( 1, $edge / max( 1, $w, $h ) );
 		return array( max( 1, (int) round( $w * $ratio ) ), max( 1, (int) round( $h * $ratio ) ) );}
 	public static function encode( $path, $info, $role ) {
@@ -157,7 +157,7 @@ final class SDP_Media {
 			return new WP_Error( 'gd', 'PHP GD diperlukan untuk pemrosesan gambar aman. Aktifkan GD pada LocalWP.' );
 		}
 		$bytes = file_get_contents( $path );
-		$im    = $bytes === false ? false : @imagecreatefromstring( $bytes );
+		$im    = false === $bytes ? false : @imagecreatefromstring( $bytes );
 		unset( $bytes );
 		if ( ! $im ) {
 			return new WP_Error( 'decode', 'Gambar tidak dapat didekode.' );
@@ -170,7 +170,7 @@ final class SDP_Media {
 				return new WP_Error( 'decode', 'Dimensi gambar tidak sesuai.' );
 			}
 			// Preserve standard JPEG EXIF orientation where PHP EXIF is available.
-			if ( $info['mime'] === 'image/jpeg' && function_exists( 'exif_read_data' ) ) {
+			if ( 'image/jpeg' === $info['mime'] && function_exists( 'exif_read_data' ) ) {
 				$exif = @exif_read_data( $path, 'IFD0' );
 				$o    = (int) ( $exif['Orientation'] ?? 1 );
 				if ( in_array( $o, array( 2, 4, 5, 7 ), true ) ) {
@@ -202,12 +202,12 @@ final class SDP_Media {
 				return new WP_Error( 'encode', 'Gagal mengubah ukuran.' );
 			}
 			$webp = function_exists( 'imagewebp' ) && defined( 'IMG_WEBP' ) && ( imagetypes() & IMG_WEBP );
-			$ext  = $webp ? 'webp' : ( $info['mime'] === 'image/jpeg' ? 'jpg' : 'png' );
+			$ext  = $webp ? 'webp' : ( 'image/jpeg' === $info['mime'] ? 'jpg' : 'png' );
 			$temp = wp_tempnam( 'sdp-image.' . $ext );
 			if ( ! $temp ) {
 				return new WP_Error( 'temp', 'Gagal membuat file sementara.' );
 			}
-			$saved = $webp ? @imagewebp( $canvas, $temp, 82 ) : ( $ext === 'jpg' ? @imagejpeg( $canvas, $temp, 85 ) : @imagepng( $canvas, $temp, 6 ) );
+			$saved = $webp ? @imagewebp( $canvas, $temp, 82 ) : ( 'jpg' === $ext ? @imagejpeg( $canvas, $temp, 85 ) : @imagepng( $canvas, $temp, 6 ) );
 			clearstatcache( true, $temp );
 			$out = $saved ? self::inspect( $temp ) : new WP_Error( 'encode', 'Gagal menyimpan raster.' );
 			if ( is_wp_error( $out ) ) {
@@ -312,7 +312,7 @@ final class SDP_Media {
 		if ( count( $items ) >= self::LIMIT ) {
 			return new WP_Error( 'limit', 'Maksimal 12 gambar per sekolah.' );
 		}
-		if ( $meta['role'] === 'cover' && $thumb ) {
+		if ( 'cover' === $meta['role'] && $thumb ) {
 			return new WP_Error( 'cover', 'Foto utama sudah tersedia. Hapus atau lepaskan featured image lama terlebih dahulu.' );
 		}
 		foreach ( $items as $m ) {
@@ -339,7 +339,7 @@ final class SDP_Media {
 			if ( is_wp_error( $current ) || $current['post_id'] !== $pid ) {
 				return new WP_Error( 'identity', 'Profil berubah. Buka ulang halaman.' );
 			}
-			if ( $meta['mode'] === 'url' && is_wp_error( SDP_Website::validate_url( $meta['url'], $current['data']['website'] ?? '' ) ) ) {
+			if ( 'url' === $meta['mode'] && is_wp_error( SDP_Website::validate_url( $meta['url'], $current['data']['website'] ?? '' ) ) ) {
 				return new WP_Error( 'identity', 'Website resmi berubah.' );
 			}
 			$info = self::inspect( $path );
@@ -384,7 +384,7 @@ final class SDP_Media {
 			if ( ! update_post_meta( $id, self::KEY, wp_slash( $meta ) ) || ! update_post_meta( $id, '_wp_attachment_image_alt', wp_slash( $meta['alt'] ) ) ) {
 				return new WP_Error( 'meta', 'Metadata gagal disimpan.' );
 			}
-			if ( $meta['role'] === 'cover' && ! set_post_thumbnail( $pid, $id ) ) {
+			if ( 'cover' === $meta['role'] && ! set_post_thumbnail( $pid, $id ) ) {
 				return new WP_Error( 'cover', 'Featured image gagal ditetapkan.' );
 			}
 			$committed = true;
@@ -403,7 +403,7 @@ final class SDP_Media {
 	public static function remove( $pid, $npsn, $id ) {
 		$p = get_post( $id );
 		$m = get_post_meta( $id, self::KEY, true );
-		if ( ! $p || $p->post_type !== 'attachment' || (int) $p->post_parent !== $pid || ! is_array( $m ) || ( $m['npsn'] ?? '' ) !== $npsn ) {
+		if ( ! $p || 'attachment' !== $p->post_type || (int) $p->post_parent !== $pid || ! is_array( $m ) || ( $m['npsn'] ?? '' ) !== $npsn ) {
 			return new WP_Error( 'ownership', 'Media bukan milik profil ini.' );
 		}
 		if ( ! current_user_can( 'delete_post', $id ) ) {
@@ -494,7 +494,7 @@ final class SDP_Media {
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 		$temp = false;
-		if ( $meta['mode'] === 'url' ) {
+		if ( 'url' === $meta['mode'] ) {
 			$path = self::fetch( $meta['url'], $school['data']['website'] ?? '' );
 			if ( is_wp_error( $path ) ) {
 				self::finish( $n, $path );
@@ -555,7 +555,7 @@ final class SDP_Media {
 			'source' => 'URL bukti / lisensi publik (HTTPS)',
 			'proof'  => 'Catatan bukti izin privat, versi lisensi dan syarat',
 		) as $k => $label ) {
-			echo '<tr><th><label for="sdp64-' . esc_attr( $k ) . '">' . esc_html( $label ) . '</label></th><td><input class="regular-text" id="sdp64-' . esc_attr( $k ) . '" name="' . esc_attr( $k ) . '" ' . ( $k === 'source' ? 'type="url"' : 'required' ) . ' maxlength="' . ( $k === 'source' ? 1000 : ( $k === 'proof' ? 500 : 180 ) ) . '"></td></tr>';
+			echo '<tr><th><label for="sdp64-' . esc_attr( $k ) . '">' . esc_html( $label ) . '</label></th><td><input class="regular-text" id="sdp64-' . esc_attr( $k ) . '" name="' . esc_attr( $k ) . '" ' . ( 'source' === $k ? 'type="url"' : 'required' ) . ' maxlength="' . ( 'source' === $k ? 1000 : ( 'proof' === $k ? 500 : 180 ) ) . '"></td></tr>';
 		}
 		echo '</table><p><label><input type="checkbox" name="license_confirm" value="1"> Jika Creative Commons: saya memastikan lisensi CC0 1.0 atau CC BY/BY-SA 4.0 berlaku pada gambar sumber, dan hasil olahan memakai lisensi yang sama.</label></p><p><label><input type="checkbox" name="authorized" value="1" required> Saya telah memeriksa hak penggunaan, izin perubahan ukuran/format, atribusi dan syarat lisensi.</label></p><p><label><input type="checkbox" name="privacy" value="1" required> Saya telah meninjau gambar, tidak memuat informasi pribadi yang tidak diizinkan, dan memahami file akan langsung publik.</label></p><button class="button button-primary">Simpan media publik</button></form><hr><h2>Media tersimpan</h2>' . self::render( $items );
 		foreach ( $items as $id => $m ) {

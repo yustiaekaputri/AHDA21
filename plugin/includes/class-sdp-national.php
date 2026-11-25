@@ -118,17 +118,17 @@ final class SDP_National {
 		$args  = array( SDP_Directory::TYPE );
 		foreach ( SDP_Portal::FILTERS as $k => $label ) {
 			$v = SDP_Portal::clean( $raw[ $k ] ?? '', 120 );
-			if ( $v !== '' ) {
+			if ( '' !== $v ) {
 				$where[] = "s.$k=%s";
 				$args[]  = $v;}
 		}
 		$q = SDP_Portal::clean( $raw['q'] ?? '', 120 );
-		if ( $q !== '' ) {
+		if ( '' !== $q ) {
 			$where[] = '(s.nama LIKE %s OR s.npsn LIKE %s)';
 			$args[]  = $wpdb->esc_like( $q ) . '%';
 			$args[]  = $wpdb->esc_like( $q ) . '%';}
 		$cursor = $raw['after'] ?? '';
-		if ( $cursor !== '' ) {
+		if ( '' !== $cursor ) {
 			if ( ! self::npsn( $cursor ) ) {
 				return new WP_Error( 'sdp_cursor', 'Cursor NPSN tidak valid.', array( 'status' => 400 ) );
 			}$where[] = 's.npsn>%s';
@@ -142,11 +142,11 @@ final class SDP_National {
 		}$o = array();
 		foreach ( self::PUBLIC_FIELDS as $k ) {
 			$v       = $row[ $k ] ?? $d[ $k ] ?? null;
-			$o[ $k ] = is_scalar( $v ) && $v !== '' ? (string) $v : null;
+			$o[ $k ] = is_scalar( $v ) && '' !== $v ? (string) $v : null;
 		}$o['field_periods'] = array();
 		foreach ( self::PUBLIC_FIELDS as $k ) {
 			$p = SDP_Intelligence::field_period( $d, $k );
-			if ( $p !== '' ) {
+			if ( '' !== $p ) {
 				$o['field_periods'][ $k ] = $p;
 			}
 		}$o['url']           = get_permalink( (int) $row['post_id'] );
@@ -231,10 +231,10 @@ final class SDP_National {
 		}global $wpdb;
 		$claim = $wpdb->get_row( $wpdb->prepare( 'SELECT status,user_id FROM ' . self::table() . ' WHERE npsn=%s', $n ), ARRAY_A );
 		$html  = '<section class="sdp-profile"><h2>Klaim profil sekolah</h2>';
-		if ( $claim && $claim['status'] === 'approved' ) {
+		if ( $claim && 'approved' === $claim['status'] ) {
 			return $content . $html . '<p>Klaim operator telah disetujui administrator. Ini bukan verifikasi mutu sekolah.</p></section>';
 		}
-		if ( $claim && $claim['status'] === 'pending' ) {
+		if ( $claim && 'pending' === $claim['status'] ) {
 			return $content . $html . '<p>Pengajuan sedang ditinjau administrator.</p></section>';
 		}
 		if ( ! is_user_logged_in() ) {
@@ -275,7 +275,7 @@ final class SDP_National {
 		exit;
 	}
 	public static function allowed_transition( $old, $new ) {
-		return ( $old === 'pending' && in_array( $new, array( 'approved', 'rejected' ), true ) ) || ( $old === 'approved' && $new === 'revoked' );}
+		return ( 'pending' === $old && in_array( $new, array( 'approved', 'rejected' ), true ) ) || ( 'approved' === $old && 'revoked' === $new );}
 	public static function review() {
 		if ( ! current_user_can( 'manage_options' ) || ! self::install() ) {
 			wp_die( 'Akses ditolak.' );
@@ -287,7 +287,7 @@ final class SDP_National {
 		$old = $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $t WHERE npsn=%s", $n ) );
 		if ( ! self::allowed_transition( $old, $to ) ) {
 			wp_die( 'Transisi tidak valid.' );
-		}if ( $to === 'approved' && ( empty( $_POST['verified'] ) || ! SDP_Analytics::public_rows( array( $n ) ) || is_wp_error( SDP_Intelligence::load( $n ) ) ) ) {
+		}if ( 'approved' === $to && ( empty( $_POST['verified'] ) || ! SDP_Analytics::public_rows( array( $n ) ) || is_wp_error( SDP_Intelligence::load( $n ) ) ) ) {
 			wp_die( 'Verifikasi independen dan profil publik diperlukan.' );
 		}$ok = $wpdb->update(
 			$t,
@@ -301,7 +301,7 @@ final class SDP_National {
 				'status' => $old,
 			)
 		);
-		if ( $ok !== 1 ) {
+		if ( 1 !== $ok ) {
 			wp_die( 'Klaim berubah atau gagal disimpan.' );
 		}self::log( 'claim_' . $to, $n );
 		wp_safe_redirect( admin_url( 'admin.php?page=sdp-national' ) );
@@ -331,9 +331,9 @@ final class SDP_National {
 			wp_die( 'Akses ditolak.' );
 		}check_admin_referer( 'sdp50_maintenance' );
 		$op = sanitize_key( $_POST['op'] ?? '' );
-		if ( $op === 'refresh' ) {
+		if ( 'refresh' === $op ) {
 			self::invalidate();
-		} elseif ( $op === 'purge_audit' ) {
+		} elseif ( 'purge_audit' === $op ) {
 			global $wpdb;
 			$wpdb->query( $wpdb->prepare( 'DELETE FROM ' . self::audit_table() . ' WHERE created_at<%s', gmdate( 'Y-m-d H:i:s', time() - 90 * 86400 ) ) );
 		} else {
@@ -349,7 +349,7 @@ final class SDP_National {
 		}$h = self::health();
 		echo '<div class="wrap"><h1>Skala Nasional — SDP 5.1</h1><p>Ringkasan dapat disimpan sementara selama 5 menit. Kedaluwarsa berarti indeks belum ditulis ulang selama 365 hari, bukan bukti data sumber sudah lama.</p><table class="widefat striped"><tbody>';
 		foreach ( $h as $k => $v ) {
-			echo '<tr><th>' . esc_html( $k ) . '</th><td>' . esc_html( $v === null ? 'Tidak tersedia' : ( $k === 'cron' ? gmdate( 'Y-m-d H:i:s', (int) $v ) . ' UTC' : (string) $v ) ) . '</td></tr>';
+			echo '<tr><th>' . esc_html( $k ) . '</th><td>' . esc_html( null === $v ? 'Tidak tersedia' : ( 'cron' === $k ? gmdate( 'Y-m-d H:i:s', (int) $v ) . ' UTC' : (string) $v ) ) . '</td></tr>';
 		}echo '</tbody></table><p>WP-CLI: <code>wp sdp health</code>, <code>wp sdp indexes</code>, <code>wp sdp import</code>, <code>wp sdp queue</code>. Gunakan PANDUAN-V5.txt untuk backup dan impor.</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp50_maintenance">';
 		wp_nonce_field( 'sdp50_maintenance' );
 		echo '<button class="button" name="op" value="refresh">Segarkan statistik</button> <button class="button" name="op" value="purge_audit">Hapus log &gt;90 hari</button></form><h2>Moderasi klaim (maks. 100 terbaru, pending dahulu)</h2>';
@@ -358,9 +358,9 @@ final class SDP_National {
 		foreach ( (array) $rows as $r ) {
 			echo '<div style="background:white;padding:12px;margin:8px 0"><strong>' . esc_html( $r['npsn'] . ' — ' . $r['status'] ) . '</strong><p>' . esc_html( 'User ID ' . $r['user_id'] . ' | ' . $r['role_note'] ) . ' | ' . esc_html( $r['evidence'] ) . '</p><p>Periksa bukti melalui kanal resmi sekolah secara independen. Tautan ditampilkan sebagai teks agar tidak dibuka otomatis.</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp50_review"><input type="hidden" name="npsn" value="' . esc_attr( $r['npsn'] ) . '">';
 			wp_nonce_field( 'sdp50_review_' . $r['npsn'] );
-			if ( $r['status'] === 'pending' ) {
+			if ( 'pending' === $r['status'] ) {
 				echo '<label><input type="checkbox" name="verified" value="1"> Sudah verifikasi independen</label> <button class="button" name="decision" value="approved">Setujui</button> <button class="button" name="decision" value="rejected">Tolak</button>';
-			} elseif ( $r['status'] === 'approved' ) {
+			} elseif ( 'approved' === $r['status'] ) {
 				echo '<button class="button" name="decision" value="revoked">Cabut persetujuan</button>';
 			}echo '</form></div>';
 		}echo '<h2>Log administrasi (50 terakhir)</h2><table class="widefat"><tbody>';
@@ -468,7 +468,7 @@ final class SDP_National {
 							break;
 						}
 						$line = fgetcsv( $f, 0, $delimiter, '"', '' );
-						if ( $line === false ) {
+						if ( false === $line ) {
 							if ( ! feof( $f ) ) {
 								return new WP_Error( 'read', 'Gagal membaca CSV.' );
 							}$job['done'] = true;
@@ -483,7 +483,7 @@ final class SDP_National {
 							WP_CLI::warning( "Rekaman $num: jumlah kolom tidak cocok." );
 						} else {
 							$data = SDP_Collector::map_row( array_combine( $keys, $line ), $c );
-							if ( $data === null ) {
+							if ( null === $data ) {
 								$job['skipped']++;
 							} elseif ( is_wp_error( $data ) ) {
 								$job['invalid']++;
@@ -507,7 +507,7 @@ final class SDP_National {
 						if ( ! update_option( $key, $job, false ) && get_option( $key ) !== $job ) {
 							return new WP_Error( 'checkpoint', 'Checkpoint gagal disimpan. Hentikan proses.' );
 						}
-						if ( $i % 50 === 49 && function_exists( 'wp_cache_flush_runtime' ) ) {
+						if ( 49 === $i % 50 && function_exists( 'wp_cache_flush_runtime' ) ) {
 							wp_cache_flush_runtime();
 						}
 					}return $job;

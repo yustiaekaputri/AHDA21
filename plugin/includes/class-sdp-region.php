@@ -63,12 +63,12 @@ final class SDP_Region {
 			'edition' => $edition,
 		);}
 	public static function code( $system, $code, $level ) {
-		$patterns = $system === 'kemendagri' ? array( '\d{2}', '\d{2}\.\d{2}', '\d{2}\.\d{2}\.\d{2}', '\d{2}\.\d{2}\.\d{2}\.\d{4}' ) : array( '\d{2}', '\d{4}', '\d{7}', '\d{10}' );
+		$patterns = 'kemendagri' === $system ? array( '\d{2}', '\d{2}\.\d{2}', '\d{2}\.\d{2}\.\d{2}', '\d{2}\.\d{2}\.\d{2}\.\d{4}' ) : array( '\d{2}', '\d{4}', '\d{7}', '\d{10}' );
 		return isset( $patterns[ $level - 1 ] ) && preg_match( '/^' . $patterns[ $level - 1 ] . '$/D', $code ) === 1;}
 	public static function parent( $system, $code, $level ) {
-		if ( $level === 1 ) {
+		if ( 1 === $level ) {
 			return '';
-		}return $system === 'kemendagri' ? substr( $code, 0, strrpos( $code, '.' ) ) : substr( $code, 0, array( 2, 4, 7 )[ $level - 2 ] );}
+		}return 'kemendagri' === $system ? substr( $code, 0, strrpos( $code, '.' ) ) : substr( $code, 0, array( 2, 4, 7 )[ $level - 2 ] );}
 	public static function name_parts( $name, $level ) {
 		$name   = trim( preg_replace( '/\s+/u', ' ', trim( $name ) ) ?? '' );
 		$name   = function_exists( 'mb_strtolower' ) ? mb_strtolower( $name, 'UTF-8' ) : strtolower( $name );
@@ -108,12 +108,12 @@ final class SDP_Region {
 		}if ( strlen( $name ) > 120 || ! preg_match( '/^[\p{L}\p{N}][\p{L}\p{N}\p{M} .\-\x{2019}\x{0027}()\/]*$/uD', $name ) ) {
 			return new WP_Error( 'name', 'Nama wilayah kosong atau berisi karakter tidak didukung.' );
 		}[$key, $prefix] = self::name_parts( $name, $level );
-		if ( $key === '' || ( $prefix !== '' && $prefix !== $kind ) ) {
+		if ( '' === $key || ( '' !== $prefix && $prefix !== $kind ) ) {
 			return new WP_Error( 'name', 'Jenis wilayah bertentangan dengan nama.' );
-		}if ( $level === 2 ) {
-			if ( $prefix !== '' ) {
+		}if ( 2 === $level ) {
+			if ( '' !== $prefix ) {
 				$name = preg_replace( '/^[a-z]+\.?\s+/i', '', $name, 1 );
-			}$name = ( $kind === 'kota' ? 'Kota ' : 'Kabupaten ' ) . $name;
+			}$name = ( 'kota' === $kind ? 'Kota ' : 'Kabupaten ' ) . $name;
 		}if ( strlen( $name ) > 120 ) {
 			return new WP_Error( 'name', 'Nama kanonik terlalu panjang.' );
 		}return $scope + array(
@@ -134,11 +134,11 @@ final class SDP_Region {
 		global $wpdb;
 		$t            = self::table();
 		[$key, $kind] = self::name_parts( $name, $level );
-		if ( $key === '' ) {
+		if ( '' === $key ) {
 			return new WP_Error( 'missing', 'Nama wilayah kosong.' );
 		}$args = array( $scope['system'], $scope['edition'], $parent, $level, hash( 'sha256', $key ) );
 		$where = '';
-		if ( $kind !== '' ) {
+		if ( '' !== $kind ) {
 			$where  = ' AND kind=%s';
 			$args[] = $kind;
 		}$r = $wpdb->get_results( $wpdb->prepare( "SELECT code,parent,level,kind,name FROM $t WHERE `system`=%s AND edition=%s AND parent=%s AND level=%d AND name_key=%s$where LIMIT 2", ...$args ), ARRAY_A );
@@ -155,7 +155,7 @@ final class SDP_Region {
 		$gap    = false;
 		foreach ( self::FIELDS as $i => $field ) {
 			$v = trim( (string) ( $data[ $field ] ?? '' ) );
-			if ( $v === '' ) {
+			if ( '' === $v ) {
 				$gap = true;
 				continue;
 			}if ( $gap ) {
@@ -187,7 +187,7 @@ final class SDP_Region {
 		}return array_map( fn( $s )=>strtolower( trim( preg_replace( '/^\xEF\xBB\xBF/', '', (string) $s ) ) ), $h );}
 	public static function parse_master( $path, $scope, $source ) {
 		$source = trim( $source );
-		if ( $source === '' || strlen( $source ) > 191 ) {
+		if ( '' === $source || strlen( $source ) > 191 ) {
 			return new WP_Error( 'source', 'Nama/rujukan sumber wajib (maksimal 191 byte).' );
 		}$f = self::open_csv( $path );
 		if ( is_wp_error( $f ) ) {
@@ -229,7 +229,7 @@ final class SDP_Region {
 		}try {
 			foreach ( $rows as $r ) {
 				$p = $r['parent'];
-				if ( $p !== '' ) {
+				if ( '' !== $p ) {
 					$parent = $rows[ $p ] ?? self::get( $scope, $p );
 					if ( is_wp_error( $parent ) ) {
 						return $parent;
@@ -261,7 +261,7 @@ final class SDP_Region {
 	public static function safe_cell( $v ) {
 		return preg_match( '//u', (string) $v ) === 1 && ( preg_match( '/^[\s\x{FEFF}]*[=+@-]/u', (string) $v ) === 0 || preg_match( '/^-?\d+(?:\.\d+)?$/D', (string) $v ) === 1 );}
 	public static function normalize_csv( $path, $scope, $lookup = null ) {
-		if ( $lookup === null && ! self::ready() ) {
+		if ( null === $lookup && ! self::ready() ) {
 			return new WP_Error( 'schema', 'Siapkan master wilayah terlebih dahulu.' );
 		}$f = self::open_csv( $path );
 		if ( is_wp_error( $f ) ) {
@@ -317,7 +317,7 @@ final class SDP_Region {
 			wp_die( 'Akses ditolak.' );
 		}check_admin_referer( 'sdp83_region' );
 		$task = sanitize_key( $_POST['task'] ?? '' );
-		if ( $task === 'install' ) {
+		if ( 'install' === $task ) {
 			$r = self::install();
 			if ( is_wp_error( $r ) ) {
 				wp_die( esc_html( $r->get_error_message() ) );
@@ -329,10 +329,10 @@ final class SDP_Region {
 		}$scope = self::scope( sanitize_text_field( wp_unslash( $_POST['system'] ?? '' ) ), sanitize_text_field( wp_unslash( $_POST['edition'] ?? '' ) ) );
 		if ( is_wp_error( $scope ) ) {
 			wp_die( esc_html( $scope->get_error_message() ) );
-		}$r = $task === 'import' ? self::import( $f['tmp_name'], $scope, sanitize_text_field( wp_unslash( $_POST['source'] ?? '' ) ) ) : self::normalize_csv( $f['tmp_name'], $scope );
+		}$r = 'import' === $task ? self::import( $f['tmp_name'], $scope, sanitize_text_field( wp_unslash( $_POST['source'] ?? '' ) ) ) : self::normalize_csv( $f['tmp_name'], $scope );
 		if ( is_wp_error( $r ) ) {
 			wp_die( esc_html( $r->get_error_message() ) );
-		}if ( $task === 'normalize' ) {
+		}if ( 'normalize' === $task ) {
 			nocache_headers();
 			header( 'Content-Type: text/csv; charset=UTF-8' );
 			header( 'Content-Disposition: attachment; filename="sdp-wilayah-normal.csv"' );

@@ -83,7 +83,7 @@ final class SDP_Performance {
 		}
 		// Scan queried posts for supported shortcodes; dynamic calls also enqueue on render.
 		global $wp_query;
-		$tags = $kind === 'analytics' ? array( 'direktori_sekolah', 'portal_sekolah', 'bandingkan_sekolah' ) : array( 'direktori_sekolah', 'portal_sekolah', 'bandingkan_sekolah', 'statistik_sekolah' );
+		$tags = 'analytics' === $kind ? array( 'direktori_sekolah', 'portal_sekolah', 'bandingkan_sekolah' ) : array( 'direktori_sekolah', 'portal_sekolah', 'bandingkan_sekolah', 'statistik_sekolah' );
 		foreach ( (array) ( $wp_query->posts ?? array() ) as $post ) {
 			$content = $post->post_content ?? '';
 			foreach ( $tags as $tag ) {
@@ -136,24 +136,24 @@ final class SDP_Performance {
 			function () use ( $migrate ) {
 				if ( $migrate ) {
 					$removed = wp_clear_scheduled_hook( SDP_Collector::HOOK, array(), true );
-					if ( is_wp_error( $removed ) || $removed === false ) {
+					if ( is_wp_error( $removed ) || false === $removed ) {
 						return false;
 					}
 				}
 				$delay = self::next_delay( SDP_Collector::pending(), SDP_Resource::scheduled_network(), SDP_Collector::config(), get_option( 'sdp_collector_last_attempt', 0 ), SDP_Sources::all(), SDP_Engine::state(), time() );
 				$next  = wp_next_scheduled( SDP_Collector::HOOK );
-				if ( $delay === null ) {
+				if ( null === $delay ) {
 					if ( ! $next ) {
 						return true;
 					}$removed = wp_clear_scheduled_hook( SDP_Collector::HOOK, array(), true );
-					return ! is_wp_error( $removed ) && $removed !== false;}
+					return ! is_wp_error( $removed ) && false !== $removed;}
 				$when = time() + $delay;
 				if ( $next && $next <= $when ) {
 					return true;
 				}
 				if ( $next ) {
 					$removed = wp_clear_scheduled_hook( SDP_Collector::HOOK, array(), true );
-					if ( is_wp_error( $removed ) || $removed === false ) {
+					if ( is_wp_error( $removed ) || false === $removed ) {
 						return false;
 					}
 				}
@@ -165,7 +165,7 @@ final class SDP_Performance {
 		if ( ! $migrate && is_wp_error( $r ) && $r->get_error_code() === 'busy' && ! wp_next_scheduled( SDP_Collector::HOOK ) ) {
 			return wp_schedule_single_event( time() + 300, SDP_Collector::HOOK, array(), true ) === true;
 		}
-		return $r === true;
+		return true === $r;
 	}
 	public static function upgrade() {
 		if ( get_option( self::MIGRATION ) !== '1' && self::reconcile( true ) ) {
@@ -191,7 +191,7 @@ final class SDP_Performance {
 				global $wpdb;
 				$t = SDP_Collector::table();
 				$r = $wpdb->query( $wpdb->prepare( "DELETE FROM $t WHERE status='done' AND updated_at<%s ORDER BY id LIMIT 500", gmdate( 'Y-m-d H:i:s', time() - 30 * 86400 ) ) );
-				return $r === false ? new WP_Error( 'db', 'Gagal membersihkan log.' ) : (int) $r;
+				return false === $r ? new WP_Error( 'db', 'Gagal membersihkan log.' ) : (int) $r;
 			}
 		);}
 	public static function menu() {
@@ -201,15 +201,15 @@ final class SDP_Performance {
 			wp_die( 'Akses ditolak.' );
 		}check_admin_referer( 'sdp88_maintenance' );
 		$op = sanitize_key( $_POST['op'] ?? '' );
-		if ( $op === 'cache' ) {
+		if ( 'cache' === $op ) {
 			self::invalidate();for ( $i = 0;$i < self::SLOTS;$i++ ) {
 				delete_transient( 'sdp88_facet_' . $i );
 			}
-		} elseif ( $op === 'cron' ) {
+		} elseif ( 'cron' === $op ) {
 			if ( ! self::reconcile( true ) ) {
 				wp_die( 'Gagal memperbaiki jadwal; periksa database atau coba kembali.' );
 			}update_option( self::MIGRATION, '1', false );
-		} elseif ( $op === 'purge' ) {
+		} elseif ( 'purge' === $op ) {
 			$r = self::purge_done();
 			if ( is_wp_error( $r ) ) {
 				wp_die( esc_html( $r->get_error_message() ) );
@@ -230,7 +230,7 @@ final class SDP_Performance {
 			'Slot cache maksimum'         => self::SLOTS,
 			'TTL (detik)'                 => self::TTL,
 			'Load average 1 menit'        => $m['load'] ?? 'Tidak tersedia',
-			'RAM tersedia (MiB)'          => $m['available'] === null ? 'Tidak tersedia' : round( $m['available'] / 1048576, 1 ),
+			'RAM tersedia (MiB)'          => null === $m['available'] ? 'Tidak tersedia' : round( $m['available'] / 1048576, 1 ),
 			'Memori PHP proses ini (MiB)' => round( $m['used'] / 1048576, 1 ),
 			'Kolektor berikutnya'         => $next ? wp_date( 'Y-m-d H:i:s', $next ) : 'Tidak terjadwal',
 		) as $k => $v ) {

@@ -106,7 +106,7 @@ final class SDP_Website {
 		}
 		// Recognize explicit paired heading/paragraph/list blocks only; no generic whole-page copying.
 		$html = preg_replace( '~<!--.*?-->|<(script|style|noscript|template|iframe|svg|nav|footer|aside|form|head)\b[^>]*>.*?</\1\s*>~is', ' ', $html );
-		if ( $html === null || preg_match( '~<(?:script|style|template|iframe|nav|footer|aside|form|head)\b~i', $html ) ) {
+		if ( null === $html || preg_match( '~<(?:script|style|template|iframe|nav|footer|aside|form|head)\b~i', $html ) ) {
 			return new WP_Error( 'body', 'Struktur HTML tidak didukung.' );
 		}
 		$visible = self::plain( $html );
@@ -138,12 +138,12 @@ final class SDP_Website {
 			if ( strtolower( $b[1][0] ) === 'h' ) {
 				$active = self::heading( $s );
 				continue;}
-			if ( $active === '' || $s === '' || strlen( $s ) > 1000 ) {
+			if ( '' === $active || '' === $s || strlen( $s ) > 1000 ) {
 				continue;
 			}
 			// Small candidate snippets only; administrator must rewrite or confirm reuse rights.
 			$old  = $out[ $active ] ?? '';
-			$next = $old === '' ? $s : $old . "\n" . $s;
+			$next = '' === $old ? $s : $old . "\n" . $s;
 			if ( strlen( $next ) <= 1800 ) {
 				$out[ $active ] = $next;
 			} else {
@@ -182,7 +182,7 @@ final class SDP_Website {
 		if ( is_wp_error( $r ) ) {
 			return $r;
 		}$code = wp_remote_retrieve_response_code( $r );
-		if ( $code !== 200 ) {
+		if ( 200 !== $code ) {
 			return new WP_Error( 'http', 'HTTP ' . (int) $code . '. Tidak ada pengalihan atau percobaan ulang otomatis.' );
 		}
 		$type = wp_remote_retrieve_header( $r, 'content-type' );
@@ -220,7 +220,7 @@ final class SDP_Website {
 			if ( ! isset( $selected[ $k ] ) || ! isset( $p['values'][ $k ] ) ) {
 				continue;
 			}
-			if ( isset( $d[ $k ] ) && $d[ $k ] !== '' ) {
+			if ( isset( $d[ $k ] ) && '' !== $d[ $k ] ) {
 				continue;
 			}
 			if ( ! isset( $edited[ $k ] ) || ! is_string( $edited[ $k ] ) || strlen( $edited[ $k ] ) > 1800 ) {
@@ -244,13 +244,13 @@ final class SDP_Website {
 		$op  = is_string( $_POST['op'] ?? null ) ? $_POST['op'] : '';
 		$r   = SDP_Collector::lock(
 			function () use ( $key, $op ) {
-				if ( $op === 'discard' ) {
+				if ( 'discard' === $op ) {
 					delete_transient( $key );
 					return 'Pratinjau dibuang.';}
 				if ( ( $_POST['authorized'] ?? '' ) !== '1' ) {
 					return new WP_Error( 'permission', 'Konfirmasi izin akses dan penggunaan ulang sumber.' );
 				}
-				if ( $op === 'preview' ) {
+				if ( 'preview' === $op ) {
 					delete_transient( $key );
 					$id  = $_POST['npsn'] ?? '';
 					$url = $_POST['url'] ?? '';
@@ -269,7 +269,7 @@ final class SDP_Website {
 						return new WP_Error( 'database', 'Pratinjau gagal disimpan.' );
 					}return 'Pratinjau tersedia 15 menit. Belum mengubah profil.';
 				}
-				if ( $op === 'save' ) {
+				if ( 'save' === $op ) {
 					$p = get_transient( $key );
 					if ( ! is_array( $p ) ) {
 						return new WP_Error( 'preview', 'Pratinjau kedaluwarsa.' );
@@ -333,7 +333,7 @@ final class SDP_Website {
 		$prefill = $_GET['npsn'] ?? '';
 		$prefill = is_string( $prefill ) && SDP_Engine::valid_npsn( $prefill ) ? $prefill : '';
 		self::form();
-		echo '<p><label>NPSN <input required name="npsn" maxlength="8" value="' . esc_attr( $prefill !== '' ? $prefill : ( $p['npsn'] ?? '' ) ) . '"></label></p><p><label>URL halaman resmi <input required type="url" class="large-text" name="url" maxlength="1000" value="' . esc_attr( $prefill !== '' && ( $p['npsn'] ?? '' ) !== $prefill ? '' : ( $p['url'] ?? '' ) ) . '" placeholder="https://domain-sekolah.sch.id/visi-misi/"></label></p>';
+		echo '<p><label>NPSN <input required name="npsn" maxlength="8" value="' . esc_attr( '' !== $prefill ? $prefill : ( $p['npsn'] ?? '' ) ) . '"></label></p><p><label>URL halaman resmi <input required type="url" class="large-text" name="url" maxlength="1000" value="' . esc_attr( '' !== $prefill && ( $p['npsn'] ?? '' ) !== $prefill ? '' : ( $p['url'] ?? '' ) ) . '" placeholder="https://domain-sekolah.sch.id/visi-misi/"></label></p>';
 		self::consent();
 		echo '<button class="button button-primary" name="op" value="preview">Ambil dan pratinjau</button></form>';
 		if ( is_array( $p ) ) {
@@ -341,7 +341,7 @@ final class SDP_Website {
 			self::form();
 			$labels = SDP_Directory::labels();
 			foreach ( $p['values'] as $k => $v ) {
-				$has = isset( $p['old'][ $k ] ) && $p['old'][ $k ] !== '';
+				$has = isset( $p['old'][ $k ] ) && '' !== $p['old'][ $k ];
 				echo '<fieldset style="margin:1em 0"><legend><strong>' . esc_html( $labels[ $k ] ) . '</strong></legend><p>' . ( $has ? 'Data lama akan dipertahankan.' : '<label><input type="checkbox" name="selected[' . esc_attr( $k ) . ']" value="1"> Pilih untuk disimpan</label>' ) . '</p><textarea class="large-text" rows="4" maxlength="1800" name="edited[' . esc_attr( $k ) . ']" ' . ( $has ? 'disabled' : '' ) . '>' . esc_textarea( $v ) . '</textarea></fieldset>';}
 			self::consent();
 			echo '<p><label><input type="checkbox" required name="reviewed" value="1"> Saya telah meninjau identitas, ketepatan fakta, periode, privasi, dan hak publikasi setiap usulan terpilih. Saya memahami profil yang sudah terbit akan langsung diperbarui.</label></p><button class="button button-primary" name="op" value="save">Simpan kolom kosong terpilih</button></form>';
