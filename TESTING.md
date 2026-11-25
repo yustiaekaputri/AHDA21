@@ -9,7 +9,7 @@
 - `npm run lint`, `python3 -m unittest discover -s tests/simulasi`, dan `python3 tests/localwp/test-runner.py` menjalankan pemeriksaan aset JavaScript dan uji Python. Runner LocalWP membutuhkan PHP dalam PATH.
 - `make packages` menghasilkan ZIP instalasi plugin serta tema, tanpa mengubah ZIP asli.
 
-GitHub Actions menjalankan matriks PHP 8.2/8.3 dan mengarsipkan screenshot, laporan dan ZIP. WPCS tetap menghasilkan laporan meskipun masih ada pelanggaran. Versi paket Composer dan npm dikunci dalam lockfile.
+GitHub Actions menjalankan matriks PHP 8.2/8.3 dan mengarsipkan screenshot, laporan dan ZIP. Temuan WPCS membuat job gagal setelah pengujian independen dan pengarsipan laporan selesai. Versi paket Composer dan npm dikunci dalam lockfile.
 
 ## Cakupan
 

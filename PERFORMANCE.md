@@ -9,7 +9,7 @@ Pengukuran dilakukan dari loopback Cloud pada WordPress 6.9, PHP 8.2.32 FPM, Ngi
 | 1.000 FIKTIF | 28,4 ms | 96,1 ms | 46.508 byte |
 | 10.000 FIKTIF | 732,2 ms | 835,6 ms | 46.511 byte |
 
-Pada satu sampel HTTP untuk masing-masing dataset 31 dan 10.000 profil, puncak alokasi PHP adalah 8 MiB. Jumlah query termasuk WordPress adalah 51 dan 22 pada sampel tersebut; kondisi cache berbeda. WP-CLI mencatat puncak alokasi 53,3 MiB termasuk bootstrap dan WP-CLI. Angka tidak mencakup memori MariaDB, OPcache bersama, RSS proses, aset susulan, maupun total bandwidth.
+Pada satu sampel HTTP untuk masing-masing dataset 31 dan 10.000 profil, puncak alokasi PHP adalah 8 MiB. Jumlah query termasuk WordPress adalah 51 dan 22 pada kondisi cache yang berbeda. WP-CLI mencatat puncak alokasi 53,3 MiB termasuk bootstrap dan WP-CLI. Angka tidak mencakup memori MariaDB, OPcache bersama, RSS proses, aset susulan, maupun total bandwidth.
 
 Pada 10.000 profil, `EXPLAIN` menunjukkan pemindaian tabel indeks sekolah dan filesort pada daftar tanpa filter. Query provinsi memakai tabel sementara dan filesort. Median panggilan internal daftar 499 ms, sementara profil yang dibatasi provinsi 5,7 ms. Query facet pertama sangat lebih mahal daripada hit cache dalam proses yang sama. Audit cache dan perubahan SQL harus menjaga invalidasi ketika profil menjadi privat, terlindungi sandi, atau dihapus.
 
@@ -31,4 +31,4 @@ Atur `SDP_BENCHMARK_COUNTS` untuk memilih jumlah profil yang sesuai kapasitas ho
 
 Pengukuran ulang pada 10.000 profil menghasilkan p50 706,1 ms dan p95 3.236,4 ms ketika host Cloud juga menjalankan build. Sampel SQL terpisah menemukan varian pengambilan ID lalu payload menghasilkan urutan identik, dengan waktu query hangat yang serupa. Prioritaskan pengukuran agregasi dan facet pada host sepi sebelum mengganti query.
 
-MariaDB pada runtime langsung memakai pengaturan default yang teramati, termasuk buffer InnoDB 128 MiB dan 151 koneksi maksimum. RSS proses MariaDB sekitar 219 MiB pada satu sampel setelah pengujian. Pengukuran ini tidak memvalidasi preset Compose 64 MiB atau kapasitas VPS. Beranda diperiksa tanpa aset plugin direktori, sedangkan halaman direktori memuat aset plugin yang dibutuhkan. Sumber media menerima WebP dan sudah memberi atribut lazy loading pada galeri; penghematan byte gambar masih perlu diukur.
+MariaDB pada runtime langsung memakai pengaturan default yang teramati, termasuk buffer InnoDB 128 MiB dan 151 koneksi maksimum. RSS proses MariaDB sekitar 219 MiB pada satu sampel setelah pengujian. Pengukuran ini tidak memvalidasi preset Compose 64 MiB atau kapasitas VPS. Beranda diperiksa tanpa aset plugin direktori, sedangkan halaman direktori memuat aset plugin yang dibutuhkan. Sumber media menerima WebP dan sudah memberi atribut lazy loading pada galeri. Penghematan byte gambar masih perlu diukur.

@@ -50,6 +50,7 @@ jobs:
           composer audit --locked --format=json > artifacts/reports/composer-audit.json
           npm audit --audit-level=high --json > artifacts/reports/npm-audit.json
       - name: WordPress Coding Standards
+        id: wpcs
         if: always()
         continue-on-error: true
         run: |
@@ -72,3 +73,8 @@ jobs:
             artifacts/screenshots/
             artifacts/packages/
           if-no-files-found: warn
+      - name: Status WordPress Coding Standards
+        if: always() && steps.wpcs.outcome == 'failure'
+        run: |
+          echo 'Temuan WPCS masih terbuka. Laporan tersedia sebagai artefak.'
+          exit 1
