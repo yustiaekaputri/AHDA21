@@ -35,6 +35,8 @@ jobs:
           mkdir -p artifacts
           docker compose exec -T -u www-data wordpress wp eval-file /sdp-scripts/seed-preview.php --user=sdp_local_admin > artifacts/preview-urls.json
           /tmp/sdp-browser/bin/python scripts/capture-preview.py
+      - name: Verify two-account operator isolation and moderation
+        run: /tmp/sdp-browser/bin/python scripts/test-operator-e2e.py
       - name: Build installable ZIPs
         run: |
           mkdir -p /tmp/sdp-dist/sekolah-directory-pro /tmp/sdp-dist/sekolah-directory-theme artifacts
