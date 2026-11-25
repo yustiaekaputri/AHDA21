@@ -5,3 +5,8 @@ __pycache__/
 wp-config.php
 *.log
 .DS_Store
+artifacts/
+node_modules/
+.venv/
+playwright-report/
+test-results/
