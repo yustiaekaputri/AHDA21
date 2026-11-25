@@ -83,7 +83,7 @@ jobs:
           "$RUNNER_TEMP/sdp-venv/bin/python" tests/browser/test_preview.py 2>&1 | tee artifacts/browser.log
       - name: Actual CSV and XLSX integration
         run: bash scripts/test-import-integration.sh 2>&1 | tee artifacts/import-integration.log
-      - name: Bounded scale benchmark (100 and 1000 fictional schools)
+      - name: Bounded scale benchmark (100, 1000 and 10000 fictional schools; HTTP)
         if: matrix.php == '8.3'
         run: python3 scripts/test-benchmark-integration.py 2>&1 | tee artifacts/benchmark.log
       - name: Remove temporary browser credentials
