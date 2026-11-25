@@ -17,5 +17,13 @@ foreach (['direktori'=>'[direktori_sekolah]','perbandingan'=>'[bandingkan_sekola
     if(is_wp_error($id)||!$id) WP_CLI::error('Demo page failed');
     $pages[$slug]=get_permalink($id);
     if($slug==='direktori') {update_option('sdp_page_id',$id); update_option('show_on_front','page'); update_option('page_on_front',$id);}
+    if($slug==='perbandingan') update_option('sdp41_compare_page',$id,false);
+    if($slug==='operator') update_option(SDP_Operator::PAGE,$id,false);
 }
+// Use the real bounded snapshot engine. Fictitious profiles must be excluded.
+$r=SDP_Education::start(['period'=>'2025/2026'],1);
+if(is_wp_error($r)) WP_CLI::error($r->get_error_message());
+$r=SDP_Education::step();
+if(is_wp_error($r)) WP_CLI::error($r->get_error_message());
+if(($r['status']??'')!=='complete'||($r['demo']??0)!==3||($r['total']['schools']??-1)!==0||($r['invalid']??-1)!==0) WP_CLI::error('Snapshot must exclude exactly three demo schools.');
 WP_CLI::log(wp_json_encode(['home'=>home_url('/'),'pages'=>$pages,'schools'=>$schools],JSON_UNESCAPED_SLASHES));
