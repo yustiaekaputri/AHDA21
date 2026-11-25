@@ -48,6 +48,7 @@ jobs:
             echo "SDP_WP_ROOT=$RUNNER_TEMP/sdp-wordpress"
             echo "SDP_WP_CLI=$RUNNER_TEMP/wp-cli.phar"
             echo "SDP_PREVIEW_MANIFEST=$RUNNER_TEMP/sdp-preview.json"
+            echo "SDP_PREVIEW_AUTH=$RUNNER_TEMP/sdp-preview-auth.json"
           } >> "$GITHUB_ENV"
       - name: Install WP-CLI
         run: curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$SDP_WP_CLI"
@@ -71,6 +72,9 @@ jobs:
           done
           curl -fsS "$SDP_PREVIEW_URL/" >/dev/null
           "$RUNNER_TEMP/sdp-venv/bin/python" tests/browser/test_preview.py 2>&1 | tee artifacts/browser.log
+      - name: Remove temporary browser credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sdp-preview-auth.json"
       - name: Save screenshots and logs
         if: always()
         uses: actions/upload-artifact@v4
