@@ -64,10 +64,20 @@ with sync_playwright() as p:
         for role in ("subscriber", "admin"):
             context = browser.new_context()
             page = context.new_page()
-            page.goto(base + "/wp-login.php", wait_until="domcontentloaded")
-            page.locator("#user_login").fill(auth[role]["user"])
-            page.locator("#user_pass").fill(auth[role]["password"])
-            page.locator("#wp-submit").click()
+            response = page.goto(manifest["pages"]["operator"], wait_until="domcontentloaded")
+            assert response and response.ok
+            login_link = page.locator(".sdp71").get_by_role("link", name="Masuk", exact=True)
+            login_url = login_link.get_attribute("href")
+            assert login_url and urlsplit(login_url).hostname == "127.0.0.1"
+            response = page.goto(login_url, wait_until="domcontentloaded")
+            assert response and response.ok, f"Login page HTTP {response.status if response else 'no response'}"
+            user_field = page.locator('input[name="log"], #user_login').first
+            pass_field = page.locator('input[name="pwd"], #user_pass').first
+            if not user_field.count() or not pass_field.count():
+                raise AssertionError(f"Missing login fields: path={urlsplit(page.url).path}; title={page.title()[:120]}; visible body={page.locator('body').inner_text()[:250]}")
+            user_field.fill(auth[role]["user"])
+            pass_field.fill(auth[role]["password"])
+            page.locator('form#loginform input[type="submit"], #wp-submit, form#loginform button[type="submit"]').first.click()
             page.wait_for_load_state("domcontentloaded")
             assert any(c["name"].startswith("wordpress_logged_in_") for c in context.cookies()), f"{role}: no login cookie"
             response = page.goto(manifest["pages"]["operator"], wait_until="domcontentloaded")
