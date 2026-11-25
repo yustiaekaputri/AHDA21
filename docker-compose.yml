@@ -1,7 +1,11 @@
 name: sdp-dev
 services:
   db:
-    image: mariadb:10.11
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM mariadb:10.11
+        COPY --chmod=644 config/mariadb.cnf /etc/mysql/conf.d/sdp.cnf
     environment:
       MARIADB_DATABASE: sdp_development
       MARIADB_USER: sdp_dev
@@ -9,7 +13,6 @@ services:
       MARIADB_RANDOM_ROOT_PASSWORD: "1"
     volumes:
       - database:/var/lib/mysql
-      - ./config/mariadb.cnf:/etc/mysql/conf.d/sdp.cnf:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 3s
@@ -33,11 +36,6 @@ services:
       SDP_WP_SECRET: ${SDP_WP_SECRET:?Run scripts/setup.sh}
     volumes:
       - uploads:/var/www/html/wp-content/uploads
-      - ./plugin:/var/www/html/wp-content/plugins/sekolah-directory-pro:ro
-      - ./theme:/var/www/html/wp-content/themes/sekolah-directory-theme:ro
-      - ./scripts:/opt/sdp/scripts:ro
-      - ./tests/localwp:/opt/sdp/tests/localwp:ro
-      - ./tests/integration:/opt/sdp/tests/integration:ro
 volumes:
   database:
   uploads:

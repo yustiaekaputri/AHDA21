@@ -38,9 +38,18 @@ RUN --mount=type=secret,id=sdp_proxy_ca \
     for sapi in apache2 cli; do ln -s /etc/sdp/development.ini "/etc/php/${PHP_VERSION}/$sapi/conf.d/99-sdp.ini"; done; \
     rm /var/www/html/index.html /tmp/wordpress.tar.gz /tmp/sdp-id.zip; \
     if [ -e /tmp/sdp-build-ca.crt ]; then rm /tmp/sdp-build-ca.crt; fi
-COPY config/development-wordpress.php /var/www/html/wp-config.php
-COPY config/apache.conf /etc/apache2/conf-enabled/sdp.conf
-COPY config/php.ini /etc/sdp/development.ini
+RUN --mount=type=bind,source=.,target=/tmp/sdp-source,readonly \
+    set -eux; \
+    install -D -m 0644 /tmp/sdp-source/config/development-wordpress.php /var/www/html/wp-config.php; \
+    install -D -m 0644 /tmp/sdp-source/config/apache.conf /etc/apache2/conf-enabled/sdp.conf; \
+    install -D -m 0644 /tmp/sdp-source/config/php.ini /etc/sdp/development.ini; \
+    cp -R /tmp/sdp-source/plugin/ /var/www/html/wp-content/plugins/sekolah-directory-pro; \
+    cp -R /tmp/sdp-source/theme/ /var/www/html/wp-content/themes/sekolah-directory-theme; \
+    mkdir -p /opt/sdp/tests; \
+    cp -R /tmp/sdp-source/scripts/ /opt/sdp/scripts; \
+    cp -R /tmp/sdp-source/tests/localwp/ /tmp/sdp-source/tests/integration/ /opt/sdp/tests/; \
+    chmod -R a+rX /var/www/html/wp-content/plugins/sekolah-directory-pro \
+        /var/www/html/wp-content/themes/sekolah-directory-theme /opt/sdp
 WORKDIR /var/www/html
 EXPOSE 80
 CMD ["apache2ctl", "-D", "FOREGROUND"]

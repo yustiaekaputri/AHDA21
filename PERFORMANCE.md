@@ -28,3 +28,7 @@ scripts/reset-test-db.sh --confirm
 ```
 
 Atur `SDP_BENCHMARK_COUNTS` untuk memilih jumlah profil yang sesuai kapasitas host uji.
+
+Pengukuran ulang pada 10.000 profil menghasilkan p50 706,1 ms dan p95 3.236,4 ms ketika host Cloud juga menjalankan build. Sampel SQL terpisah menemukan varian pengambilan ID lalu payload menghasilkan urutan identik, dengan waktu query hangat yang serupa. Prioritaskan pengukuran agregasi dan facet pada host sepi sebelum mengganti query.
+
+MariaDB pada runtime langsung memakai pengaturan default yang teramati, termasuk buffer InnoDB 128 MiB dan 151 koneksi maksimum. RSS proses MariaDB sekitar 219 MiB pada satu sampel setelah pengujian. Pengukuran ini tidak memvalidasi preset Compose 64 MiB atau kapasitas VPS. Beranda diperiksa tanpa aset plugin direktori, sedangkan halaman direktori memuat aset plugin yang dibutuhkan. Sumber media menerima WebP dan sudah memberi atribut lazy loading pada galeri; penghematan byte gambar masih perlu diukur.

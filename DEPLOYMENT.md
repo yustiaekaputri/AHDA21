@@ -2,7 +2,7 @@
 
 ## Lokal dan CI
 
-`make start` menyiapkan WordPress, Apache, PHP dan MariaDB lewat Docker Compose. Port pratinjau default hanya mendengarkan loopback. Jalankan `make test` untuk instalasi uji terpisah. Jaga file `.env` dalam workspace lokal; script membuat kata sandi acak dan Git mengabaikan file itu.
+`make start` menyiapkan WordPress, Apache, PHP dan MariaDB lewat Docker Compose. Port pratinjau default hanya mendengarkan loopback. Jalankan `make start` kembali setelah mengubah sumber agar image memuat revisi terbaru. Gunakan `make test` untuk instalasi uji terpisah. Jaga file `.env` dalam workspace lokal; script membuat kata sandi acak dan Git mengabaikan file itu.
 
 ## Staging dan produksi
 
