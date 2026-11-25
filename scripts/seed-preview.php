@@ -18,11 +18,50 @@ foreach (['TEST0001'=>'SD DEMO FIKTIF','TEST0002'=>'SMP DEMO FIKTIF'] as $npsn=>
     if (is_wp_error($r) || empty($r['id']) || get_post_status((int)$r['id'])!=='publish') WP_CLI::error('Fixture publication failed');
     $profiles[$npsn]=get_permalink((int)$r['id']);
 }
+// Verify period-sensitive arithmetic in memory. Do not store synthetic official totals.
+$aggregate=SDP_Education::blank();
+SDP_Education::add($aggregate,[
+    'npsn'=>'TEST0001','nama'=>'DEMO FIKTIF','jenjang'=>'SD','status'=>'Negeri',
+    'jumlah_siswa'=>'10','jumlah_guru'=>'2',
+    '_field_sources'=>['jumlah_siswa'=>['period'=>'2025/2026'],'jumlah_guru'=>['period'=>'2025/2026']]
+],'2025/2026');
+if($aggregate['schools']!==1||$aggregate['sum']['jumlah_siswa']!==10||$aggregate['sum']['jumlah_guru']!==2||SDP_Education::ratio($aggregate)!=5) WP_CLI::error('Synthetic in-memory aggregate mismatch');
+SDP_Education::add($aggregate,[
+    'npsn'=>'TEST0002','nama'=>'DEMO FIKTIF','jenjang'=>'SMP',
+    'jumlah_siswa'=>'99','jumlah_guru'=>'9',
+    '_field_sources'=>['jumlah_siswa'=>['period'=>'2024/2025'],'jumlah_guru'=>['period'=>'2024/2025']]
+],'2025/2026');
+if($aggregate['schools']!==2||$aggregate['known']['jumlah_siswa']!==1||$aggregate['sum']['jumlah_siswa']!==10||$aggregate['ratio_n']!==1) WP_CLI::error('Wrong-period values counted');
+WP_CLI::log('PASS: in-memory educational aggregate and period exclusion');
+// Real stored snapshots must exclude demo profiles, exactly as in production.
+foreach([1=>'2025/2026',2=>'2024/2025'] as $slot=>$period){
+    $started=SDP_Education::start(['period'=>$period],$slot);
+    if(is_wp_error($started)) WP_CLI::error($started->get_error_message());
+    $job=SDP_Education::step();
+    if(is_wp_error($job)||($job['status']??'')!=='complete'||$job['scanned']!==2||$job['demo']!==2||$job['invalid']!==0||$job['total']['schools']!==0) WP_CLI::error('Snapshot did not safely exclude the two fictional profiles');
+    $stored=get_option(SDP_Education::key($slot),[]);
+    if(($stored['status']??'')!=='complete'||$stored['total']['schools']!==0||$stored['filter']['period']!==$period) WP_CLI::error('Persisted snapshot mismatch');
+    $fp=fopen('php://temp','w+b');
+    SDP_Education::csv($fp,$stored);rewind($fp);
+    $header=fgetcsv($fp,0,',','"','');$row=fgetcsv($fp,0,',','"','');
+    fclose($fp);
+    if(!is_array($header)||!is_array($row)||count($header)!==count($row)) WP_CLI::error('Snapshot CSV export mismatch');
+    $csv=array_combine($header,$row);
+    if($csv['profil']!=='0'||$csv['siswa_total']!==''||$csv['guru_total']!=='') WP_CLI::error('Snapshot export misrepresents excluded demo data');
+    WP_CLI::log('PASS: real database snapshot, fixture exclusion and CSV export '.$period);
+}
+$compared=SDP_Education::compare_snapshots([get_option(SDP_Education::key(1)),get_option(SDP_Education::key(2))]);
+if(is_wp_error($compared)||array_keys($compared)!==['2024/2025','2025/2026']) WP_CLI::error('Snapshot period comparison failed');
 $pages=[];
-foreach (['directory'=>['Direktori DEMO FIKTIF','portal_sekolah'],'compare'=>['Perbandingan DEMO FIKTIF','bandingkan_sekolah'],'statistics'=>['Statistik DEMO FIKTIF','statistik_pendidikan'],'operator'=>['Portal Operator DEMO FIKTIF','portal_operator_sekolah']] as $key=>$spec) {
+foreach (['directory'=>['Direktori DEMO FIKTIF','portal_sekolah'],'compare'=>['Perbandingan DEMO FIKTIF','bandingkan_sekolah'],'statistics'=>['Statistik DEMO FIKTIF','statistik_pendidikan'],'periods'=>['Perbandingan Periode DEMO FIKTIF','perbandingan_periode_pendidikan slots="1,2"'],'operator'=>['Portal Operator DEMO FIKTIF','portal_operator_sekolah']] as $key=>$spec) {
     $id=wp_insert_post(['post_title'=>$spec[0],'post_type'=>'page','post_status'=>'publish','post_content'=>'<p>DEMO FIKTIF — bukan data resmi.</p> ['.$spec[1].']'],true);
     if (is_wp_error($id) || !$id) WP_CLI::error('Page creation failed: '.$key);
     if ($key==='directory') { update_option('show_on_front','page');update_option('page_on_front',$id); }
+    if (in_array($key,['statistics','periods'],true)) {
+        $page=get_post($id);
+        $update=wp_update_post(['ID'=>$id,'post_content'=>'<p>DEMO FIKTIF — data uji dikecualikan dari agregat pendidikan; nilai kosong bukan nol.</p> '.$page->post_content],true);
+        if(is_wp_error($update)) WP_CLI::error('Cannot explain fixture exclusion');
+    }
     if ($key==='compare') update_option('sdp41_compare_page',$id);
     if ($key==='operator') update_option('sdp71_operator_page',$id);
     $pages[$key]=get_permalink($id);

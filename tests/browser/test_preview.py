@@ -27,6 +27,14 @@ with sync_playwright() as p:
             assert response and response.ok, f"{key}: HTTP failure"
             page.locator("body").wait_for()
             assert "DEMO FIKTIF" in page.locator("body").inner_text(), f"{key}: missing demo marker"
+            if key == "statistics":
+                stats=page.locator(".sdp80")
+                assert stats.count()==1 and "2 fiktif, 0 tidak valid" in stats.inner_text()
+                assert stats.locator(".sdp80-card").first.locator("strong").inner_text()=="0"
+                assert "Statistik belum tersedia" not in page.locator("body").inner_text()
+            if key == "periods":
+                stats=page.locator(".sdp80")
+                assert stats.count()==1 and "2024/2025" in stats.inner_text() and "2025/2026" in stats.inner_text()
             page.screenshot(path=str(out/f"{label}-{key}.png"), full_page=True, timeout=30000)
         response = page.goto(query(manifest["pages"]["directory"], sdp_q="TEST0001"), wait_until="domcontentloaded")
         assert response and response.ok
