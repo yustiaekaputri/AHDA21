@@ -17,14 +17,14 @@ def wp(*args):
     # Avoid printing command arguments: user creation includes a random local password.
     result=subprocess.run(['docker','compose','exec','-T','-u','www-data','wordpress','wp',*args],cwd=ROOT,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
     if result.returncode:
-        raise RuntimeError('WP-CLI fixture or state query failed')
+        raise RuntimeError('WP-CLI fixture or state query failed (command '+args[0]+', exit '+str(result.returncode)+')')
     return result.stdout.strip()
 
 def state():
     return json.loads(wp('eval',r'''global $wpdb;
         $claims=$wpdb->get_results("SELECT npsn,user_id,status FROM ".SDP_National::table()." ORDER BY npsn",ARRAY_A);
         $proposals=$wpdb->get_results("SELECT id,npsn,user_id,status FROM ".SDP_Operator::table()." ORDER BY id",ARRAY_A);
-        $a=SDP_Intelligence::load("TEST0001"); $b=SDP_Intelligence::load("TEST0002");
+        $a=SDP_Intelligence::load("ZZQA0001"); $b=SDP_Intelligence::load("ZZQA0002");
         if($wpdb->last_error||is_wp_error($a)||is_wp_error($b)||!is_array($claims)||!is_array($proposals)) WP_CLI::error("Fixture read failed");
         WP_CLI::log(wp_json_encode(["claims"=>$claims,"proposals"=>$proposals,"a"=>$a["visi"]??"","b"=>$b["visi"]??""]));'''))
 
@@ -90,6 +90,17 @@ def denied_response(response,phrases):
 # Check the test environment independently before creating accounts.
 guard=wp('eval',"""if(wp_get_environment_type()!=='local'||home_url('/')!=='http://127.0.0.1:8080/'||(string)get_option('blog_public')!=='0'||!defined('SDP_SAFE_MODE')||!SDP_SAFE_MODE) WP_CLI::error('Not disposable'); WP_CLI::log('LOCAL');""")
 assert guard=='LOCAL'
+# TEST identifiers are intentionally blocked by the production operator engine.
+# Use distinct internal-only fixtures that meet the application's identity format.
+# These are not official NPSNs. They never enter the preview snapshot or public artifacts.
+fixture=wp('eval',r'''if(!is_wp_error(SDP_Intelligence::load("TEST0001"))) WP_CLI::error("Demo identity guard failed");
+    $urls=[]; foreach(["ZZQA0001","ZZQA0002"] as $n){
+        $r=SDP_Directory::save(["npsn"=>$n,"nama"=>"UJI INTERNAL BUKAN SEKOLAH NYATA ".$n,"jenjang"=>"SD","status"=>"Negeri","provinsi"=>"Wilayah Uji Internal","kabupaten"=>"Kabupaten Uji Internal","kecamatan"=>"Kecamatan Uji Internal","sumber"=>"Fixture QA lokal bukan data resmi"],true);
+        if(is_wp_error($r)||empty($r["id"])||get_post_status($r["id"])!=="publish"||is_wp_error(SDP_Intelligence::load($n))) WP_CLI::error("Internal operator fixture unavailable");
+        $urls[]=get_permalink($r["id"]);
+    } WP_CLI::log(wp_json_encode($urls,JSON_UNESCAPED_SLASHES));''','--user=sdp_local_admin')
+URLS['schools']=json.loads(fixture)
+record('Existing TEST identity guard rejects demo profile')
 initial=state()
 assert initial['claims']==[] and initial['proposals']==[],'Fresh fixture required'
 pa,pb=secrets.token_urlsafe(24),secrets.token_urlsafe(24)
@@ -104,33 +115,33 @@ with sync_playwright() as p:
         claim(a,0)
         claim(b,1)
         s=state()
-        record('Two claims submitted via actual browser forms',[(x['npsn'],int(x['user_id']),x['status']) for x in s['claims']]==[('TEST0001',ua,'pending'),('TEST0002',ub,'pending')])
-        portal(a,'TEST0001')
+        record('Two claims submitted via actual browser forms',[(x['npsn'],int(x['user_id']),x['status']) for x in s['claims']]==[('ZZQA0001',ua,'pending'),('ZZQA0002',ub,'pending')])
+        portal(a,'ZZQA0001')
         expect(form(a,'sdp71_submit')).to_have_count(0)
         record('Pending claim cannot submit proposal')
-        review_claim(admin,'TEST0001','approved')
-        review_claim(admin,'TEST0002','approved')
+        review_claim(admin,'ZZQA0001','approved')
+        review_claim(admin,'ZZQA0002','approved')
         record('Admin approved both claims through actual forms',all(x['status']=='approved' for x in state()['claims']))
-        portal(a,'TEST0002')
+        portal(a,'ZZQA0002')
         expect(form(a,'sdp71_submit')).to_have_count(0)
-        expect(a.locator('.sdp71')).not_to_contain_text('TEST0002 — approved')
-        portal(b,'TEST0001')
+        expect(a.locator('.sdp71')).not_to_contain_text('ZZQA0002 — approved')
+        portal(b,'ZZQA0001')
         expect(form(b,'sdp71_submit')).to_have_count(0)
-        expect(b.locator('.sdp71')).not_to_contain_text('TEST0001 — approved')
+        expect(b.locator('.sdp71')).not_to_contain_text('ZZQA0001 — approved')
         record('Both subscribers isolated from other school proposal forms and claim history')
-        portal(a,'TEST0001')
+        portal(a,'ZZQA0001')
         f=fill_proposal(a,'Visi DEMO A teruji')
         nonce=f.locator('[name=_wpnonce]').input_value()
         before=state()
-        attack=ca.request.post(HOME+'wp-admin/admin-post.php',form={'action':'sdp71_submit','npsn':'TEST0002','_wpnonce':nonce,'candidate[field]':'visi','candidate[value]':'Perubahan terlarang','candidate[url]':'https://example.invalid/bukti-demo','candidate[period]':'','candidate[note]':''})
+        attack=ca.request.post(HOME+'wp-admin/admin-post.php',form={'action':'sdp71_submit','npsn':'ZZQA0002','_wpnonce':nonce,'candidate[field]':'visi','candidate[value]':'Perubahan terlarang','candidate[url]':'https://example.invalid/bukti-demo','candidate[period]':'','candidate[note]':''})
         record('Tampered school identity rejected with unchanged database',attack.status==403 and state()==before)
         f.locator('button[type=submit]').click()
         expect(a.locator('.sdp71')).to_contain_text('Menunggu')
         s=state()
         record('Submission is pending, not public mutation',len(s['proposals'])==1 and s['proposals'][0]['status']=='pending' and int(s['proposals'][0]['user_id'])==ua and s['a']==initial['a'] and s['b']==initial['b'])
         pid=str(s['proposals'][0]['id'])
-        portal(b,'TEST0002')
-        expect(b.locator('.sdp71-table')).not_to_contain_text('TEST0001')
+        portal(b,'ZZQA0002')
+        expect(b.locator('.sdp71-table')).not_to_contain_text('ZZQA0001')
         denied=cb.request.post(HOME+'wp-admin/admin-post.php',form={'action':'sdp71_review','id':pid,'decision':'approve','confirm':'1'})
         denied_response(denied,['Akses ditolak'])
         record('Other subscriber cannot see proposal or invoke moderator action',state()==s)
@@ -141,10 +152,10 @@ with sync_playwright() as p:
         expect(admin.locator('h1')).to_contain_text('Portal Operator')
         s=state()
         record('Moderator approval updates only target school',s['a']=='Visi DEMO A teruji' and s['b']==initial['b'] and s['proposals'][0]['status']=='approved')
-        portal(a,'TEST0001')
+        portal(a,'ZZQA0001')
         expect(a.locator('.sdp71-table')).to_contain_text('Disetujui')
         f=fill_proposal(a,'Visi DEMO setelah pencabutan')
-        review_claim(admin,'TEST0001','revoked')
+        review_claim(admin,'ZZQA0001','revoked')
         f.locator('button[type=submit]').click()
         expect(a.locator('body')).to_contain_text('Klaim aktif dan profil publik diperlukan')
         s=state()
