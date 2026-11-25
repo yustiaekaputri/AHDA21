@@ -53,3 +53,26 @@ jobs:
       - name: Stop disposable stack
         if: always()
         run: docker compose down -v
+  database-acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      PHP_VERSION: '8.3'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Start separate disposable database stack
+        run: bash scripts/setup-wordpress.sh DISPOSABLE-LOCAL-ONLY
+      - name: XLSX CSV checkpoint benchmark and restore
+        run: python3 scripts/test-database-acceptance.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: database-acceptance-php-8.3
+          path: artifacts/database-checks.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Stop disposable database stack
+        if: always()
+        run: docker compose down -v
