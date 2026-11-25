@@ -88,9 +88,20 @@ with sync_playwright() as p:
             assert response
             if role == "subscriber":
                 assert response.status == 403, "Subscriber must not access plugin administrator"
+                assert page.locator("#wpbody-content .wrap h1").count() == 0, "Protected dashboard leaked"
             else:
                 assert response.ok and page.locator("#wpbody-content").count() == 1
-                assert "Direktori Sekolah" in page.locator("#wpbody-content").inner_text()
+                assert urlsplit(page.url).path == "/wp-admin/admin.php"
+                assert dict(parse_qsl(urlsplit(page.url).query)).get("page") == "sdp-directory"
+                dashboard = page.locator("#wpbody-content .wrap").filter(
+                    has=page.locator("h1").filter(has_text="Sekolah Directory Pro")
+                ).first
+                assert dashboard.count() == 1, "Expected actual Sekolah Directory Pro dashboard"
+                assert dashboard.get_by_role("link", name="Impor CSV", exact=True).count() == 1
+                assert dashboard.get_by_role("link", name="Tambah sekolah", exact=True).count() == 1
+                assert "SD DEMO FIKTIF" in dashboard.inner_text()
+                assert "SMP DEMO FIKTIF" in dashboard.inner_text()
+            print(f"PASS: {role} login, operator portal, cache protection and dashboard access policy")
             context.close()
         print("PASS: authenticated operator and admin/subscriber access separation (no private screenshots)")
     else:
