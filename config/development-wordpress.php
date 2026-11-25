@@ -26,5 +26,7 @@ define('WP_DEBUG', true);
 define('WP_DEBUG_DISPLAY', false);
 define('AUTOMATIC_UPDATER_DISABLED', true);
 define('WP_HTTP_BLOCK_EXTERNAL', true);
-define('ABSPATH', __DIR__ . '/');
+if (!defined('ABSPATH')) {
+    define('ABSPATH', __DIR__ . '/');
+}
 require_once ABSPATH . 'wp-settings.php';

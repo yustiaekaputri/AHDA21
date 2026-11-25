@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-export COMPOSE_PROJECT_NAME="sdp-test-${GITHUB_RUN_ID:-local}-${SDP_PHP_VERSION:-8.3}-$$"
+export COMPOSE_PROJECT_NAME="sdp-test-${GITHUB_RUN_ID:-local}-$$"
 export SDP_HTTP_PORT="${SDP_TEST_PORT:-3001}"
 export SDP_BIND_ADDRESS=127.0.0.1
 export SDP_SITE_URL="http://127.0.0.1:$SDP_HTTP_PORT"

@@ -49,3 +49,4 @@ Baca PANDUAN-V81.txt; batas versi sebelumnya dalam bagian historis tidak berlaku
 - Siapkan konfigurasi WordPress–MariaDB, data DEMO terisolasi, rangkaian PHPUnit dan Playwright, serta CI dua versi PHP.
 - Selaraskan kelayakan klaim dengan aturan portal operator agar admin tidak bisa menyetujui klaim profil demo yang ditolak modul peninjauan.
 - Validasi metadata unggahan CSV dan XLSX sebelum pemrosesan dan ringkas navigasi tema pada layar kecil.
+- Perbaiki pengalihan berulang pada `/wp-admin/` di Apache lokal dan pastikan profil Compose dapat dijalankan pada filesystem dengan izin host ketat.
