@@ -2,6 +2,9 @@ name: WordPress integration
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
+concurrency:
+  group: wordpress-integration-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   integration:
     runs-on: ubuntu-24.04
@@ -14,6 +17,8 @@ jobs:
       PHP_VERSION: ${{ matrix.php }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Start disposable stack
         run: bash scripts/setup-wordpress.sh DISPOSABLE-LOCAL-ONLY
       - name: Lint plugin and theme
@@ -42,6 +47,7 @@ jobs:
           name: wordpress-php-${{ matrix.php }}
           path: artifacts/
           if-no-files-found: warn
+          retention-days: 14
       - name: Stop disposable stack
         if: always()
         run: docker compose down -v
