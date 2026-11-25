@@ -143,7 +143,7 @@ final class SDP_Engine {
 		if ( ! empty( $wpdb->last_error ) ) {
 			return new WP_Error( 'database', 'Gagal membaca profil.' );
 		}
-		if ( ! $r || $r['post_type'] !== SDP_Directory::TYPE || ! in_array( $r['post_status'], array( 'publish', 'draft', 'pending' ), true ) || '' !== $r['post_password'] ) {
+		if ( ! $r || SDP_Directory::TYPE !== $r['post_type'] || ! in_array( $r['post_status'], array( 'publish', 'draft', 'pending' ), true ) || '' !== $r['post_password'] ) {
 			return null;
 		}
 		foreach ( array( 'provinsi', 'kabupaten', 'kecamatan', 'jenjang' ) as $k ) {

@@ -488,7 +488,7 @@ final class SDP_Collector {
 					return new WP_Error( 'pending', 'Selesaikan atau batalkan antrean saat ini sebelum menambah dataset.' );
 				}
 				$f       = $_FILES['dataset'] ?? array();
-				$hasfile = isset( $f['error'] ) && (int) $f['error'] !== UPLOAD_ERR_NO_FILE;
+				$hasfile = isset( $f['error'] ) && UPLOAD_ERR_NO_FILE !== (int) $f['error'];
 				if ( 'upload' === $op || ( 'preview' === $op && $hasfile ) ) {
 					if ( ( $f['error'] ?? 1 ) !== UPLOAD_ERR_OK || ! is_uploaded_file( $f['tmp_name'] ?? '' ) || ( $f['size'] ?? 0 ) > SDP_Resource::cap( self::MAX_BYTES, 2097152 ) ) {
 						return new WP_Error( 'file', 'File tidak valid atau melebihi batas mode aktif.' );

@@ -1,6 +1,7 @@
 name: sdp-dev
 services:
   db:
+    restart: unless-stopped
     build:
       context: .
       dockerfile_inline: |
@@ -19,6 +20,7 @@ services:
       timeout: 5s
       retries: 30
   wordpress:
+    restart: unless-stopped
     build:
       context: .
       args:

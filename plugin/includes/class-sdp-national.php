@@ -476,7 +476,7 @@ final class SDP_National {
 								return new WP_Error( 'checkpoint', 'Checkpoint akhir gagal disimpan.' );
 							}break;}
 						$num = $job['seen'] + 1;
-						if ( $line === array( null ) ) {
+						if ( array( null ) === $line ) {
 							$job['skipped']++;
 						} elseif ( count( $line ) !== count( $keys ) ) {
 							$job['invalid']++;

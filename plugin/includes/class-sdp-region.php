@@ -199,7 +199,7 @@ final class SDP_Region {
 			$n     = 1;
 			while ( ( $v = fgetcsv( $f, 0, ',', '"', '' ) ) !== false ) {
 				++$n;
-				if ( $v === array( null ) ) {
+				if ( array( null ) === $v ) {
 					continue;
 				}if ( count( $rows ) >= self::limits()['rows'] || count( $v ) !== 4 ) {
 					return new WP_Error( 'row', 'Batas baris/kolom terlampaui pada baris ' . $n );
@@ -280,7 +280,7 @@ final class SDP_Region {
 			$line = 1;
 			while ( ( $v = fgetcsv( $f, 0, ',', '"', '' ) ) !== false ) {
 				++$line;
-				if ( $v === array( null ) ) {
+				if ( array( null ) === $v ) {
 					continue;
 				}if ( ++$n > self::limits()['rows'] || count( $v ) !== count( $h ) ) {
 					return new WP_Error( 'row', 'Batas baris atau kolom tidak cocok pada baris ' . $line );

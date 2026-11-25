@@ -141,7 +141,7 @@ final class SDP_Pilot {
 					)
 				);
 				$state  = $orphan ? 'broken_profile' : self::classify( $kind, $r, null, '' );
-			} elseif ( ! is_array( $old ) || $rec['post_type'] !== SDP_Directory::TYPE || '' !== $rec['post_password'] ) {
+			} elseif ( ! is_array( $old ) || SDP_Directory::TYPE !== $rec['post_type'] || '' !== $rec['post_password'] ) {
 				$state = 'broken_profile';
 			} else {
 				$state = self::classify( $kind, $r, $old, $rec['post_status'], SDP_Intelligence::state( $old )['locks'] );

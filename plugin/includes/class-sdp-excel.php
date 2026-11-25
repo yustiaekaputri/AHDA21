@@ -67,9 +67,9 @@ final class SDP_Excel {
 			libxml_clear_errors();
 			libxml_use_internal_errors( $old );}}
 	private static function element( $r, $name, $ns = self::NS ) {
-		return $r->nodeType === XMLReader::ELEMENT && $r->localName === $name && $r->namespaceURI === $ns;}
+		return XMLReader::ELEMENT === $r->nodeType && $r->localName === $name && $r->namespaceURI === $ns;}
 	private static function end( $r, $name, $depth ) {
-		return $r->nodeType === XMLReader::END_ELEMENT && $r->localName === $name && $r->depth === $depth;}
+		return XMLReader::END_ELEMENT === $r->nodeType && $r->localName === $name && $r->depth === $depth;}
 	private static function text_group( $r ) {
 		$depth = $r->depth;
 		$name  = $r->localName;
@@ -77,7 +77,7 @@ final class SDP_Excel {
 		if ( $r->isEmptyElement ) {
 			return '';
 		}while ( $r->read() && ! self::end( $r, $name, $depth ) ) {
-			if ( self::element( $r, 't' ) && ( $r->depth === $depth + 1 || ( $r->depth === $depth + 2 && $r->namespaceURI === self::NS ) ) ) { // exclude phonetic annotations by checking rPh in the traversal below
+			if ( self::element( $r, 't' ) && ( $r->depth === $depth + 1 || ( $r->depth === $depth + 2 && self::NS === $r->namespaceURI ) ) ) { // exclude phonetic annotations by checking rPh in the traversal below
 				$v .= $r->readString();
 				self::check_text( $v );
 			} elseif ( self::element( $r, 'rPh' ) && ! $r->isEmptyElement ) {

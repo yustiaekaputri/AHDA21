@@ -12,7 +12,7 @@ final class SDP_Integrity {
 			return new WP_Error( 'identity', 'Payload indeks tidak cocok dengan NPSN.' );
 		}
 		$id = (int) ( $existing['post_id'] ?? 0 );
-		if ( ! $id || ! $post || (int) $post->ID !== $id || $post->post_type !== SDP_Directory::TYPE || ! in_array( $post->post_status, array( 'publish', 'draft', 'pending', 'private', 'future', 'trash' ), true ) ) {
+		if ( ! $id || ! $post || (int) $post->ID !== $id || SDP_Directory::TYPE !== $post->post_type || ! in_array( $post->post_status, array( 'publish', 'draft', 'pending', 'private', 'future', 'trash' ), true ) ) {
 			return new WP_Error( 'identity', 'Relasi artikel tidak valid. Audit sebelum memperbarui.' );
 		}
 		if ( $meta !== array( $npsn ) || array_values( $owners ) !== array( $npsn ) ) {

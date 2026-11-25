@@ -137,7 +137,7 @@ final class SDP_Media {
 		if ( false === $bytes ) {
 			return new WP_Error( 'file', 'File tidak dapat dibaca.' );
 		}
-		if ( ( $info[2] === IMAGETYPE_PNG && strpos( $bytes, 'acTL' ) !== false ) || ( $info[2] === IMAGETYPE_WEBP && ( strpos( $bytes, 'ANIM' ) !== false || strpos( $bytes, 'ANMF' ) !== false ) ) ) {
+		if ( ( IMAGETYPE_PNG === $info[2] && strpos( $bytes, 'acTL' ) !== false ) || ( IMAGETYPE_WEBP === $info[2] && ( strpos( $bytes, 'ANIM' ) !== false || strpos( $bytes, 'ANMF' ) !== false ) ) ) {
 			return new WP_Error( 'animated', 'Gambar animasi tidak didukung.' );
 		}
 		return array(

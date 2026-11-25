@@ -205,7 +205,7 @@ final class SDP_Directory {
 		return get_option( 'sdp_db_version' ) === self::VERSION;
 	}
 	public static function delete_post( $id, $post = null ) {
-		if ( ! $post || $post->post_type !== self::TYPE ) {
+		if ( ! $post || self::TYPE !== $post->post_type ) {
 			return;
 		}
 		global $wpdb;

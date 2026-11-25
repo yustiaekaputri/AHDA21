@@ -204,7 +204,7 @@ final class SDP_SEO {
 			$robots['noindex'] = true;
 		}return $robots;}
 	public static function sitemap( $args, $type ) {
-		if ( $type !== SDP_Directory::TYPE ) {
+		if ( SDP_Directory::TYPE !== $type ) {
 			return $args;
 		}$existing          = $args['meta_query'] ?? array();
 		$args['meta_query'] = array(
