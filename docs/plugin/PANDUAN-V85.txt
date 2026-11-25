@@ -1,0 +1,25 @@
+SEKOLAH DIRECTORY PRO 8.5.0 — SMART SCHOOL WEBSITE CRAWLER
+Beta untuk pengujian LocalWP. Pertahankan tema v7.0 dan data versi sebelumnya.
+
+INSTALASI
+1. Cadangkan WordPress (database, wp-content dan konfigurasi), gunakan salinan LocalWP.
+2. Upload ZIP plugin melalui Plugins > Add New > Upload Plugin, Replace current with uploaded.
+3. Pastikan aktif. Direktori Sekolah > Penelusuran Website.
+4. Impor identitas nyata yang berizin. Isi website resmi melalui Penemuan Website v8.4 atau edit profil.
+5. Masukkan NPSN, konfirmasi izin crawling dan penggunaan ulang, Buat / ganti pekerjaan.
+6. Klik Periksa robots.txt. Tidak ada akses saat membuat pekerjaan.
+7. Setelah jeda minimum 60 detik atau crawl-delay yang lebih lama, klik Proses 1 halaman. Ulangi manual sampai selesai. Tidak ada cron baru. Jika tidak ingin melanjutkan, tinggalkan halaman; checkpoint sampai 24 jam (transient bisa dihapus lebih awal oleh cache).
+8. Pada Usulan per halaman, klik Kirim ke pratinjau Website Sekolah; buka menu Website Sekolah. Ini mengganti pratinjau v6.1 milik akun Anda. Periksa/sunting usulan, sumber, hak publikasi, privasi, pilih kolom kosong dan simpan. Ulangi sumber lain secara terpisah. Tidak ada perubahan artikel oleh crawler sendiri. Pratinjau 15 menit.
+9. Jika HTTP 403/429/5xx, redirect, DNS gagal, identitas konflik, atau robots tidak didukung: berhenti. Jangan mencoba melewati pembatasan. Tinjau penyebab secara manual; pekerjaan yang dihentikan tidak dapat diteruskan atau dikirim untuk simpan. Buat pekerjaan baru hanya setelah permasalahan/izin jelas.
+
+LIMIT DAN VPS
+Default hemat: 5 halaman HTML per pekerjaan, kedalaman 1, 256 KiB per HTML, timeout 8 detik. Standar: 15 halaman, kedalaman 2, 512 KiB, timeout 12 detik. Keduanya: 30 kandidat antrean pada satu waktu, 1 pekerjaan aktif per akun admin, 1 request per klik, robots.txt maksimum 500 KiB, jeda global crawler minimum 60 detik (juga memeriksa jeda discovery dan website collector), crawl-delay sampai 3600 detik; di atasnya dihentikan. Tidak ada tabel, aset publik, atau cron baru. WP transient bukan penyimpanan permanen. Pembatas bukan pengukur total bandwidth dan bukan jaminan performa. Gunakan LocalWP untuk pengumpulan data; VPS RAM 1 GB untuk publikasi. Mode standar: define('SDP_LOW_RESOURCE', false); hanya jika sumber daya telah diuji. Default hemat tetap aktif.
+
+PERILAKU CRAWLER
+Mulai dari website resmi tercatat. HTTPS host persis sama; tidak mengikuti redirect, query, fragmen, link skema relatif, URL encoded atau path ambigu. Hanya path ASCII sederhana. Tidak memuat JS, gambar, PDF, sitemap, atau file unduhan. Tautan anchor ber-href dengan tanda kutip dan kata kunci profil/visi/misi/sejarah/fasilitas/prestasi/ekstrakurikuler/SPMB/jurusan, dll. Kata kunci fasilitas hanya penemuan tautan: parser v6.1 belum mengekstrak jumlah fasilitas. Setiap halaman harus mencantumkan nama/NPSN yang sesuai. Parser teks v6.1 mengenali judul eksplisit: visi, misi, tujuan, sejarah, ekstra, prestasi, spmb, jurusan, mitra_industri, biaya, beasiswa. Tidak menjamin semua situs kompatibel. Halaman noindex/nofollow/noarchive/nosnippet diabaikan secara konservatif. Duplikasi berdasarkan URL persis; bukan dedup konten. Tidak memanggil AI.
+
+ROBOTS DAN KEAMANAN
+Penerapan subset konservatif RFC 9309: user-agent khusus atau wildcard, grup gabungan, longest match, allow saat seri, * dan $, crawl-delay nonstandar. 404/410 robots berarti tidak ada aturan, bukan izin penggunaan konten. Status lain selain 200 berhenti. Pola yang tidak didukung (termasuk encoded/query), respons terlalu besar, encoding tidak didukung dihentikan. Tidak sepenuhnya kompatibel RFC untuk seluruh sintaks. Robots diperiksa dalam pekerjaan, maks 24 jam. DNS A/AAAA harus publik dan wp_safe_remote_get, tanpa redirect. DNS preflight tidak menjamin IP terpin terhadap DNS rebinding; sebelum penggunaan produksi, batasi egress private/internal/link-local/metadata melalui firewall atau proxy. Modul lama tidak seluruhnya memakai pembatas crawler ini. Jangan jalankan dengan website yang tidak mengizinkan akses. Hindari informasi pribadi siswa dan teks tanpa izin.
+
+PENGUJIAN
+Uji satu profil nyata di LocalWP dengan izin. Pastikan robots deny tidak memicu permintaan halaman; cek log 403/429 dan waktu jeda; uji domain lain dan perubahan website saat job berjalan; uji pratinjau, simpan kolom kosong dan pastikan data lama utuh. Verifikasi penggunaan RAM, CPU, bandwidth, dan log server. Belum ada uji integrasi WordPress/MySQL/DNS/HTTP nyata, audit keamanan menyeluruh atau benchmark VPS. Pengujian 677 pemeriksaan terdiri dari regresi dan helper simulasi; tidak mencakup uji pengiriman HTTP baru dengan DNS nyata.

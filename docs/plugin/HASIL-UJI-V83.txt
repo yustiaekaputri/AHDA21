@@ -1,0 +1,48 @@
+SDP 8.3.0 — hasil pengujian
+Regresi v8.0: 489 PASS; mode hemat: 28 PASS; opt-in jaringan: 1 PASS; helper Excel PHP: 12 PASS; konverter Python XLSX: 13 PASS (lihat log).
+V8.3: 28 pemeriksaan baru memakai CSV nyata dan database simulasi.
+V82 PHP TOTAL 12 PASS
+PASS 1 low resource cap
+PASS 2 invalid namespace
+PASS 3 invalid edition
+PASS 4 dotted code
+PASS 5 BPS ten digits
+PASS 6 no namespace conversion
+PASS 7 BPS parent
+PASS 8 hierarchy sorted then inserted
+PASS 9 idempotent
+PASS 10 ambiguous city and regency
+PASS 11 qualified kabupaten
+PASS 12 qualified kota
+PASS 13 canonical prefix
+PASS 14 full hierarchical match
+PASS 15 normalized name
+PASS 16 missing parent rejected
+PASS 17 wrong parent rejected
+PASS 18 namespace isolated
+PASS 19 edition isolated
+PASS 20 mismatched parent rejected
+PASS 21 orphan rejected
+PASS 22 same edition conflict rejected
+PASS 23 duplicate rejected
+PASS 24 CSV normalized and zero retained
+PASS 25 normalization does not write
+PASS 26 formula rejected
+PASS 27 leading zero preserved
+PASS 28 batch cap enforced
+V83 TOTAL 28 PASS
+PASS 1 real XLSX inline strings, 2 rows
+PASS 2 zero NPSN, quote and multiline preserved
+PASS 3 missing cell stays empty
+PASS 4 select second sheet
+PASS 5 missing sheet rejected
+PASS 6 existing output protected
+PASS 7 formula rejected atomically
+PASS 8 formula-like text rejected
+PASS 9 extra data without header rejected
+PASS 10 duplicate headers rejected
+PASS 11 DTD rejected
+PASS 12 real shared strings workbook
+PASS 13 shared string leading zero preserved
+PYTHON TOTAL 13 PASS
+Tidak ada pengujian MySQL/WordPress nyata, benchmark VPS, atau validasi master resmi nasional.

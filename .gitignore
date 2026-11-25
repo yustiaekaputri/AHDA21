@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+wp-config.php
+*.log
+.DS_Store

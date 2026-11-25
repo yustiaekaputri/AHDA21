@@ -1,0 +1,24 @@
+SEKOLAH DIRECTORY PRO v6.1.0 — WEBSITE SEKOLAH (BETA)
+
+Upgrade
+1. Cadangkan situs dan database LocalWP. Jalankan situs, buka WP Admin.
+2. Plugins > Add New Plugin > Upload Plugin, pilih ZIP v6.1.0, Replace current with uploaded.
+3. Aktifkan, periksa Direktori Sekolah > Website Sekolah. Modul lama tetap disertakan; tidak ada tabel atau kolom baru.
+
+Pengujian satu sekolah nyata
+1. Impor satu NPSN yang benar dari sumber berizin. Gunakan status draf. Data demo ditolak oleh kolektor.
+2. Di Tambah / perbarui, pastikan website resmi sekolah telah dicatat dengan domain persis. Periksa melalui sumber resmi, bukan sekadar hasil pencarian.
+3. Buka situs tersebut di browser. Periksa ketentuan penggunaan, robots.txt, izin akses otomatis dan penggunaan ulang data. Pilih URL spesifik (misalnya halaman profil, visi/misi, sejarah) yang benar-benar diizinkan. Jika akses otomatis tidak diizinkan, jangan gunakan kolektor.
+4. Direktori Sekolah > Website Sekolah. Masukkan NPSN dan URL HTTPS publik dengan domain yang persis sama. URL tidak boleh memiliki kredensial, port eksplisit, query atau fragmen. URL dengan www dan tanpa www dianggap berbeda; pengalihan tidak diikuti. Jangan mengubah URL website pada profil hanya untuk mengakali batasan.
+5. Centang persetujuan dan Ambil dan pratinjau. Ini satu permintaan HTTP; tidak membuat artikel atau mengubah data. Tunggu minimal 60 detik antarpermintaan ke domain yang sama. Timeout 15 detik, maksimal 1 MiB HTML UTF-8. Respons bukan HTTP 200 ditolak, tanpa retry.
+6. Jika ada usulan, periksa halaman sumber, identitas NPSN/nama, konteks, tanggal, data pribadi dan hak publikasi. Gunakan ringkasan faktual sendiri atau teks yang mempunyai izin penggunaan ulang. Jangan menyalin artikel lengkap, nama siswa, kontak pribadi, atau data sensitif. Jangan menganggap usulan sebagai data terverifikasi.
+7. Pilih kolom kosong yang diinginkan, sunting isinya, lalu centang konfirmasi izin dan peninjauan. Klik Simpan kolom kosong terpilih. Pratinjau hanya untuk administrator yang membuatnya, berlaku 15 menit, dihapus setelah berhasil atau dibuang. Profil terbit langsung diperbarui; profil draf tetap draf. Gunakan draf untuk pengujian.
+8. Periksa artikel dan sumber data per atribut. Uji kembali dengan kolom yang telah terisi: data lama tidak ditimpa. Bila perlu, gunakan menu Tambah / perbarui untuk koreksi manual setelah verifikasi.
+
+Atribut: visi, misi, tujuan, sejarah, ekstrakurikuler, prestasi, SPMB, jurusan/kompetensi, mitra industri, biaya, beasiswa. Parser eksperimental hanya mengenali judul HTML eksplisit h1–h6 yang cocok dengan kamus judul, diikuti paragraf atau item daftar. Judul gabungan seperti “Visi dan Misi” tidak dipisah secara otomatis. Maksimum 1800 byte kandidat per atribut. Bagian lain diabaikan sejauh dikenali parser; konten tersembunyi dengan CSS, markup kompleks dan batas bagian yang ambigu masih mungkin salah terdeteksi. Tidak memakai AI, tidak menjalankan JavaScript, tidak merayapi halaman lain, tidak mencari website secara otomatis, tidak mengambil foto atau mengubah jumlah fasilitas menjadi angka dari narasi. Tidak menguji izin akses secara otomatis; administrator harus memeriksa terlebih dahulu. Fitur baru hanya manual dan satu halaman per permintaan; pengayaan berjadwal v6.0 tetap terpisah.
+
+Batasan dan keamanan
+- Pemeriksaan domain persis, URL HTTPS, wp_safe_remote_get, sertifikat SSL, tanpa pengalihan dan batas respons adalah perlindungan dasar; bukan audit SSRF independen. Untuk produksi, batasi egress jaringan dan lakukan audit DNS/HTTP, permission, serta konfigurasi server.
+- Pencocokan nama/NPSN berupa pemeriksaan tekstual, bukan verifikasi kepemilikan website. Sumber resmi harus diverifikasi administrator. Bila NPSN lain disebut secara eksplisit, parser menolak halaman meskipun nama cocok. Situs dengan identitas pada gambar/JS mungkin tidak dapat diproses.
+- Pengujian 250 fungsi (203 regresi + 47 baru) dengan stub WordPress, database dan HTTP. Tidak menguji jaringan nyata, browser, WordPress/LocalWP atau MySQL. Tidak menjamin keamanan atau kapasitas produksi. Data dan profil contoh lama di ZIP tetap fiktif.
+- Lihat PANDUAN-V60.txt dan panduan versi sebelumnya untuk impor, pengayaan NPSN, SEO, portal, analitik, API dan WP-CLI.

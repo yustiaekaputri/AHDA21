@@ -1,0 +1,46 @@
+SEKOLAH DIRECTORY PRO — 10.0.0-rc.2 — 25 November 2026
+Kandidat staging; belum rilis stabil.
+
+SUMBER YANG DITELUSURI
+- Data Induk: https://data.kemendikdasmen.go.id/data-induk/satpen/daftar
+  Laman menampilkan tabel NPSN, nama, bentuk, status, alamat, dan tombol Unduh Data. Tanggal pembaruan yang ditampilkan saat penelusuran: 29 Oktober 2026. File unduhan belum diperoleh; format sebenarnya belum diuji.
+- Dataset: https://data.kemendikdasmen.go.id/dataset
+  Portal menyebut CSV/XLSX dan format lain menurut kategori. Periksa granularitas: agregat provinsi bukan statistik sekolah.
+- Referensi: https://referensi.data.kemendikdasmen.go.id/satpen/cari
+  Pencarian publik. Penjelasan NPSN/residu: https://referensi.data.kemendikdasmen.go.id/pustaka/satuan_pendidikan
+- Dapodik: https://dapo.kemendikdasmen.go.id/
+  Keterangan data: https://pusatinformasi.ult.kemendikdasmen.go.id/hc/id/articles/55316840071577-Informasi-Terkait-Data-yang-Tersedia-pada-Sekolah-Kita
+- Kemenag: https://satudata.kemenag.go.id/ ; EMIS bukan API terbuka yang telah teruji.
+- BAN-PDM: https://ban-pdm.id/ ; cari NPSN dan periksa keputusan resmi, tahun serta perubahan hasil.
+- Kemendagri: https://pelita.kemendagri.go.id/ ; master administrasi.
+- BPS: https://www.bps.go.id/ ; https://sirusa.web.bps.go.id/metadata/variabel/193030 ; kode statistik terpisah.
+Kanal permohonan data: https://data.kemendikdasmen.go.id/ (menu PPID).
+Tidak ada jaminan hak publikasi atau akses massal dari keberadaan portal. Periksa ketentuan dataset, izin dan perlindungan data; jangan mengambil data individu, akun, NIK, NISN, kontak pribadi, atau menerobos autentikasi.
+
+INSTALASI
+Backup file dan database. Upgrade di clone LocalWP via Plugins > Add New > Upload plugin. Jangan instal ZIP paket lengkap sebagai plugin. Gunakan ZIP plugin di dalamnya. Tema v7.0 tetap sama. Buka Direktori Sekolah > Validasi Sumber Nasional. Menu hanya untuk admin, tanpa cron/permintaan HTTP/tabel baru. Mode hemat tetap default.
+
+VALIDATOR LOKAL
+Python 3.8+ tanpa paket pihak ketiga; jalankan dari komputer lokal, bukan VPS. Batas input 2 MiB, 1.000 baris, 128 kolom, UTF-8 (BOM diterima). Konversi XLSX melalui alat v8.2; pertahankan kode sebagai teks. Pecah file berdasarkan wilayah secara lokal; jangan mengimpor dataset penuh langsung ke VPS. Audit saja jika tidak menggunakan --output. Gunakan --delimiter ';' bila diperlukan.
+
+Contoh perintah (ubah nama file, edisi dan izin sesuai dokumen nyata; bukan pernyataan izin):
+python sdp-validate-source.py sekolah.csv --kind identity --source https://data.kemendikdasmen.go.id/data-induk/satpen/daftar --edition "EDISI-AKTUAL" --rights "DASAR-IZIN-AKTUAL" --output sekolah-valid.csv > laporan-identitas.json
+
+Identitas membutuhkan NPSN, nama, bentuk pendidikan spesifik, status, provinsi, kabupaten/kota, kecamatan. Jika file hanya berisi kabupaten dan tidak memiliki provinsi, tambahkan dari sumber/metadata resmi yang terverifikasi, jangan menebak. Bentuk seperti SD/MI/SMP/MTs dibedakan dari jenjang umum PENDIDIKAN DASAR. Untuk kolom bernama jenjang yang telah dipastikan berisi bentuk spesifik, gunakan --canonical-form. Bentuk yang belum didukung ditolak agar diperiksa manual. Kolom tidak dikenal diabaikan. Alat tidak membuktikan data bebas PII dalam kolom yang diizinkan. Periksa kembali seluruh nilai sebelum publikasi.
+
+Statistik: --kind statistics; wajib NPSN, tahun_data/periode/semester yang persis sesuai --edition, minimal satu jumlah_siswa/guru/tendik/rombel. Nol adalah nilai valid. Agregat wilayah tidak dapat diimpor ke profil.
+Akreditasi: --kind accreditation; wajib NPSN, akreditasi, tahun_akreditasi, nomor_sk_akreditasi. Periksa keputusan yang berlaku. Konversi PDF secara manual, bukan dengan menebak.
+
+Laporan JSON berisi SHA256 file input, SHA256 output jika dibuat, mapping, jumlah baris, jumlah error, 30 contoh error (nomor rekaman, bukan nilai), edisi, URL, dasar izin yang dinyatakan operator. Exit 0 = format lulus, 2 = gagal. Tidak mengubah sumber dan tidak menimpa output. Tidak ada output CSV jika ada baris gagal. NPSN duplikat hanya dicek per file; periksa lintas batch sebelum impor. Tidak ada verifikasi online, tidak ada penerbitan otomatis. URL dan izin yang diberikan tidak diautentikasi. Jangan mengisi laporan dengan rahasia.
+
+IMPOR PERTAMA
+1. Pilih satu kabupaten, 100 profil nyata, dapatkan file dan dokumentasi hak penggunaan.
+2. Jalankan validator, tinjau laporan, cek sampel pada Referensi Data Pendidikan. Simpan file asli, output, laporan JSON dalam arsip lokal.
+3. Bila perlu normalisasi wilayah melalui Master Wilayah dan ulangi validasi. Jangan menganggap nama kabupaten sama dengan kota.
+4. Sumber Resmi > jenis general untuk identity; statistics/accreditation untuk pelengkap. Isi nama sumber dan edisi secara eksplisit. URL dataset langsung hanya jika benar-benar tersedia dan diizinkan; jangan memakai URL halaman HTML sebagai dataset. Jika menggunakan upload lokal, kosongkan URL jika bukan URL unduh langsung; simpan URL rujukan dalam laporan terpisah. Mode isi kosong, jadwal mati, publikasi langsung mati. Pratinjau dulu, lalu antrekan.
+5. Uji NPSN yang sama dua kali, pastikan tidak menggandakan artikel; tinjau status draf dan data sumber. Jangan aktifkan overwrite massal. Dataset pelengkap hanya untuk profil yang sudah ada.
+6. Lakukan audit `wp sdp readiness --audit`, smoke test RC1 pada clone nonindeks sesuai panduan RC1, dan uji benchmark lokal.
+7. Baru setelah data dan izin diverifikasi, publikasi terpilih. Jangan impor contoh fiktif ke produksi.
+
+BATASAN
+Belum ada file data nasional resmi yang diunduh atau diimpor dalam pengembangan RC2, tidak ada API langsung baru, tidak ada pengujian WordPress/MySQL nyata. Validator bersifat opsional, tidak memblokir importer lama. Laporan provenance eksternal, belum otomatis terkait ke tiap rekaman WordPress. Uji lintas file, data real, dan akses sumber masih diperlukan. Mode hemat, cache dan scheduler sebelumnya tetap dipertahankan; tidak ada pengukuran VPS aktual. RC3: pilot impor data nyata dan verifikasi hasil.

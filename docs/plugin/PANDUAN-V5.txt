@@ -1,0 +1,44 @@
+SEKOLAH DIRECTORY PRO 5.0.0 — NATIONAL SCALE (beta pengujian lokal)
+
+1. UPGRADE
+Cadangkan seluruh website/database LocalWP, lalu upload ZIP melalui Plugins > Add New > Upload Plugin > Replace current with uploaded. Pastikan plugin aktif. Buka Direktori Sekolah > Skala Nasional untuk migrasi dua tabel baru (sdp_claims dan sdp_audit). Tabel sekolah, antrean, riwayat, laporan koreksi, artikel dan shortcode sebelumnya dipertahankan. Jangan uninstall/hapus data lama. Jika profil 404, simpan ulang Settings > Permalinks. Uji dulu pada clone situs.
+
+2. BACKUP DAN RESTORE
+LocalWP: ekspor situs lengkap atau salin website secara aman termasuk database dan wp-content. Di Open Site Shell, bila WP-CLI tersedia:
+  wp db export "D:/backup/sdp-sebelum-v5.sql"
+Gunakan folder privat di luar web root; simpan juga wp-content, konfigurasi dan file terkait. Perintah restore berikut menimpa database tujuan: jalankan hanya pada situs uji yang tepat setelah backup dan verifikasi file:
+  wp db import "D:/backup/sdp-sebelum-v5.sql"
+Tidak ada tombol restore yang menghapus/mengganti database di browser. Dokumentasi: https://developer.wordpress.org/cli/commands/db/export/ dan https://developer.wordpress.org/cli/commands/db/import/.
+
+3. WP-CLI
+Buka LocalWP > Start Site > Open Site Shell. Jalankan wp --info dan wp plugin list. Gunakan path aktual dan username administrator aktual. Command berikut mengasumsikan WordPress terpasang dan plugin aktif.
+  wp sdp health
+  wp sdp indexes --yes
+Indeks opsional untuk kombinasi wilayah/jenjang dan waktu pembaruan. Buat hanya setelah backup, pada jam sepi; ALTER TABLE dapat mengunci tabel dan membutuhkan ruang disk. Tidak otomatis saat upgrade. Nama indeks tetap sama setelah ulang. Kinerja aktual perlu EXPLAIN/benchmark MySQL.
+
+4. IMPORT CSV STREAMING
+Tidak perlu mengunggah dataset nasional lewat web. CSV UTF-8, header NPSN wajib (alias tersedia), kolom unik, 150 kolom maksimum. Koma default, titik koma dengan --delimiter=semicolon. Nilai angka tanpa separator ribuan. Dataset harus diperoleh dan boleh digunakan secara sah. Simpan file lokal di luar web root, jangan mengubah file selama proses. Gunakan file sumber yang identik saat melanjutkan.
+  wp sdp import "D:/data/sekolah.csv" --authorized=1 --source="Data identitas resmi" --limit=500 --user=admin
+Ulangi perintah IDENTIK sampai done=true. Perintah membaca CSV baris demi baris, menggunakan checkpoint offset byte, checksum SHA-256 file dan konfigurasi, bukan memuat seluruh file ke memori. --limit default 500, maks 5000 rekaman per pemanggilan. --limit boleh diubah; konfigurasi sumber, kebijakan, filter atau isi file yang berubah menghasilkan job baru. --restart memulai ulang job yang sama dan tidak menghapus sekolah. Jalankan satu proses impor per situs; impor memakai kunci kolektor serta kunci per NPSN dari versi sebelumnya. Operasi ini tidak berjalan sendiri setelah terminal ditutup. Gunakan cron server yang Anda atur sendiri untuk pengulangan perintah identik jika dibutuhkan. Jangan gunakan --restart dalam cron. Audit hasil setiap batch.
+  wp sdp import "D:/data/sekolah.csv" --authorized=1 --source="Identitas" --provinsi="Jawa Barat" --kabupaten="Kabupaten Indramayu" --limit=500 --user=admin
+Filter opsional: --provinsi, --kabupaten, --kecamatan, --jenjang. Default --policy=fill; gunakan --policy=overwrite hanya untuk data baru yang terpercaya. Untuk data pelengkap: --kind=statistics atau --kind=accreditation, yang hanya memperbarui NPSN terdaftar; --kind=madrasah atau --kind=general untuk identitas. Jangan menggabungkan statistik dari periode berbeda tanpa pemeriksaan. Publikasi baru opsional --publish --user=admin; tetap melalui guard SEO. Profil fiktif hanya untuk situs privat.
+Contoh pelengkap:
+  wp sdp import "D:/data/statistik.csv" --authorized=1 --source="Statistik semester resmi" --kind=statistics --policy=overwrite --limit=500 --user=admin
+CSV tidak valid (jumlah kolom tidak cocok/validasi) dilaporkan dan dilewati; jika simpan profil gagal, proses berhenti sebelum checkpoint baris tersebut, sehingga bisa dilanjutkan setelah perbaikan penyebab. Jika CSV harus dikoreksi, checksum berubah dan file dianggap job baru. Upsert NPSN mencegah profil ganda, namun periksa sumber dan periode. Jika proses terputus setelah save sebelum checkpoint, baris terakhir mungkin diproses ulang. EOF dapat memerlukan satu panggilan ekstra. Tidak ada klaim persis-sekali secara transaksional.
+Impor via admin lama tetap dibatasi seperti v4.1 (5 MB; kolektor 10.000 rekaman; impor dasar 200). Proses antrean kolektor lama melalui:
+  wp sdp queue --rounds=10
+Maks 100 putaran per panggilan. WP-Cron versi lama tetap ada. Jangan menjalankan banyak worker secara paralel. Batas waktu dan RAM nyata tergantung hosting; ukur 100/1000/10000 profil sebelum memperluas.
+
+5. REST API PUBLIK READ-ONLY
+http://nama-situs.local/wp-json/sdp/v1/schools?limit=20&provinsi=Jawa%20Barat&jenjang=MTs
+http://nama-situs.local/wp-json/sdp/v1/schools/12345678
+GET saja; limit 1-100, default 50. Filter exact provinsi/kabupaten/kecamatan/jenjang/status/akreditasi, q awalan nama atau NPSN, after cursor NPSN. Ambil next_after dari respons untuk halaman selanjutnya; null berarti akhir. Pertahankan filter sama saat paging. Tidak ada hitung total pada endpoint ini. Daftar bukan snapshot konsisten saat ada perubahan simultan. Hanya profil terbit tanpa password; field dibatasi pada identitas, wilayah dan statistik agregat tertentu. Data kosong null, angka tersedia dikirim sebagai string agar kompatibel dengan data asli; updated_at_utc adalah waktu tulis indeks bukan tanggal statistik. Tidak menyertakan akun, bukti klaim, email, field sumber privat. Tidak ada caching respons publik agar perubahan privasi segera tercermin. Untuk produksi, atur rate limit pada reverse proxy/WAF, HTTPS dan kebijakan akses data. Endpoint portal lama masih tersedia. Data contoh terbit lokal dapat muncul pada API, hapus sebelum produksi.
+
+6. KLAIM OPERATOR
+Profil terbit menampilkan pengajuan klaim. Pengunjung wajib login, mengisi peran dan URL bukti publik resmi. Jangan gunakan dokumen identitas pribadi, NIK, data siswa. Satu klaim aktif per NPSN, jeda 10 menit per akun (bukan proteksi anti-abuse lengkap). Administrator memeriksa secara independen melalui kontak resmi sekolah dan menandai verifikasi. Pending -> approved/rejected; approved -> revoked. Setelah rejected/revoked, pengguna dapat mengajukan kembali. Persetujuan hanya label klaim, tidak memberi hak mengedit langsung atau hak akses admin. Bukti hanya disimpan di admin, tidak ditampilkan pada REST publik; hapus akun akan menghapus klaim akun. Belum ada verifikasi email domain atau OTP. Kelola registrasi WordPress, privasi, retensi, dan proteksi spam sebelum membuka situs untuk publik.
+
+7. SYSTEM HEALTH
+Direktori Sekolah > Skala Nasional: total indeks, profil terbit, calon profil lama (updated_at lebih dari 365 hari), profil yatim, antrean pending/gagal, jumlah memenuhi aturan SEO, jadwal cron, versi PHP/MySQL. Statistik dapat tersimpan sementara 5 menit, segarkan manual. Waktu pembaruan indeks bukan tanggal sumber, tidak membuktikan data sudah mutakhir. seo_ready merupakan jumlah indeks yang mempunyai flag SEO siap, bukan penilaian mutu. Log tindakan admin (klaim, indeks, batch CLI), bukan rekam setiap perubahan atribut. Tombol membersihkan log >90 hari. Backup tetap diperlukan.
+
+8. UJI LOKAL SEBELUM PRODUKSI
+Uji upgrade pada clone, pastikan artikel lama tetap tersedia; impor demo melalui CLI dengan limit 2 dan ulangi sampai done; pastikan tidak duplikat; uji API dan draf/password tidak terlihat; uji dua akun klaim dan moderasi; uji cron; uji EXPLAIN serta ukur waktu dan RAM batch 100, 1000, 10000. Data contoh fiktif tidak boleh dipublikasikan ke internet. Konektor pemerintah tetap terbatas sebagaimana v2.1. Tidak ada bukti kapasitas nasional atau pengujian database nyata saat ZIP dibuat. Sitemap tetap memakai WordPress bawaan dan filter SEO v3; belum benchmark nasional. Gunakan WordPress 6.4+ dan PHP 8.0+ serta MySQL/MariaDB yang mendukung fungsi JSON dan GET_LOCK. Multisite belum diuji.

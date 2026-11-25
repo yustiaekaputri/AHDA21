@@ -1,0 +1,80 @@
+SEKOLAH DIRECTORY PRO 8.7.0 — CENTRAL AUTOMATION SCHEDULER
+Beta / belum teruji pada WordPress dan VPS nyata.
+
+INSTALASI
+1. Backup file dan database. Gunakan situs LocalWP uji.
+2. Plugins > Add New > Upload Plugin > sekolah-directory-pro-v8.7.0.zip.
+3. Replace current with uploaded; aktifkan. Tema v7.0 tidak perlu diganti.
+4. Impor data identitas yang berizin (hindari data fiktif untuk kolektor jaringan).
+5. Direktori Sekolah > Otomatisasi Terpadu: buat kampanye provinsi/jenjang.
+6. Direktori Sekolah > Scheduler Otomatisasi: mulai sesi untuk kampanye aktif.
+   Default manual, jam 01:00–05:00 waktu WordPress, jaringan tidak diizinkan.
+   Untuk uji lokal: jam awal/akhir sama agar 24 jam. Pada Windows, jika metrik OS
+   tidak tersedia, gunakan langkah manual biasa atau centang izin metrik tidak
+   tersedia (guard sisa memori PHP tetap diperiksa).
+7. Mode manual: Proses satu langkah (jeda minimum 60 detik).
+   Mode terjadwal: jadwal sekali jalan, diperbarui hanya bila sesi masih aktif.
+   Hentikan sesi untuk membatalkan jadwal. Pulihkan jadwal jika event hilang.
+
+IZIN JARINGAN DAN PENINJAUAN
+- Default preset hemat tidak menjalankan jaringan terjadwal. Untuk uji jaringan
+  terjadwal yang telah diizinkan, tambahkan pada wp-config.php sebelum bootstrap:
+    define('SDP_LOW_RESOURCE_NETWORK_CRON', true);
+  Konstanta ini juga mengizinkan jaringan terjadwal modul lama bila jadwalnya aktif.
+  Pastikan jadwal sumber lama nonaktif dan Mesin Pengayaan lama dijeda sebelum uji.
+- Di scheduler centang izin jaringan DAN konfirmasi izin sumber. Grant hanya
+  untuk NPSN saat ini dan fingerprint identitas termasuk URL website. Administrator
+  harus memeriksa izin akses otomatis, robots.txt portal referensi, hak penggunaan
+  dan publikasi; crawler tetap memeriksa robots.txt sesuai batasan v8.5.
+- Perubahan identitas atau NPSN baru memerlukan sesi berizin baru jika jaringan
+  diperlukan. Discovery, review, penolakan HTTP, kampanye jeda atau selesai
+  menghentikan sesi. Tidak ada retry otomatis untuk HTTP 403/429/5xx.
+- Usulan website tidak langsung diterbitkan. Tinjau melalui Otomatisasi Terpadu /
+  Website Sekolah. Statistik dan akreditasi tetap melalui impor dataset berizin.
+- Anggaran langkah berpotensi jaringan per hari UTC: 12 hemat, 40 standar;
+  dapat diturunkan. Reservasi sebelum langkah; bukan penghitung bandwidth atau
+  seluruh permintaan plugin. Langkah yang gagal setelah reservasi tetap terhitung.
+  Anggaran hari yang sama dipertahankan saat membuat sesi baru.
+
+HEMAT SUMBER DAYA
+- Satu sesi aktif, maksimum 24 jam, satu langkah per event, tidak ada daemon.
+- Tidak ada cron berulang baru atau aset frontend baru; single event hanya
+  dijadwalkan setelah opt-in. Cron kolektor lama setiap 5 menit tetap ada.
+- Menggunakan lock kolektor lama; mendahulukan antrean dataset dan mesin lama.
+  Tidak menjamin semua plugin, CLI, proses database atau pengunjung bebas konflik.
+- Ambang load average 1 menit default 0,8 hemat / 2,0 standar; dapat disetel.
+  MemAvailable OS minimum 128 MiB hemat / 256 MiB standar; headroom PHP 16/32 MiB.
+  Metrik host bukan kuota cgroup, CPU% atau RAM aktual per situs. Jangan menganggap
+  ambang ini jaminan VPS tidak kehabisan memori. Jika metrik OS hilang, default tunda.
+- Backoff untuk beban, antrean sibuk atau rate (maksimum lima penundaan untuk
+  kegagalan yang tercatat; lock sibuk dijadwal ulang 300 detik sampai sesi habis).
+  Di luar jam kerja cek maksimal sekali per jam selama sesi aktif.
+- Tidak mengukur bandwidth server. Kuota 10 GB dan kapasitas CPU belum dikonfirmasi
+  periodenya/unitnya; pekerjaan jaringan sebaiknya dilakukan di LocalWP.
+- Setelah upgrade VPS dan benchmark: define('SDP_LOW_RESOURCE', false);
+  Mode standar bukan jaminan performa. Pengaturan sesi baru tetap perlu ditinjau.
+- Kill switch: define('SDP_SCHEDULER_DISABLED', true); menghentikan pekerjaan pada
+  event berikutnya; juga hentikan sesi di admin bila memungkinkan.
+
+WP-CRON
+WordPress perlu berjalan; WP-Cron biasa dipicu kunjungan dan tidak menjamin jam
+tepat. Pada VPS produksi, pertimbangkan system cron untuk menjalankan
+`wp cron event run --due-now --path=/path/wordpress` setiap 5 menit sebagai user
+situs, lalu DISABLE_WP_CRON=true hanya setelah cron eksternal terbukti bekerja.
+Jangan jalankan worker permanen. Perintah ini juga menjalankan cron plugin lain.
+Uji LocalWP dari Site Shell: wp cron event list ; wp sdp health ; wp db check.
+Periksa jadwal hook sdp87_single_tick muncul hanya pada sesi terjadwal. Hentikan
+sesi dan periksa event hilang. Hook lama sdp_collector_tick masih terjadwal.
+
+UJI PENERIMAAN LOKAL
+- Uji start/stop, manual dan scheduled, izin jaringan default mati, jam kerja,
+  kampanye selesai/berubah, antrean dataset aktif, dan profil privat tidak diproses.
+- Periksa WP_DEBUG_LOG, aktivitas cron, penggunaan RAM/CPU serta waktu respons.
+- Lakukan satu NPSN berizin dahulu. Jangan aktifkan otomatisasi massal sebelum
+  koneksi sumber nyata, database, penguncian, dan penggunaan sumber daya tervalidasi.
+
+BATASAN
+Scheduler khusus kampanye multi-sumber v8.6, bukan penjadwal seluruh modul.
+WP-Cron, MySQL GET_LOCK, admin, jaringan nyata dan performa belum diuji langsung.
+Tes simulasi terpisah tersedia. Audit keamanan jaringan dan integrasi produksi
+masih diperlukan; konektor pemerintah tidak berubah.

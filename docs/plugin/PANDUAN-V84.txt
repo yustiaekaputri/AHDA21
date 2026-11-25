@@ -1,0 +1,24 @@
+SEKOLAH DIRECTORY PRO 8.4.0 — SCHOOL WEBSITE DISCOVERY
+Beta LocalWP. Menggantikan ZIP 8.3; tema 7.0 tetap.
+
+INSTALASI
+1. Backup situs dan database. WP Admin > Plugins > Add New Plugin > Upload Plugin > ZIP 8.4 > Replace current with uploaded. Aktifkan.
+2. Direktori Sekolah > Penemuan Website. Masukkan NPSN dari profil nyata yang sudah diimpor. Profil publish/draft/pending tanpa password diizinkan; demo dan private ditolak.
+3. Gunakan pencarian manual Nama dan wilayah atau Nama dan NPSN. Tautan membuka Google di browser; plugin tidak scraping SERP. Periksa identitas sekolah, nama, wilayah, kepemilikan resmi, izin akses dan penggunaan ulang.
+4. Masukkan URL HTTPS halaman sekolah dengan identitas yang terlihat. Tanpa query, fragmen, port atau kredensial. Centang konfirmasi izin termasuk robots.txt dan ketentuan sumber (diperiksa manual). Klik Periksa identitas dan akses. Tidak mengikuti redirect; jika alamat berubah, periksa URL tujuan manual. HTTP gagal tidak membuktikan situs tutup.
+5. Periksa indikator: NPSN berlabel cocok 50, nama lengkap 30, kabupaten atau kecamatan 15, suffix sch.id 5. Konflik NPSN berlabel menghapus skor. Kandidat layak tinjau jika NPSN cocok atau nama+wilayah cocok tanpa konflik. Skor bukan bukti resmi/probabilitas, dapat salah. Periksa kepemilikan dari sumber resmi lain.
+6. Jika website masih benar-benar kosong dan kandidat lolos, konfirmasi pemeriksaan admin, lalu klik Isi website kosong. Status publikasi dipertahankan, sumber dicatat. Jika website lama sudah ada, gunakan menu Validasi & Konflik (8.3/6.3) untuk menggantinya. Jangan mengisi media sosial sebagai website. Kandidat sosial hanya tampil sebagai tautan petunjuk, tidak diverifikasi atau disimpan modul ini.
+7. Buka Website Sekolah (v6.1) untuk ekstraksi satu halaman pada host yang sama. URL yang disimpan boleh berupa halaman profil yang diverifikasi; bukan otomatis homepage. Jangan anggap seluruh isi situs akurat atau bebas hak cipta.
+8. Menu Kelengkapan Data kini memberi tautan Temukan website jika website kosong; membuka halaman admin saja, tidak mengambil data jaringan.
+
+BRAVE SEARCH API (OPSIONAL)
+Dokumentasi https://api-dashboard.search.brave.com/api-reference/web/search/get
+Gunakan akun dan API key sendiri. Periksa tarif, kuota, dan hak menyimpan hasil pada paket Anda. Tambahkan sebelum baris akhir wp-config.php:
+  define('SDP_BRAVE_SEARCH_KEY', 'API_KEY_ANDA');
+Jangan bagikan wp-config atau API key. Plugin tidak menampilkan key di UI; key dikirim hanya ke endpoint HTTPS tetap api.search.brave.com. Pencarian manual tidak membutuhkan key. Pencarian API mengirim nama, kabupaten/provinsi, dan NPSN jika mode tersebut dipilih; tidak mengirim data siswa individual, email, kontak, atau isi profil lain. Setelah persetujuan, hasil terbatas disimpan sebagai pratinjau admin selama 15 menit; pastikan kontrak layanan mengizinkannya. Tidak ada fallback scraping. API belum diuji dengan key sungguhan.
+
+HEMAT VPS DAN KEAMANAN
+Default SDP_LOW_RESOURCE tetap aktif. Maksimum hasil API 5 (standar 10), batas respons 256 KiB (standar 512 KiB), timeout HTTP 8 detik (standar 12), satu permintaan per tindakan, jeda global modul 60 detik, tanpa retry, tanpa redirect. Satu pratinjau per administrator, 15 menit; pemeriksaan ulang identik memakai hasil tersebut. Tidak ada cron, tabel, pemindaian frontend atau worker baru. Jalur jaringan dan persetujuan memakai lock kolektor; proses lama tidak berjalan bersamaan melalui lock yang sama. Saat VPS ditingkatkan, define('SDP_LOW_RESOURCE', false); dapat digunakan setelah benchmark. Tidak ada jaminan penggunaan RAM, CPU, bandwidth total; batas respons bukan batas semua trafik. DNS diperiksa untuk alamat publik dan WP safe HTTP digunakan; bukan perlindungan lengkap dari DNS rebinding atau konfigurasi proxy, gunakan firewall egress dan pengujian keamanan sebelum produksi. HTTPS harus valid. Tidak ada crawling otomatis, pengecekan robots.txt otomatis, pencarian media sosial tersendiri, pemantauan domain berkala, atau antrean penemuan massal.
+
+UJI LOCALWP
+Gunakan sekolah nyata dari dataset berizin, bukan contoh demo. Uji manual dan API (jika memiliki izin/key), URL valid, redirect, 403/429, website tanpa NPSN, konflik NPSN, data lama tidak tertimpa, hasil kadaluarsa dan halaman berpassword/privat ditolak. Uji admin vs Subscriber, cache halaman admin, error log, dan konsumsi RAM/CPU. Jalankan WP CLI wp sdp health. Uji URL profil sebelum/sesudah simpan. Semua pengujian otomatis baru masih simulasi; integrasi langsung WordPress/MySQL/HTTP/DNS belum diverifikasi. Jangan menjalankan produksi sebelum pengujian nyata.

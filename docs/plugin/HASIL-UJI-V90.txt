@@ -1,0 +1,651 @@
+SDP 9.0.0 — HASIL UJI
+Lingkungan PHP CLI dan stub WordPress/DB; Python HTTP lokal sederhana. Bukan produksi.
+Regresi: 437 PHP + 6 Python = 443 eksekusi. Stub is_admin ditambahkan ke test86/87/88 agar memuat bootstrap baru.
+Baru: 33 hemat + 33 standar + 36 hemat darurat + 36 standar darurat = 138.
+Total 581 eksekusi (575 PHP + 6 Python). Bukan 581 kasus unik.
+=== reg-86---standard.txt ===
+PASS: Mode cap
+PASS: Valid filter
+PASS: Limit rejection
+PASS: Province required
+PASS: Parent required
+PASS: Zero not missing
+PASS: Missing teacher data
+PASS: Missing accreditation
+PASS: Placeholder requires review
+PASS: Irrelevant SD fields excluded
+PASS: Missing website routed to reference
+PASS: Missing narrative detected
+PASS: New campaign
+PASS: No request on campaign creation
+PASS: Empty rejected
+PASS: Duplicate rejected
+PASS: Demo rejected
+PASS: Matching filters
+PASS: Changed region rejected
+PASS: Changed region cannot process
+PASS: Consent required
+PASS: No request before consent
+PASS: Cooldown respected
+PASS: HTTP 429 pauses
+PASS: Only one request
+PASS: Paused not processed
+PASS: Explicit resume
+PASS: Wrong NPSN pauses
+PASS: Reference unchanged advances routing
+PASS: Missing website routes to discovery
+PASS: Discovery handoff no API call
+PASS: Verified URL available routes crawler
+PASS: Crawler requires consent
+PASS: Crawler initialized without request
+PASS: No HTTP on initialization
+PASS: Expired crawler does not restart
+PASS: Changed website rejects checkpoint
+PASS: Checkpoint saved
+PASS: Crawler payload not in persistent option
+PASS: Checkpoint autoload disabled
+PASS: Checkpoint restored
+PASS: Crawler TTL bounded
+PASS: Pause persisted
+PASS: Revision changes
+PASS: Old checkpoint removed
+PASS: Expired transient recognized
+PASS: Skip resets crawler
+PASS: Final skip completes campaign
+PASS: Completed cannot resume
+PASS: Cancel works
+PASS: Handoff advances without network
+PASS: Review requires explicit completion
+PASS: No narrative needs no crawler
+PASS: No need skips network
+PASS: Crawler extraction with real parser
+PASS: Review handoff contains source text
+PASS: Review blocked for changed website
+PASS: Reviewed selected field normalizes
+PASS: Existing narrative not overwritten
+TOTAL 59 checks; mode standard
+=== reg-86-.txt ===
+PASS: Mode cap
+PASS: Valid filter
+PASS: Limit rejection
+PASS: Province required
+PASS: Parent required
+PASS: Zero not missing
+PASS: Missing teacher data
+PASS: Missing accreditation
+PASS: Placeholder requires review
+PASS: Irrelevant SD fields excluded
+PASS: Missing website routed to reference
+PASS: Missing narrative detected
+PASS: New campaign
+PASS: No request on campaign creation
+PASS: Empty rejected
+PASS: Duplicate rejected
+PASS: Demo rejected
+PASS: Matching filters
+PASS: Changed region rejected
+PASS: Changed region cannot process
+PASS: Consent required
+PASS: No request before consent
+PASS: Cooldown respected
+PASS: HTTP 429 pauses
+PASS: Only one request
+PASS: Paused not processed
+PASS: Explicit resume
+PASS: Wrong NPSN pauses
+PASS: Reference unchanged advances routing
+PASS: Missing website routes to discovery
+PASS: Discovery handoff no API call
+PASS: Verified URL available routes crawler
+PASS: Crawler requires consent
+PASS: Crawler initialized without request
+PASS: No HTTP on initialization
+PASS: Expired crawler does not restart
+PASS: Changed website rejects checkpoint
+PASS: Checkpoint saved
+PASS: Crawler payload not in persistent option
+PASS: Checkpoint autoload disabled
+PASS: Checkpoint restored
+PASS: Crawler TTL bounded
+PASS: Pause persisted
+PASS: Revision changes
+PASS: Old checkpoint removed
+PASS: Expired transient recognized
+PASS: Skip resets crawler
+PASS: Final skip completes campaign
+PASS: Completed cannot resume
+PASS: Cancel works
+PASS: Handoff advances without network
+PASS: Review requires explicit completion
+PASS: No narrative needs no crawler
+PASS: No need skips network
+PASS: Crawler extraction with real parser
+PASS: Review handoff contains source text
+PASS: Review blocked for changed website
+PASS: Reviewed selected field normalizes
+PASS: Existing narrative not overwritten
+TOTAL 59 checks; mode low
+=== reg-87---network.txt ===
+PASS: Budget preset
+PASS: Settings accepted
+PASS: Budget cap
+PASS: Invalid hour
+PASS: Invalid mode
+PASS: Invalid load
+PASS: Overnight window
+PASS: 24-hour window
+PASS: End exclusive
+PASS: Bounded exponential backoff
+PASS: Memory parsing
+PASS: Healthy metrics
+PASS: Load protection
+PASS: System memory protection
+PASS: PHP headroom protection
+PASS: Missing metrics conservative
+PASS: Explicit unknown opt-in
+PASS: Session lease
+PASS: No network by default
+PASS: Non-autoload state
+PASS: Manual no cron
+PASS: Local step persisted
+PASS: Stops on completed campaign
+PASS: No HTTP for local step
+PASS: No consent stops reference
+PASS: No unapproved HTTP
+PASS: Review handoff stops
+PASS: Discovery handoff stops
+PASS: Stale campaign revision stops
+PASS: Revoked admin stops
+PASS: Expired session stops
+PASS: Single event scheduled
+PASS: Minimum schedule delay
+PASS: No duplicate event
+PASS: Stop clears event
+PASS: High load defers
+PASS: Deferred event scheduled
+PASS: Retry cap stops
+PASS: Dataset priority
+PASS: Legacy engine priority
+PASS: Outside window sleeps
+PASS: Daily count survives new session
+PASS: Daily UTC reset
+PASS: Budget exhaustion stops
+PASS: Budget no HTTP
+PASS: Changed source fingerprint stops
+PASS: HTTP 429 no auto retry
+PASS: Budget reserved before request
+PASS: Source rejection pauses campaign
+PASS: One network request
+PASS: Scheduling failure detected
+PASS: Deactivation clears schedule
+PASS: Stale callback no-op
+PASS: Lock busy schedules delayed wakeup
+TOTAL 54 checks; mode low; network enabled
+=== reg-87---standard.txt ===
+PASS: Budget preset
+PASS: Settings accepted
+PASS: Budget cap
+PASS: Invalid hour
+PASS: Invalid mode
+PASS: Invalid load
+PASS: Overnight window
+PASS: 24-hour window
+PASS: End exclusive
+PASS: Bounded exponential backoff
+PASS: Memory parsing
+PASS: Healthy metrics
+PASS: Load protection
+PASS: System memory protection
+PASS: PHP headroom protection
+PASS: Missing metrics conservative
+PASS: Explicit unknown opt-in
+PASS: Session lease
+PASS: No network by default
+PASS: Non-autoload state
+PASS: Manual no cron
+PASS: Local step persisted
+PASS: Stops on completed campaign
+PASS: No HTTP for local step
+PASS: No consent stops reference
+PASS: No unapproved HTTP
+PASS: Review handoff stops
+PASS: Discovery handoff stops
+PASS: Stale campaign revision stops
+PASS: Revoked admin stops
+PASS: Expired session stops
+PASS: Single event scheduled
+PASS: Minimum schedule delay
+PASS: No duplicate event
+PASS: Stop clears event
+PASS: High load defers
+PASS: Deferred event scheduled
+PASS: Retry cap stops
+PASS: Dataset priority
+PASS: Legacy engine priority
+PASS: Outside window sleeps
+PASS: Daily count survives new session
+PASS: Daily UTC reset
+PASS: Budget exhaustion stops
+PASS: Budget no HTTP
+PASS: Changed source fingerprint stops
+PASS: HTTP 429 no auto retry
+PASS: Budget reserved before request
+PASS: Source rejection pauses campaign
+PASS: One network request
+PASS: Scheduling failure detected
+PASS: Deactivation clears schedule
+PASS: Stale callback no-op
+PASS: Lock busy schedules delayed wakeup
+TOTAL 54 checks; mode standard; network enabled
+=== reg-87-.txt ===
+PASS: Budget preset
+PASS: Settings accepted
+PASS: Budget cap
+PASS: Invalid hour
+PASS: Invalid mode
+PASS: Invalid load
+PASS: Overnight window
+PASS: 24-hour window
+PASS: End exclusive
+PASS: Bounded exponential backoff
+PASS: Memory parsing
+PASS: Healthy metrics
+PASS: Load protection
+PASS: System memory protection
+PASS: PHP headroom protection
+PASS: Missing metrics conservative
+PASS: Explicit unknown opt-in
+PASS: Session lease
+PASS: No network by default
+PASS: Non-autoload state
+PASS: Manual no cron
+PASS: Local step persisted
+PASS: Stops on completed campaign
+PASS: No HTTP for local step
+PASS: No consent stops reference
+PASS: No unapproved HTTP
+PASS: Review handoff stops
+PASS: Discovery handoff stops
+PASS: Stale campaign revision stops
+PASS: Revoked admin stops
+PASS: Expired session stops
+PASS: Single event scheduled
+PASS: Minimum schedule delay
+PASS: No duplicate event
+PASS: Stop clears event
+PASS: High load defers
+PASS: Deferred event scheduled
+PASS: Retry cap stops
+PASS: Dataset priority
+PASS: Legacy engine priority
+PASS: Outside window sleeps
+PASS: Daily count survives new session
+PASS: Daily UTC reset
+PASS: Budget exhaustion stops
+PASS: Budget no HTTP
+PASS: Changed source fingerprint stops
+PASS: HTTP 429 no auto retry
+PASS: Low mode requires network override
+PASS: Scheduling failure detected
+PASS: Deactivation clears schedule
+PASS: Stale callback no-op
+PASS: Lock busy schedules delayed wakeup
+TOTAL 52 checks; mode low; network disabled
+=== reg-88---nocache.txt ===
+PASS Facet value
+PASS Repeated query cache or opt-out
+PASS Cache opt-out writes nothing
+PASS Ordinary page skips assets
+PASS No portal CSS or JS ordinary page
+PASS Directory shortcode loads assets
+PASS Asset dependencies loaded
+PASS Statistics excludes analytics
+PASS School profile loads assets
+PASS Dynamic fallback
+PASS Bulk prime unique posts only
+PASS Network off ignores configured jobs
+PASS Local queue wakes network off
+PASS Empty idle stops
+PASS Daily next due
+PASS Multi-source next due
+PASS Legacy engine wakes
+PASS Paused engine idle
+PASS Migration removes idle recurring cron
+PASS Migration checkpoint
+PASS Pending exists
+PASS Queue wakes cron
+PASS No duplicate wakeup
+PASS Empty queue
+PASS Queue drained stops
+PASS DB error fails closed
+PASS Lock contention delayed wake
+PASS Idle recovery cleans wake
+PASS Bounded successful log purge
+TOTAL 29 checks; mode low; cache off
+=== reg-88---standard.txt ===
+PASS Facet value
+PASS Repeated query cache or opt-out
+PASS Epoch invalidates cache
+PASS Epoch nonautoload
+PASS Private transition invalidates
+PASS Password change invalidates
+PASS Deletion invalidates
+PASS Errors not cached
+PASS Oversized value not cached
+PASS Fixed cache slots
+PASS Collision never returns other values
+PASS Ordinary page skips assets
+PASS No portal CSS or JS ordinary page
+PASS Directory shortcode loads assets
+PASS Asset dependencies loaded
+PASS Statistics excludes analytics
+PASS School profile loads assets
+PASS Dynamic fallback
+PASS Bulk prime unique posts only
+PASS Network off ignores configured jobs
+PASS Local queue wakes network off
+PASS Empty idle stops
+PASS Daily next due
+PASS Multi-source next due
+PASS Legacy engine wakes
+PASS Paused engine idle
+PASS Migration removes idle recurring cron
+PASS Migration checkpoint
+PASS Pending exists
+PASS Queue wakes cron
+PASS No duplicate wakeup
+PASS Empty queue
+PASS Queue drained stops
+PASS DB error fails closed
+PASS Lock contention delayed wake
+PASS Idle recovery cleans wake
+PASS Bounded successful log purge
+TOTAL 37 checks; mode standard; cache on
+=== reg-88-.txt ===
+PASS Facet value
+PASS Repeated query cache or opt-out
+PASS Epoch invalidates cache
+PASS Epoch nonautoload
+PASS Private transition invalidates
+PASS Password change invalidates
+PASS Deletion invalidates
+PASS Errors not cached
+PASS Oversized value not cached
+PASS Fixed cache slots
+PASS Collision never returns other values
+PASS Ordinary page skips assets
+PASS No portal CSS or JS ordinary page
+PASS Directory shortcode loads assets
+PASS Asset dependencies loaded
+PASS Statistics excludes analytics
+PASS School profile loads assets
+PASS Dynamic fallback
+PASS Bulk prime unique posts only
+PASS Network off ignores configured jobs
+PASS Local queue wakes network off
+PASS Empty idle stops
+PASS Daily next due
+PASS Multi-source next due
+PASS Legacy engine wakes
+PASS Paused engine idle
+PASS Migration removes idle recurring cron
+PASS Migration checkpoint
+PASS Pending exists
+PASS Queue wakes cron
+PASS No duplicate wakeup
+PASS Empty queue
+PASS Queue drained stops
+PASS DB error fails closed
+PASS Lock contention delayed wake
+PASS Idle recovery cleans wake
+PASS Bounded successful log purge
+TOTAL 37 checks; mode low; cache on
+=== reg-89---standard.txt ===
+PASS Explicit local
+PASS Reject production
+PASS Reject staging
+PASS Reject development
+PASS Opt in required
+PASS Strict boolean
+PASS Low limits
+PASS Standard limits
+PASS Empty percentile
+PASS Nearest rank median
+PASS Nearest rank p95
+PASS Unfiltered
+PASS Filtered
+PASS Deep page
+PASS Samples and counts
+PASS Valid timing
+PASS Error stops repeat
+PASS Exception stops
+PASS Deadline
+PASS Database error
+PASS Four cases
+PASS Query deltas
+PASS Counts correct
+PASS Facets counts
+PASS Mode label
+PASS Peak memory
+PASS Facets opt in
+PASS Deadline before first case
+TOTAL 28 checks
+=== reg-89-.txt ===
+PASS Explicit local
+PASS Reject production
+PASS Reject staging
+PASS Reject development
+PASS Opt in required
+PASS Strict boolean
+PASS Low limits
+PASS Standard limits
+PASS Empty percentile
+PASS Nearest rank median
+PASS Nearest rank p95
+PASS Unfiltered
+PASS Filtered
+PASS Deep page
+PASS Samples and counts
+PASS Valid timing
+PASS Error stops repeat
+PASS Exception stops
+PASS Deadline
+PASS Database error
+PASS Four cases
+PASS Query deltas
+PASS Counts correct
+PASS Facets counts
+PASS Mode label
+PASS Peak memory
+PASS Facets opt in
+PASS Deadline before first case
+TOTAL 28 checks
+=== new90---safe.txt ===
+PASS Valid cursors
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Mode limits
+PASS Valid profile
+PASS Broken JSON
+PASS Malformed fields
+PASS Identity mismatch
+PASS Index mismatch
+PASS Wrong post type
+PASS Demo public flagged
+PASS Protected not public
+PASS Draft not public
+PASS Eight tables
+PASS Required vs optional
+PASS Missing columns
+PASS Readiness includes schema
+PASS HTTPS check
+PASS Invalid audit cursor
+PASS Audit bounded + cursor
+PASS Keyset prepared and payload bounded
+PASS No full count
+PASS Empty audit
+PASS DB error surfaced
+PASS Safe blocks scheduler
+PASS Safe blocks scheduled network
+PASS Safe blocks legacy work
+PASS Safe no next event
+PASS Safe clears scheduled collector
+PASS Core schema success records version
+PASS Missing table does not update version
+PASS Missing columns do not update version
+TOTAL 36 checks
+=== new90---standard.txt ===
+PASS Valid cursors
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Mode limits
+PASS Valid profile
+PASS Broken JSON
+PASS Malformed fields
+PASS Identity mismatch
+PASS Index mismatch
+PASS Wrong post type
+PASS Demo public flagged
+PASS Protected not public
+PASS Draft not public
+PASS Eight tables
+PASS Required vs optional
+PASS Missing columns
+PASS Readiness includes schema
+PASS HTTPS check
+PASS Invalid audit cursor
+PASS Audit bounded + cursor
+PASS Keyset prepared and payload bounded
+PASS No full count
+PASS Empty audit
+PASS DB error surfaced
+PASS Scheduler available
+PASS Pending wakes collector
+PASS Core schema success records version
+PASS Missing table does not update version
+PASS Missing columns do not update version
+TOTAL 33 checks
+=== new90---standard_--safe.txt ===
+PASS Valid cursors
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Mode limits
+PASS Valid profile
+PASS Broken JSON
+PASS Malformed fields
+PASS Identity mismatch
+PASS Index mismatch
+PASS Wrong post type
+PASS Demo public flagged
+PASS Protected not public
+PASS Draft not public
+PASS Eight tables
+PASS Required vs optional
+PASS Missing columns
+PASS Readiness includes schema
+PASS HTTPS check
+PASS Invalid audit cursor
+PASS Audit bounded + cursor
+PASS Keyset prepared and payload bounded
+PASS No full count
+PASS Empty audit
+PASS DB error surfaced
+PASS Safe blocks scheduler
+PASS Safe blocks scheduled network
+PASS Safe blocks legacy work
+PASS Safe no next event
+PASS Safe clears scheduled collector
+PASS Core schema success records version
+PASS Missing table does not update version
+PASS Missing columns do not update version
+TOTAL 36 checks
+=== new90-.txt ===
+PASS Valid cursors
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Reject cursor
+PASS Mode limits
+PASS Valid profile
+PASS Broken JSON
+PASS Malformed fields
+PASS Identity mismatch
+PASS Index mismatch
+PASS Wrong post type
+PASS Demo public flagged
+PASS Protected not public
+PASS Draft not public
+PASS Eight tables
+PASS Required vs optional
+PASS Missing columns
+PASS Readiness includes schema
+PASS HTTPS check
+PASS Invalid audit cursor
+PASS Audit bounded + cursor
+PASS Keyset prepared and payload bounded
+PASS No full count
+PASS Empty audit
+PASS DB error surfaced
+PASS Scheduler available
+PASS Pending wakes collector
+PASS Core schema success records version
+PASS Missing table does not update version
+PASS Missing columns do not update version
+TOTAL 33 checks
+=== Python ===
+test_code (__main__.Tests.test_code) ... ok
+test_generate (__main__.Tests.test_generate) ... ok
+test_http (__main__.Tests.test_http) ... ok
+test_limits (__main__.Tests.test_limits) ... ok
+test_summary (__main__.Tests.test_summary) ... ok
+test_target (__main__.Tests.test_target) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.733s
+
+OK
+=== PHP syntax ===
+No syntax errors detected in sekolah-directory-pro/sekolah-directory-pro.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-scheduler.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-discovery.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-collector.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-resource.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-missing.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-operator.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-analytics.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-engine.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-performance.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-excel.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-website.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-intelligence.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-region.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-education.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-crawler.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-media.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-automation.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-production.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-benchmark.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-national.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-seo.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-portal.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-ai.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-sources.php
+=== JS syntax ===
+PASS sekolah-directory-pro/assets/analytics.js
+PASS sekolah-directory-pro/assets/portal.js
+677 pemeriksaan historis sebelum v8.6 tidak tersedia lengkap dan tidak dijalankan ulang.
+DDL nyata, indeks, konfigurasi firewall, HTTP WordPress dan performa VPS belum diuji.

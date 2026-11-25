@@ -1,0 +1,39 @@
+SEKOLAH DIRECTORY PRO v7.1.0 — PORTAL OPERATOR
+Status: beta pengujian lokal. Memuat seluruh modul plugin v6.4.0.
+
+INSTALASI / UPGRADE
+1. Backup database dan wp-content. Gunakan situs uji LocalWP.
+2. WP Admin > Plugins > Add New Plugin > Upload Plugin > sekolah-directory-pro-v7.1.0.zip.
+3. Replace current with uploaded, aktifkan. Tabel sekolah lama tidak diganti.
+4. Buka Direktori Sekolah > Portal Operator. Klik Buat halaman portal. Tabel baru wp_sdp_operator_proposals memakai prefix aktual instalasi, dibuat pada aktivasi atau admin_init.
+5. Buka halaman portal. Tambahkan ke menu navigasi tema secara manual (Appearance > Menus). Tema v7.0 tetap dapat digunakan; tidak perlu memasang tema sebagai plugin.
+6. Shortcode halaman: [portal_operator_sekolah]. Gunakan halaman portal yang dibuat dari menu admin agar URL kanonis dan pengecualian sitemap berfungsi. Halaman ini bukan homepage.
+
+AKUN DAN PRIVASI
+- Disarankan membuat akun uji Subscriber melalui Users > Add New. Jangan memakai akun Administrator sebagai operator.
+- Registrasi mandiri bersifat opsional, memakai fungsi WordPress. Jika mengaktifkan Settings > General > Membership, pastikan New User Default Role = Subscriber. Tautan daftar pada portal hanya tampil bila kedua syarat terpenuhi. Plugin tidak mengubah pengaturan global atau memberi peran editor.
+- Pendaftaran bukan verifikasi sekolah. Admin wajib memeriksa bukti melalui kontak resmi dan memastikan operator berwenang. Jangan menyimpan NIK, dokumen identitas, data individual peserta didik, kata sandi, atau informasi pribadi lain dalam usulan/bukti.
+- Kecualikan URL portal dan halaman berisi shortcode dari cache plugin, reverse proxy dan CDN. Plugin memakai DONOTCACHEPAGE, no-cache headers dan noindex/nofollow pada halaman portal; cache yang bekerja sebelum WordPress masih harus dikonfigurasi. Jangan gunakan halaman portal sebagai konten yang disalin ke area publik.
+- Publikasi profil tetap menggunakan modul sebelumnya. URL bukti untuk usulan data yang disetujui dapat tercatat sebagai referensi profil publik. Catatan privat tidak dipublikasikan.
+
+ALUR KLAIM DAN USULAN
+1. Operator login di halaman portal. Cari NPSN lalu buka profil publik dan gunakan formulir klaim yang sudah ada.
+2. Admin > Direktori Sekolah > Skala Nasional > periksa bukti klaim dan setujui. Klaim hanya berlaku untuk satu NPSN dan akun yang disetujui; pengajuan dapat dicabut.
+3. Operator buka kembali portal, pilih Ajukan perubahan pada klaim approved. Form menampilkan data saat ini. Pilih satu atribut, nilai, URL bukti publik, catatan, dan periode (wajib untuk statistik; YYYY atau YYYY/YYYY ganjil/genap). NPSN, nama, status, jenjang, akreditasi, periode global, dan sumber tidak dapat diusulkan melalui formulir ini; hubungi admin untuk perubahan identitas/legalitas.
+4. Admin > Direktori Sekolah > Portal Operator. Periksa usulan, nilai saat ini, periode, URL bukti dan catatan. Centang konfirmasi. Setujui dan kunci atribut atau Tolak. Persetujuan memakai Data Intelligence Engine, menyimpan sumber dan periode per atribut. Tidak ada pengambilan URL otomatis di modul ini.
+5. Jika profil berubah setelah halaman moderasi dimuat, muat ulang dan periksa lagi. Jika klaim telah dicabut atau diganti, usulan lama tidak bisa disetujui; tolak usulan tersebut. Jangan menjalankan approval bersamaan dengan pencabutan klaim atau perubahan profil manual. Persetujuan bukan bukti verifikasi independen otomatis.
+6. Operator dapat melihat status 50 usulan terakhir. Maksimal 20 usulan tertunda dan 10 pengajuan per jam per akun; admin melihat 50 usulan tertunda per halaman dengan navigasi ke batch sebelumnya. Atribut terkunci dapat ditinjau ulang melalui Validasi & Konflik.
+
+USULAN MEDIA
+Pilih Usulan logo / foto (URL). Nilai = URL HTTPS gambar, bukti = URL HTTPS bukti izin, catatan = deskripsi gambar dan izin. Centang persetujuan hak. Operator tidak mengunggah file langsung. Admin memeriksa hak dan privasi secara independen, kemudian menggunakan Direktori Sekolah > Media Sekolah untuk mengunggah atau mengimpor media yang diizinkan. Status Media ditinjau hanyalah status moderasi, bukan bukti gambar berhasil diimpor.
+
+UJI INTEGRASI DUA AKUN (LOCALWP)
+- Buat akun Subscriber A dan B; gunakan jendela browser terpisah dari admin. Pastikan masing-masing tidak melihat klaim atau usulan akun lain, termasuk saat memodifikasi NPSN pada URL/form. Uji login/logout dan no-cache memakai browser berbeda.
+- Uji profil sekolah publik non-demo dengan data yang penggunaannya diizinkan. Jangan gunakan data fiktif sebagai profil nyata. Profil demo sengaja ditolak oleh mesin validasi.
+- Uji klaim pending/rejected/revoked tidak dapat mengajukan perubahan. Setelah disetujui, ajukan satu atribut dengan bukti, periksa profil belum berubah. Tolak satu usulan dan setujui satu usulan; periksa status, artikel, periode, riwayat, dan lock.
+- Uji kiriman ulang, nonce salah, NPSN lain, perubahan profil saat halaman moderasi terbuka, serta pencabutan klaim sebelum persetujuan.
+- Uji media URL hanya tercatat sebagai permintaan dan tidak menimbulkan file baru. Setelah admin memeriksa izin, uji alur Media Sekolah.
+- Periksa wp db check, wp sdp health, dan log PHP/WordPress. Periksa browser mobile dan tema v7.0.
+
+BATASAN
+Pengujian PHP menggunakan stub WordPress dan database, tidak menguji dbDelta atau SQL di server MySQL nyata, nonce asli, email registrasi, cache/CDN aktual, maupun keamanan menyeluruh. Tidak ada upload langsung operator, notifikasi email khusus, otomatisasi verifikasi identitas atau integrasi pemerintah baru. Riwayat pengajuan hanya status ringkas. Usulan disimpan dalam tabel admin; penghapusan akun/profil memicu pembersihan data terkait. Perubahan profil dan pencatatan status usulan tidak atomik lintas tabel WordPress: jika update status gagal sesudah profil tersimpan, periksa profil dan log sebelum memutuskan tindakan ulang. Hak klaim diperiksa saat pengajuan dan moderasi, bukan transaksi bersama pencabutan klaim. Belum siap produksi nasional.

@@ -1,0 +1,51 @@
+SEKOLAH DIRECTORY PRO 8.1.0 — LOW RESOURCE EDITION
+Panduan pengujian dan deployment hemat VPS
+
+TARGET
+RAM 1 GB, CPU diasumsikan 1 vCPU (pengguna menyebut 1 GB), bandwidth 10 GB (periode kuota belum dikonfirmasi). Kapasitas disk juga belum diketahui. Mode hemat merupakan preset konservatif, bukan hasil benchmark pada VPS pengguna.
+
+INSTALASI
+1. Backup database dan wp-content di LocalWP. Jangan langsung upgrade server publik.
+2. WP Admin > Plugins > Add New Plugin > Upload Plugin > sekolah-directory-pro-v8.1.0.zip. Replace current with uploaded jika upgrade. Aktifkan plugin. Tema v7.0 tetap digunakan.
+3. Buka Direktori Sekolah > Mode Hemat VPS. Periksa mode aktif dan batas efektif.
+4. Jalankan dari Open Site Shell: wp plugin list; wp sdp health; wp db check; wp cron event list. Periksa log PHP serta wp-content/debug.log jika debug diaktifkan pada lingkungan lokal.
+5. Uji CSV demo sebagai draf, impor ulang NPSN yang sama, verifikasi tidak duplikat. Hapus semua data demo sebelum publikasi.
+
+MODE HEMAT (DEFAULT)
+- Impor langsung browser: 50 rekaman, maksimum 2 MiB.
+- Kolektor CSV/JSON: 1000 rekaman, maksimum 2 MiB, termasuk URL dataset. Dataset lebih besar ditolak, bukan diimpor sebagian diam-diam karena batas parser.
+- Queue: 5 rekaman per putaran dan sasaran waktu 5 detik, bukan timeout keras. Satu rekaman masih mungkin lebih lama.
+- WP-CLI import: maksimal 100 baris/panggilan, sasaran waktu 15 detik di antara baris. Ulangi perintah yang sama untuk checkpoint. Bukan pembatas waktu keras, hash file dan penyimpanan database dapat menambah waktu.
+- Statistik: 25 rekaman/putaran. CLI queue/education maks. 5 putaran/panggilan; masing-masing hingga 25/125 rekaman. Statistik dan impor CLI/antrean/impor CSV langsung berbagi named lock MySQL. Tidak menjamin konsistensi snapshot lintas putaran; jangan mengubah profil saat membangun snapshot final. Penyuntingan manual dan modul lain masih dapat berjalan.
+- REST /schools: maksimal 20 hasil per halaman; gunakan cursor next_after. Portal pencarian 20 hasil seperti versi lama. Autocomplete dinonaktifkan di browser dan server. Filter provinsi/kabupaten tetap memicu AJAX untuk dropdown bertingkat; filter lain diterapkan ketika tombol Cari ditekan. Formulir GET tetap tersedia.
+- Revisi CPT sdp_school: maksimum 2, kebijakan yang lebih ketat tetap dihormati. Revisi lama tidak dihapus massal saat upgrade. Artikel biasa tidak diubah kebijakannya.
+- Media baru: maksimum 1 MiB, 4 megapiksel, panjang sisi masukan tetap 5000 piksel. Logo keluaran maksimal 400 piksel, foto 1000 piksel. Bisa gagal jika hasil kompresi tetap terlalu besar. Media lama tidak diubah. PHP GD diperlukan; siapkan foto pada LocalWP.
+- Ollama dinonaktifkan pada mode hemat; OpenAI/Gemini opsional manual. Generator template tidak membutuhkan API AI.
+- Pengambilan jaringan terjadwal dari kolektor dan mesin NPSN dinonaktifkan secara default. Antrean data lokal tetap diproses oleh WP-Cron. Ambil data manual tetap bisa dijalankan sesuai izin sumber; tidak ada kuota total transfer atau traffic limiter.
+
+KONFIGURASI LOCALWP VS VPS
+Masukkan konstanta opsional sebelum baris akhir wp-config.php, tidak di plugin:
+LocalWP (jika PC cukup kuat): define('SDP_LOW_RESOURCE', false);
+VPS: define('SDP_LOW_RESOURCE', true); (atau biarkan tanpa konstanta)
+Hanya jika sudah mengukur kuota dan ingin mengaktifkan lagi pengambilan jaringan terjadwal:
+  define('SDP_LOW_RESOURCE_NETWORK_CRON', true);
+Jangan aktifkan opsi ini jika kuota sangat terbatas. Jadwal lama yang aktif akan dapat berjalan kembali setelah opt-in; periksa pengaturan sumber dan kampanye dulu.
+
+CONTOH TERMINAL VPS / SITE SHELL
+wp sdp health
+wp sdp import "/path/data-sekolah.csv" --authorized=1 --source="Dataset resmi" --limit=100 --user=admin
+wp sdp queue --rounds=1
+wp sdp education --rounds=1
+Gunakan dataset berizin, username dan path yang sesuai. Untuk statistik, mulai job di menu Statistik Pendidikan terlebih dahulu. Ulangi perintah secara bertahap. Jangan jalankan impor besar saat trafik ramai. Gunakan --publish hanya setelah validasi data; pengujian pertama selalu draf.
+
+SARAN SERVER (BUKAN KONFIGURASI OTOMATIS)
+- Gunakan stack ringan seperti Nginx + PHP-FPM + MariaDB, atau konfigurasi hosting yang sudah tersedia. Jangan mengganti stack tanpa backup. PHP-FPM 2 worker (ondemand) dan memory_limit PHP 128 MB dapat dijadikan titik awal uji, bukan jaminan aman. Pantau RAM aktual, swap, CPU, query lambat dan disk. Naikkan memory_limit hanya setelah mengukur. Jangan menjalankan Ollama, Elasticsearch atau layanan berat tambahan di VPS ini. Redis belum wajib.
+- Terapkan cache halaman publik dan kompresi HTTP; jangan cache portal operator, wp-admin, login, halaman privat, pengunjung login, atau respons dengan data privat. Atur pengecualian query string dan invalidasi saat profil berubah. Uji privasi dengan dua akun. Plugin ini tidak memasang page cache/CDN.
+- Bila memungkinkan gunakan CDN untuk aset publik, setelah cek apakah bandwidth origin tetap dihitung oleh penyedia VPS. Batasi bot, scraper, request REST dan pencarian dengan aturan server yang sudah diuji; tidak ada rate-limit publik baru di plugin.
+- Himpun data, optimalkan media, dan buat snapshot di LocalWP. Untuk deployment awal, migrasikan database dan wp-content menggunakan prosedur WordPress yang mendukung perubahan domain. Setelah situs online menerima koreksi operator, jangan menimpa seluruh database produksi dari lokal; lakukan impor pembaruan terpilih.
+- Mulai 100–500 sekolah nyata dalam satu kabupaten, kemudian 1.000 atau lebih hanya setelah mengukur. Jangan langsung memasukkan seluruh Indonesia ke VPS kecil. Sisakan ruang disk untuk backup, indeks dan thumbnail. Simpan backup di luar VPS jika memungkinkan.
+- Kuota 10 GB harus dikonfirmasi per bulan atau periode lain, serta apakah mencakup transfer masuk/keluar. Pantau panel penyedia; kompresi gambar dan cache mengurangi beban namun tidak membatasi total kuota otomatis.
+
+VALIDASI DI LOCALWP
+- Bandingkan mode standar dan hemat: 51 baris CSV langsung ditolak pada mode hemat; kolektor 1001 baris ditolak. Uji queue 5, statistik 25 dan checkpoint. Uji API limit=100 mengembalikan paling banyak 20 item. Uji filter wilayah dan tombol Cari. Uji login operator tanpa cache. Uji media GD. Uji CPU/RAM dan durasi proses. Lihat log PHP dan MySQL.
+- Tidak ada API pemerintah baru. Sumber profil NPSN/website masih eksperimental. Pengujian nyata WordPress/MySQL/WP-CLI/browser/GD dan benchmark VPS belum dilakukan. Jangan menganggap siap produksi nasional.

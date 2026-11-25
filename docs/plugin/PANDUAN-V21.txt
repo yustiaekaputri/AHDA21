@@ -1,0 +1,30 @@
+SEKOLAH DIRECTORY PRO 2.1.0 — Integrasi Sumber Resmi
+
+UPGRADE
+1. Backup database dan folder wp-content dengan LocalWP. Sebaiknya clone situs untuk uji.
+2. WP Admin > Plugins > Add New Plugin > Upload Plugin. Upload sekolah-directory-pro-v2.1.0.zip, pilih Replace current with uploaded. Pastikan plugin aktif. Jangan uninstall versi lama.
+3. Buka Direktori Sekolah > Sumber Resmi. Menu Pengumpul Data lama tetap ada. Tabel sekolah, antrean, tipe post, shortcode, NPSN, dan pengaturan kolektor lama dipertahankan; tidak ada migrasi tabel baru pada v2.1.
+
+UJI TIGA DATASET FIKTIF (JANGAN PUBLIKASIKAN)
+File ada di folder contoh/ di ZIP. Gunakan menu Sumber Resmi, bukan Impor CSV lama.
+A. Jenis Madrasah, nama sumber Demo Identitas, format CSV, mode Isi kolom kosong, filter kabupaten Kabupaten Indramayu. Biarkan URL, jadwal dan publikasi kosong. Unggah v21-identitas-fiktif.csv, centang izin, klik Pratinjau dataset. Seharusnya dua valid. Pilih ulang berkas dan centang izin, klik Antrekan dataset. Di Pengumpul Data, klik Proses 20 sekarang. Dua draf dibuat.
+B. Kembali Sumber Resmi. Jenis Statistik per NPSN, nama Demo Statistik, format CSV, mode Isi kolom kosong, filter Kabupaten Indramayu. Gunakan v21-statistik-fiktif.csv. Pratinjau, antrekan, lalu proses antrean seperti langkah A. Statistik harus masuk ke dua draf yang sama, bukan membuat sekolah baru.
+C. Jenis Akreditasi, nama Demo Akreditasi, format JSON, mode Isi kolom kosong, filter Kabupaten Indramayu. Gunakan v21-akreditasi-fiktif.json. Pratinjau, antrekan, proses.
+D. Periksa Artikel profil: DEMO2101 berisi MTs, 120 siswa, 12 guru, akreditasi B; DEMO2102 MI, 80 siswa, 8 guru, akreditasi A. Semua data simulasi. Hapus permanen kedua profil demo sebelum produksi. Jika mengulang uji, mode isi kosong tidak menimpa nilai lama.
+
+SUMBER RESMI
+- Identitas: https://data.kemendikdasmen.go.id/data-induk/satpen/daftar
+- Statistik: https://data.kemendikdasmen.go.id/data-induk/pd/jumlah-per-satuan-pendidikan
+- Akreditasi: https://ban-pdm.id/ (pencarian resmi, bukan endpoint API)
+- Madrasah: https://satudata.kemenag.go.id/
+- Dataset tambahan: https://data.go.id/
+Unduh data yang memang diizinkan untuk penggunaan ulang. Periksa lisensi, periode dan cakupan. Tidak semua dataset berisi NPSN; agregat wilayah tidak boleh dianggap sebagai statistik sekolah. Jika file XLSX, ekspor CSV UTF-8 dengan NPSN/NSM sebagai teks; plugin tidak membaca XLSX langsung. URL halaman portal bukan URL dataset. Masukkan URL langsung CSV/JSON jika tersedia dan diizinkan; jika tidak, gunakan berkas lokal. Jangan memakai endpoint privat/login atau mengakali pembatasan portal.
+
+MULTI-SUMBER
+Simpan hingga 30 konfigurasi. Setiap sumber memiliki nama, jenis, URL, format, jalur JSON, mapping, filter, mode gabung, opsi publikasi dan jadwal. Sumber tanpa URL dapat disimpan untuk pemakaian ulang dengan unggahan manual. Jadwal tiap 24 jam membutuhkan URL langsung. Satu sumber dipilih tiap putaran setelah antrean kosong; sumber legacy tetap berjalan jika dijadwalkan. Jadwal tidak menjamin waktu tepat; WP-Cron perlu situs aktif dan trafik/cron. Batasi pengambilan dan pastikan izin penggunaan. Maksimum 5 MB dan 10.000 baris per dataset; proses antrean 20 per putaran. Mode isi kosong tidak mengganti data lama; mode perbarui tidak membandingkan periode secara otomatis, jadi periksa tanggal/semester sebelum memilihnya. Statistik dan akreditasi hanya untuk NPSN yang sudah ada, dan tidak boleh mengubah identitas. Filter wilayah jenis tersebut mengikuti profil yang ada. Tidak ada API BAN-PDM atau EMIS langsung yang diuji.
+
+PROFIL REFERENSI BERDASARKAN NPSN (EKSPERIMENTAL)
+Di Sumber Resmi, masukkan NPSN valid 8 karakter, konfirmasi izin, klik Ambil dan pratinjau. Plugin meminta URL publik https://referensi.data.kemendikdasmen.go.id/pendidikan/npsn/{NPSN} (tanpa login, tanpa redirect), maksimum sekali per 60 detik. Parser hanya mengenali tabel label tertentu dan mencocokkan NPSN, nama, bentuk pendidikan; jika halaman berubah atau ditolak, tampilkan error dan gunakan dataset resmi. Data tidak disimpan saat pratinjau. Periksa hasil dan konfirmasi izin lagi sebelum simpan. Profil baru draf; profil lama menggunakan mode isi kosong (status publikasi dipertahankan). Telepon, email dan nama operator tidak diambil dari halaman ini untuk mengurangi risiko data pribadi. Luas tanah 0 dari halaman profil dianggap belum diketahui. Tidak ada pengambilan massal halaman HTML atau pencarian otomatis berdasarkan wilayah di konektor ini. Daftar wilayah melalui dataset identitas dan filter impor. Visi/misi hanya dari sumber yang sah, tidak dikarang.
+
+PENGUJIAN DAN BATASAN
+Semua tiga file PHP lolos php -l. 24 pemeriksaan smoke test PHP dengan stub WordPress dan database fiktif lulus. Parser HTML diuji pada fixture sintetis berdasarkan label halaman yang dapat dilihat di portal, bukan respons HTML mentah langsung. Belum ada uji instalasi WordPress/LocalWP, WP-Cron atau HTTP live dari plugin. Tidak ada benchmark nasional. Pengujian nyata wajib sebelum produksi. Jangan memasukkan data pribadi peserta didik. Baca PANDUAN-V2.txt untuk fungsi lama.

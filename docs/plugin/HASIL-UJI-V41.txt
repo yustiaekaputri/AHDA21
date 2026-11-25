@@ -1,0 +1,116 @@
+HASIL UJI SDP 4.1.0
+104 pemeriksaan smoke test PHP dengan stub WordPress dan database: 72 regresi v4.0 + 32 baru. Bukan 104 uji integrasi WordPress. Lint seluruh PHP dan dua JavaScript lulus. Tidak menjalankan MySQL/MariaDB, browser, LocalWP, koneksi API atau benchmark; SQL diperiksa sebagai string dan parameter, bukan eksekusi database. Pengujian koreksi, dbDelta, cron, dan localStorage memerlukan instalasi nyata.
+PASS 1 68 atribut lama
+PASS 2 score 7/20
+PASS 3 zero recognized
+PASS 4 missing placeholder
+PASS 5 ready threshold
+PASS 6 thin rejected
+PASS 7 hold thin
+PASS 8 preserve publish
+PASS 9 ready publish
+PASS 10 respect draft
+PASS 11 demo noindex
+PASS 12 demo local override
+PASS 13 summary zero
+PASS 14 missing facts omitted
+PASS 15 title NPSN
+PASS 16 unicode excerpt
+PASS 17 FAQ recorded facts
+PASS 18 FAQ no guessed claims
+PASS 19 schema type and NPSN
+PASS 20 missing geo omitted
+PASS 21 geo numeric
+PASS 22 meta ready
+PASS 23 meta demo
+PASS 24 sitemap filter
+PASS 25 unrelated sitemap untouched
+PASS 26 region valid
+PASS 27 region invalid
+PASS 28 slug stable
+PASS 29 slug distinct
+PASS 30 AI allowlist
+PASS 31 reject provider
+PASS 32 reject model injection
+PASS 33 key required
+PASS 34 fixed local endpoint
+PASS 35 Ollama parser
+PASS 36 OpenAI parser
+PASS 37 Gemini parser excludes thought
+PASS 38 empty output rejected
+PASS 39 old CSV works
+PASS 40 old validation works
+PASS 41 old HTML generator
+TOTAL 41 PASS
+PASS 42 scope enforced and non-scalar filter ignored
+PASS 43 page cap
+PASS 44 Unicode query cap
+PASS 45 published and nonpassworded SQL
+PASS 46 literal wildcard escaping
+PASS 47 bound filter parameters
+PASS 48 prefix suggestion SQL
+PASS 49 dependent options initially empty
+PASS 50 province expands district only
+PASS 51 district expands subdistrict
+PASS 52 fixed option
+PASS 53 zero distinct from missing
+PASS 54 null island placeholder ignored
+PASS 55 invalid latitude
+PASS 56 valid coordinate
+PASS 57 equatorial valid coordinate
+PASS 58 map markers escaped
+PASS 59 empty map
+PASS 60 zero shown and ratio valid
+PASS 61 zero denominator omitted
+PASS 62 missing chart
+PASS 63 pagination clamped
+PASS 64 card escaped
+PASS 65 summary accurate fixture
+PASS 66 fixed scope omitted from URL
+PASS 67 empty state
+PASS 68 API scope forced
+PASS 69 short suggestion no query
+PASS 70 SSR fallback form
+PASS 71 portal enhancement markup
+PASS 72 regional stats qualified
+COMBINED TOTAL 72 PASS
+PASS 73 comparison ID dedupe and cap
+PASS 74 nested input ignored
+PASS 75 numeric input rejected
+PASS 76 favorite cap
+PASS 77 no invented period
+PASS 78 placeholder period rejected
+PASS 79 empty observation rejected
+PASS 80 explicit period zero retained
+PASS 81 no synthetic carry forward
+PASS 82 invalid period type ignored
+PASS 83 student teacher ratio
+PASS 84 zero numerator valid
+PASS 85 zero denominator rejected
+PASS 86 missing denominator rejected
+PASS 87 haversine 1 degree
+PASS 88 coincident points
+PASS 89 antimeridian distance
+PASS 90 facility filter positive numeric
+PASS 91 jurusan wildcard escaped
+PASS 92 unlisted facility ignored
+PASS 93 filter query persists
+PASS 94 comparison ordered by request
+PASS 95 unknown NPSN omitted by result defense
+PASS 96 comparison excludes private and passworded via query
+PASS 97 comparison HTML escaping
+PASS 98 period and missing distinction
+PASS 99 comparison noindex
+PASS 100 favorites mode
+PASS 101 nearby disclaimer
+PASS 102 missing coordinate no distance
+PASS 103 portal controls
+PASS 104 accessible selection state
+V41 TOTAL 104 PASS
+No syntax errors detected in ./includes/class-sdp-seo.php
+No syntax errors detected in ./includes/class-sdp-portal.php
+No syntax errors detected in ./includes/class-sdp-collector.php
+No syntax errors detected in ./includes/class-sdp-analytics.php
+No syntax errors detected in ./includes/class-sdp-sources.php
+No syntax errors detected in ./includes/class-sdp-ai.php
+No syntax errors detected in ./sekolah-directory-pro.php

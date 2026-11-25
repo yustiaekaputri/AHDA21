@@ -1,0 +1,5 @@
+# crontab user pemilik WordPress (BUKAN root). Sesuaikan path wp dan PHP.
+# Jalankan tiap 5 menit; flock mencegah overlap untuk pemanggilan ini.
+# Siapkan /var/lib/sdp-run milik user tersebut, mode 0700.
+# Aktifkan setelah menjalankan wp cron event run --due-now secara manual.
+*/5 * * * * /usr/bin/flock -n /var/lib/sdp-run/cron.lock /usr/local/bin/wp --path=/var/www/sekolah/public cron event run --due-now --quiet

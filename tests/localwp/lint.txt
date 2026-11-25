@@ -1,0 +1,4 @@
+No syntax errors detected in /mnt/data/sdp-localwp-oneclick/sdp-preflight-local.php
+No syntax errors detected in /mnt/data/sdp-localwp-oneclick/sdp-run-localwp.php
+No syntax errors detected in /mnt/data/sdp-localwp-oneclick/sdp-smoke-rc6.php
+No syntax errors detected in /mnt/data/sdp-localwp-oneclick/test-runner.php

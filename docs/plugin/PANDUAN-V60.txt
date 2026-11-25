@@ -1,0 +1,75 @@
+SEKOLAH DIRECTORY PRO 6.0.0 — MESIN PENGAYAAN PROFIL
+Status: beta eksperimental, belum teruji di WordPress/MySQL nyata.
+
+1. UPGRADE
+- Cadangkan file dan database melalui LocalWP atau fasilitas WordPress yang sesuai.
+- Pada situs uji privat, WP Admin > Plugins > Add New Plugin > Upload Plugin.
+- Unggah sekolah-directory-pro-v6.0.0.zip; pilih Replace current with uploaded bila diminta.
+- Aktifkan plugin, periksa menu Direktori Sekolah > Mesin Pengayaan.
+- Modul lama tetap disertakan; tidak perlu mengimpor ulang data. Tidak ada tabel baru.
+  Kampanye tersimpan dalam option non-autoload sdp60_campaign; log hanya kampanye terakhir.
+- Cek `wp sdp health` dan `wp cron event list` di Open Site Shell. Jadwal sdp_collector_tick
+  menggunakan interval 5 menit, pelaksanaan nyata bergantung pada WP-Cron dan situs berjalan.
+
+2. DATA IDENTITAS AWAL
+Portal: https://data.kemendikdasmen.go.id/data-induk/satpen/daftar
+Jawa Barat: https://data.kemendikdasmen.go.id/data-induk/satpen/020000/daftar
+Portal profil: https://referensi.data.kemendikdasmen.go.id/pendidikan/npsn/
+Pastikan syarat akses otomatis, izin penggunaan ulang dan publikasi mengizinkan kegiatan Anda.
+Jika tidak diizinkan atau belum jelas, jangan jalankan pengambilan otomatis; gunakan dataset
+berizin atau ajukan akses resmi. Jangan mengimpor data individu siswa.
+Unduh dataset identitas melalui portal secara sah; jika Excel, simpan sebagai CSV UTF-8
+(dengan NPSN sebagai teks). Periksa header dan pratinjau di Sumber Resmi. Kolom wajib
+untuk profil baru: NPSN dan nama. Untuk filter, lengkapi provinsi, kabupaten, kecamatan,
+jenjang, status. Gunakan format wilayah konsisten. Impor draf. Jalankan antrean dataset
+sampai selesai sebelum memakai Mesin Pengayaan. Jalur bulk WP-CLI lama tetap tersedia.
+Statistik, akreditasi dan madrasah tambahan dapat diimpor melalui Sumber Resmi menggunakan
+CSV/JSON per NPSN yang diizinkan. Versi ini tidak menyediakan dataset nasional nyata atau
+API langsung baru untuk BAN-PDM, EMIS, Dapodik maupun statistik peserta didik.
+
+3. UJI SATU PROFIL TERLEBIH DAHULU
+- Pilih NPSN nyata yang telah Anda periksa. Di Sumber Resmi gunakan Ambil dan pratinjau
+  profil, dengan izin akses sumber. Periksa NPSN, nama dan nilai. Jangan menyimpan jika salah.
+- Bila HTTP 403/429/502, redirect, atau struktur HTML berubah, hentikan. Jangan gunakan
+  proxy, CAPTCHA bypass atau metode lain untuk mengatasi pembatasan.
+- Setelah minimal 60 detik, buka Mesin Pengayaan. Isi provinsi sesuai database lokal,
+  misalnya Jawa Barat. Isi kabupaten (Indramayu atau Kabupaten Indramayu sesuai nilai
+  persis di database), kecamatan dan jenjang opsional. Batas 1. Klik Pratinjau kandidat.
+- Pratinjau tidak menghubungi server sumber. Periksa NPSN yang dipilih. Centang konfirmasi
+  izin jika benar-benar telah memeriksa. Jangan centang otomatis untuk uji pertama.
+- Klik Buat kampanye, centang izin kembali, klik Proses 1 profil. Hasil berhasil dapat
+  berupa updated (kolom kandidat baru) atau unchanged (tidak ada perubahan).
+- Periksa profil lokal dan sumber per atribut. Tidak ada publikasi otomatis baru.
+  Artikel yang telah terbit tetap terbit dan dapat diperbarui; draf tetap draf.
+- Jika gagal, status paused. Periksa penyebab sebelum resume; jangan terus mencoba pada
+  akses ditolak. Bisa lewati atau batalkan. Tidak ada percobaan ulang otomatis pada kegagalan
+  HTTP, parser, identitas atau database. Batas laju bersama dengan pratinjau manual 60 detik.
+
+4. KAMPANYE BERIKUTNYA
+Batas 1–100 NPSN per kampanye, satu aktif dalam satu situs. Filter provinsi wajib;
+kecamatan membutuhkan kabupaten. Filter menggunakan nama di database (bukan kode wilayah).
+Jika ada kelompok lanjut, salin cursor NPSN setelah kampanye selesai dengan filter sama.
+Opsi cron hanya bila dicentang saat membuat kampanye. Satu profil per putaran cron (sekitar
+5 menit bila situs aktif). Antrean dataset diprioritaskan. Pause/cancel untuk menghentikan.
+Skip hanya pada status paused. Jangan membuat kampanye baru sampai kampanye lama selesai
+atau dibatalkan. Log kampanye sebelumnya diganti saat memulai kampanye baru. Tidak ada
+jadwal pengayaan berulang tanpa kampanye baru. Jeda kampanye sebelum deaktivasi bila tidak
+menginginkan proses dilanjutkan setelah reaktivasi. Profil terhapus, privat, berpassword,
+di luar filter atau teridentifikasi demo dilewati. Konflik nama, jenjang, status atau
+wilayah menjeda kampanye; variasi ejaan yang sah mungkin perlu koreksi manual.
+
+5. ATRIBUT
+Hanya atribut yang dikenali parser profil sumber: jenjang, status, naungan, alamat, desa,
+kecamatan, kabupaten, provinsi, akreditasi, luas tanah, SK dan tanggal pendirian/operasional,
+internet, listrik, website. Kolom lama yang berisi nilai tidak ditimpa (termasuk placeholder
+teks yang telah tersimpan). Nol tidak diganti. Nama dan NPSN dicocokkan; tidak digunakan
+untuk mengganti identitas. Kontak individu, email/telepon, statistik siswa/guru, visi/misi,
+sejarah dan prestasi tidak diambil oleh mesin ini. Sumber per atribut dicatat oleh generator.
+
+6. BATASAN DAN HASIL UJI
+159 pemeriksaan regresi + 44 pemeriksaan baru = 203 lulus dengan stub WordPress/MySQL/HTTP.
+PHP dan JS lint diperiksa. Tidak ada uji langsung WordPress/MySQL/cron/browser atau skala
+nasional. Percobaan membuka profil publik dalam penelusuran web mengembalikan 502; tidak ada
+respons live yang berhasil diuji oleh plugin. Parser memakai HTML simulasi. Struktur sumber
+mungkin berbeda; jika gagal gunakan pratinjau dan dataset berizin. Tidak ada jaminan akses
+otomatis atau kelengkapan data. Pilih satu profil nyata pada situs lokal privat untuk uji.

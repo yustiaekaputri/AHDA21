@@ -1,0 +1,101 @@
+{
+  "candidate": "RC6 / plugin 10.0.0-rc.4",
+  "gates": {
+    "local_install": {
+      "description": "WordPress + MySQL/MariaDB + plugin RC4 + tema v7.0 pada clone lokal",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "smoke": {
+      "description": "Smoke test RC6 selesai, termasuk pembersihan fixture",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "real_data": {
+      "description": "Minimal 100 NPSN nyata, sumber/izin dan periode diverifikasi; impor serta pembaruan berhasil",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "integrity": {
+      "description": "Audit kedua arah seluruh pilot selesai; tidak ada konflik identitas belum ditangani",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "frontend": {
+      "description": "7 shortcode, profil, filter wilayah, mobile, galeri dan perbandingan diuji di browser",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "operator": {
+      "description": "Dua akun operator; klaim, usulan, moderasi, pencabutan, akses silang ditolak",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "automation": {
+      "description": "Scheduler, batas jaringan, safe mode dan penghentian antrean diuji dengan sumber berizin",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "seo": {
+      "description": "Canonical, sitemap, robots dan tidak ada data fiktif publik; indexing hanya setelah disetujui",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "backup": {
+      "description": "Backup database dan file dipulihkan pada clone terpisah dan diperiksa",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "performance": {
+      "description": "Benchmark lokal dan pengukuran CPU/RAM/latensi VPS representatif ditinjau",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "vps": {
+      "description": "Staging VPS HTTPS, Nginx/PHP-FPM/MariaDB, privasi cache, log dan smoke test",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    },
+    "security": {
+      "description": "Tinjauan keamanan, hak akses, jaringan keluar, serta temuan kritis ditutup",
+      "status": "pending",
+      "evidence": "",
+      "sha256": "",
+      "reviewer": "",
+      "notes": ""
+    }
+  }
+}

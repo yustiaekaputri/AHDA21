@@ -1,0 +1,4 @@
+NPSN,Nama Satuan Pendidikan,Bentuk,Jenjang,Status,Kota/Kab,Kecamatan,Kelurahan,Alamat,Pembina,Peserta Didik,Rombel
+DEMO0001,SD Contoh Kolektor,SD,Dasar,Negeri,Kabupaten Indramayu,Jatibarang,Desa Contoh,Jalan Contoh 1,Kemendikdasmen,125,6
+DEMO0002,MTs Contoh Kolektor,MTs,Dasar,Swasta,Kabupaten Indramayu,Karangampel,Desa Contoh,Jalan Contoh 2,Kemenag,240,9
+DEMO0003,SMK Contoh Kolektor,SMK,Menengah,Swasta,Kabupaten Cirebon,Palimanan,Desa Contoh,Jalan Contoh 3,Kemendikdasmen,320,12

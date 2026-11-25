@@ -1,0 +1,97 @@
+SEKOLAH DIRECTORY PRO 8.8.0 — PERFORMANCE OPTIMIZATION ENGINE
+Beta pengujian lokal, belum produksi.
+
+1. UPGRADE
+- Cadangkan file dan database LocalWP (termasuk wp-content/uploads).
+- Upload sekolah-directory-pro-v8.8.0.zip di Plugins > Add New > Upload Plugin,
+  pilih Replace current with uploaded. Jangan hapus tabel sekolah.
+- Buka WP Admin setidaknya sekali: migrasi jadwal kolektor terjadi di admin_init.
+- Buka Direktori Sekolah > Performa & Cache. Tema 7.0 tetap digunakan.
+- Tidak ada tabel baru; konfigurasi cache dan migrasi memakai Options non-autoload.
+
+2. CACHE FILTER
+Hanya hasil SELECT DISTINCT pilihan filter publik (provinsi, kabupaten,
+kecamatan, jenjang, status, akreditasi) yang dicache. Bukan HTML, daftar
+sekolah, data profil, halaman operator, maupun hasil pencarian bebas.
+Cache tetap dibatasi 32 slot, maksimum serialisasi nilai 16 KiB per slot,
+TTL 300 detik, sehingga payload nilai tersimpan maksimum sekitar 512 KiB
+(tidak termasuk metadata, serialisasi pembungkus dan overhead MySQL).
+Kunci mencakup SQL dan epoch; tabrakan slot mengganti nilai, tidak
+mengembalikan hasil kueri lain. Error DB tidak dicache. Cache diinvalidasi
+pada penyimpanan sekolah melalui plugin, perubahan status/tipe/password
+post sekolah dan penghapusan post. Perubahan langsung SQL tidak tercakup;
+batas stale 5 menit, bersihkan manual setelah impor langsung/migrasi.
+Cache hanya untuk nilai yang pernah publik; tidak menggantikan pemeriksaan
+akses. Cache seluruh halaman di luar plugin memiliki aturan tersendiri.
+Untuk menonaktifkan cache: define('SDP_FACET_CACHE', false);
+Tambahkan di wp-config.php sebelum baris akhir, jangan duplikasi definisi.
+
+3. ASET DAN KUERI
+CSS/JS direktori/portal/analitik dimuat jika halaman utama mengandung
+shortcode terkait atau halaman profil sekolah. Render shortcode juga
+meminta aset yang diperlukan. Page builder/widget dinamis mungkin memuat
+CSS terlambat; fallback kompatibilitas: define('SDP_ALWAYS_ASSETS', true);
+Hasil pencarian tetap live (join post terbit tanpa password). Cache post
+WordPress dipanaskan secara batch untuk ID hasil; tidak memuat meta/term.
+Pemeriksaan antrean memakai SELECT 1 LIMIT 1, bukan COUNT(*) semua pending.
+Indeks tambahan v5.0 tetap opsional: wp sdp indexes --yes (setelah backup,
+jalankan saat sepi). Belum ada EXPLAIN nyata. Pagination portal tetap OFFSET;
+API publik v5.0 sudah memiliki cursor. Semua kelas PHP masih dimuat;
+conditional loading modul PHP belum dilakukan. Tidak perlu Redis.
+
+4. CRON LEGACY ON-DEMAND
+Migrasi mengganti recurring sdp_collector_tick lima menit menjadi single
+event jika pekerjaan diperlukan. Jika antrean kosong, pengambilan jaringan
+nonaktif/tidak dijadwalkan dan mesin pengayaan lama tidak otomatis,
+tidak ada jadwal berikut. Antrean aktif: maksimal satu wakeup setiap sekitar
+5 menit; jadwal sumber harian diatur mendekati waktu jatuh tempo. Mesin
+pengayaan v6.0 otomatis masih berjalan menggunakan hook lama jika mode
+mengizinkan jaringan. Scheduler v8.7 memakai hook tersendiri dan tetap ada.
+Cron kolektor dan mesin pengayaan lama memeriksa metrik load/RAM/PHP bila
+tersedia; metrik OS yang tidak tersedia (mis. Windows) tidak menghalangi
+kerja, tetapi batas memori PHP tetap dicek. Jika DB bermasalah atau lock
+sibuk, percobaan wakeup dapat dijadwalkan lagi. Tidak ada pengukuran
+bandwidth aktual dan guard bukan hard limit atau prioritas CPU OS.
+Bila mengganti SDP_LOW_RESOURCE_NETWORK_CRON atau SDP_LOW_RESOURCE,
+klik Periksa/pulihkan jadwal kolektor. Jika cron hilang lakukan hal sama.
+WP-Cron bergantung pada request; untuk situs minim trafik bisa jalankan
+wp cron event run --due-now dari cron sistem sesuai kebutuhan (mis. 5 menit),
+tetapi ini tetap memulai proses WP dan punya overhead. Jangan menyalakan
+cron sistem tambahan jika tidak perlu; jangan jalankan dua mekanisme berat.
+Jika memakai DISABLE_WP_CRON, atur cron eksternal jika perlu otomatisasi.
+
+5. PEMELIHARAAN
+Tombol hapus log selesai >30 hari menghapus maksimal 500 per klik, tidak
+menghapus pending atau failed, dan tidak menghapus profil sekolah.
+Cadangkan dahulu jika membutuhkan riwayat antrean lama. Tidak ada purge
+otomatis, pemindaian transient umum, perubahan Redis, atau indeks otomatis.
+Dashboard menunjukkan load 1 menit, MemAvailable OS (jika ada), RAM proses
+PHP saat ini dan jadwal berikut; bukan monitoring historis atau pengukuran
+RAM/CPU keseluruhan VPS. Mode hemat default tetap aktif.
+
+6. UJI LOCALWP (WAJIB)
+- Jalankan wp plugin list, wp db check, wp sdp health, wp cron event list.
+- Saat antrean kosong/jaringan off, sdp_collector_tick tidak terjadwal.
+- Impor 5 sekolah fiktif sebagai draf lalu uji terbitkan hanya di LocalWP.
+  Buat antrean, cek jadwal muncul, jalankan langkah manual atau cron,
+  cek jadwal hilang setelah antrean kosong. Hapus data uji sebelum produksi.
+- Buka direktori dua kali, cek filter sama; ubah wilayah dan simpan profil,
+  cek filter baru. Jadikan profil privat atau beri password, cek hasil
+  pencarian tidak memuat profil itu. Periksa cache setelah perubahan.
+- Cek DevTools Network: halaman berita tanpa shortcode tidak memuat 3 CSS
+  dan 2 JS portal/analitik. Profil, direktori, perbandingan harus tetap
+  tampil/berfungsi, termasuk AJAX, mobile, dan tema v7.0.
+- Uji operator tetap dikecualikan dari page cache/CDN.
+- Catat memori, CPU, query count dan TTFB sebelum/sesudah menggunakan
+  dataset sama; belum ada benchmark VPS nyata. Jangan langsung mengimpor
+  nasional di VPS RAM 1 GB. Jalankan pengolahan besar di LocalWP.
+- Setelah VPS diupgrade, set SDP_LOW_RESOURCE=false bila kapasitas sudah
+  diuji; tidak perlu mengganti plugin. Mode standar tidak menjamin kapasitas.
+
+7. PENGUJIAN DAN BATASAN
+Tes PHP simulasi 8.6/8.7: 278 eksekusi lulus. Tes 8.8: 37 hemat + 37 standar
++ 29 cache off = 103 eksekusi. Total 381 eksekusi, bukan 381 fungsi unik.
+PHP lint dan node --check lulus. Skrip tes simulasi disertakan terpisah.
+677 pemeriksaan historis yang tidak tersedia belum diulang. Belum ada
+WordPress, MySQL, browser, VPS aktual, EXPLAIN atau benchmark produksi.
+Tidak ada klaim persentase penghematan CPU/RAM/bandwidth.

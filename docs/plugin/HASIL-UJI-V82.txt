@@ -1,0 +1,51 @@
+SDP v8.2.0 — pengujian
+Regresi v8.0: 489 PASS; mode hemat v8.1: 28 PASS; network opt-in: 1 PASS (dijalankan kembali)
+PHP XLSX: 12 pemeriksaan helper dan fallback; tidak menjalankan parser native karena ZipArchive/XMLReader tidak tersedia.
+PASS 1 low mode caps XLSX
+PASS 2 column reference conversion
+PASS 3 reject EU1
+PASS 4 reject A0
+PASS 5 reject a1
+PASS 6 reject A1048577
+PASS 7 reject A1x
+PASS 8 sparse and zero preserved
+PASS 9 reject extra cell
+PASS 10 reject long cell
+PASS 11 UTF8 text retained
+PASS 12 missing extensions handled
+V82 PHP TOTAL 12 PASS
+Konverter lokal Python: file XLSX asli (inline dan shared strings).
+PASS 1 real XLSX inline strings, 2 rows
+PASS 2 zero NPSN, quote and multiline preserved
+PASS 3 missing cell stays empty
+PASS 4 select second sheet
+PASS 5 missing sheet rejected
+PASS 6 existing output protected
+PASS 7 formula rejected atomically
+PASS 8 formula-like text rejected
+PASS 9 extra data without header rejected
+PASS 10 duplicate headers rejected
+PASS 11 DTD rejected
+PASS 12 real shared strings workbook
+PASS 13 shared string leading zero preserved
+PYTHON TOTAL 13 PASS
+Lint PHP:
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-seo.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-national.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-portal.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-resource.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-operator.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-collector.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-analytics.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-engine.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-sources.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-education.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-excel.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-intelligence.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-ai.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-media.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-missing.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-website.php
+No syntax errors detected in sekolah-directory-pro/sekolah-directory-pro.php
+Semua JavaScript lolos node --check.
+Belum diuji: WordPress/MySQL nyata, upload browser, parser PHP end-to-end, performa VPS.

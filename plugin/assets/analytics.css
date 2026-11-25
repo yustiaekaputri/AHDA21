@@ -1,0 +1,9 @@
+.sdp41-toolbar,.sdp41-controls{display:flex;align-items:center;flex-wrap:wrap;gap:.55rem;margin:.75rem 0}
+.sdp41-toolbar{padding:.85rem;border:1px solid #cbd5e1;border-radius:12px;background:#f1f5f9;color:#183b56}
+.sdp41-toolbar[hidden],.sdp41-controls button[hidden],.sdp41-print[hidden]{display:none!important}
+.sdp41-toolbar a,.sdp41-controls button,.sdp41-form button,.sdp41-print,.sdp41-report button{background:#fff;border:1px solid #a7bbc9;border-radius:7px;color:#17445e;padding:.4rem .7rem;font-size:.9rem;cursor:pointer;text-decoration:none;line-height:1.5}
+.sdp41-controls button[aria-pressed=true]{background:#17445e;color:white;border-color:#17445e}
+.sdp41-toolbar button{font:inherit;color:#17445e;background:transparent;border:0;cursor:pointer;text-decoration:underline}
+.sdp41-compare{min-width:480px}.sdp41-compare td,.sdp41-compare th{min-width:120px;vertical-align:top;overflow-wrap:anywhere}
+.sdp41-report form{display:grid;gap:1rem;max-width:640px}.sdp41-report label{display:grid;gap:.25rem}.sdp41-report input,.sdp41-report select,.sdp41-report textarea,.sdp41-form input{width:100%;box-sizing:border-box;padding:.5rem;border:1px solid #9aafbe;border-radius:6px;font:inherit}.sdp41-form{display:flex;flex-wrap:wrap;align-items:end;gap:.5rem;margin:1rem 0}.sdp41-form label{flex:1;min-width:200px}.sdp41 section{margin:1.4rem 0}
+@media print{.sdp41-toolbar,.sdp41-controls,.sdp41-print,.sdp41-report,.sdp41-form{display:none!important}.sdp41-compare{min-width:0!important;font-size:10pt}.sdp41-compare td,.sdp41-compare th{min-width:0!important}.sdp-table-wrap{overflow:visible!important}}

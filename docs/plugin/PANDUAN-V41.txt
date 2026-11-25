@@ -1,0 +1,29 @@
+SEKOLAH DIRECTORY PRO 4.1.0 — SCHOOL COMPARISON & ANALYTICS
+
+UPGRADE
+1. Backup database dan seluruh situs LocalWP. Jangan hapus plugin lama.
+2. WP Admin > Plugins > Add New Plugin > Upload Plugin > pilih ZIP 4.1.0 > Replace current with uploaded.
+3. Pastikan plugin aktif; buka admin. Dua tabel {prefix}sdp_history dan {prefix}sdp_reports dibuat melalui dbDelta pada aktivasi/admin_init. Tabel utama dan 68 atribut dipertahankan. Jika tabel gagal dibuat, lihat pesan pada menu Analitik & Koreksi dan log database.
+4. Direktori Sekolah > Analitik & Koreksi > Buat / aktifkan halaman perbandingan. Halaman publik [bandingkan_sekolah] akan dibuat; ID halaman disimpan. Jika membuat halaman sendiri, shortcode dapat dipakai manual tetapi tombol favorit/perbandingan otomatis bergantung pada halaman yang dibuat melalui menu.
+5. Buka halaman [direktori_sekolah]. Klik Bandingkan pada 2–4 kartu, lalu Bandingkan pilihan. Pilih Favorit untuk menyimpan maksimal 20 NPSN di localStorage browser; tidak disinkronkan antar perangkat. Tanpa JavaScript, masukkan daftar NPSN dipisahkan koma di halaman perbandingan.
+6. Filter fasilitas hanya mencocokkan jumlah laboratorium/perpustakaan/toilet yang tercatat lebih dari nol. Nilai kosong tidak diperlakukan sebagai nol. Jurusan dicari sebagai teks substring, bukan klasifikasi jurusan resmi. Filter JSON memerlukan MySQL/MariaDB dengan JSON_VALID, JSON_EXTRACT, JSON_UNQUOTE (sesuai lingkungan WordPress modern); uji versi database Anda.
+7. Tombol Cetak / Simpan PDF menggunakan dialog cetak browser (pilih Save as PDF). Tidak menghasilkan file PDF server-side.
+
+RIWAYAT
+Impor data dengan tahun_data eksplisit (mis. 2025/2026 Ganjil), dan setidaknya satu statistik numerik: jumlah_siswa, jumlah_guru, jumlah_rombel, ruang_kelas, siswa_laki_laki, siswa_perempuan, jumlah_tendik. Data yang dikirim dan lolos penyimpanan profil dicatat sebagai observasi, termasuk jika kebijakan isi kosong tidak menerapkan nilai baru pada profil. Hanya atribut statistik yang benar-benar dikirim disimpan pada observasi; tidak mengisi data tahun lain. Administrator tetap harus memastikan periode sesuai angka yang dikirim, terutama jika form edit memuat nilai lama. Observasi identik (periode, angka, label sumber) dideduplikasi. Observasi berbeda pada periode sama bisa muncul; 20 observasi terakhir ditampilkan berdasarkan urutan pencatatan. Tidak mengarang riwayat sebelum v4.1. Tidak melakukan backfill otomatis. Data sumber belum diverifikasi independen. Tanggal catatan UTC. Riwayat berupa tabel, bukan grafik tren otomatis.
+
+SEKOLAH SEKITAR
+Menampilkan hingga 5 profil publik berdasarkan jarak garis lurus dari koordinat profil saat ini. Hanya kandidat satu provinsi dan kabupaten/kota, maksimal 1.000 pertama menurut NPSN; jika dibatasi, keterangan tampil. Tidak menghitung jarak jalan maupun lintas kabupaten. Koordinat hilang/tidak valid tidak digunakan. Rasio siswa/guru dan siswa/ruang kelas hanya dihitung bila pembilang dan penyebut diketahui serta penyebut >0. Perbandingan data dari periode berlainan bukan ranking kualitas.
+
+KOREKSI DATA
+Pengunjung yang login WordPress dapat mengusulkan koreksi atribut dari profil publik. Registrasi pengguna tidak diaktifkan oleh plugin; gunakan akun uji jika situs privat. Nonce, validasi NPSN, batas panjang, dan pembatasan sederhana 1 laporan per menit per akun digunakan. Tidak menyimpan ID pelapor, email, atau IP dalam tabel laporan; teks yang dikirim bisa mengandung informasi pribadi, jadi jangan masukkan data individual siswa. Admin harus memeriksa laporan, mengedit profil jika benar, lalu tandai selesai atau hapus. Tidak ada perubahan profil otomatis, notifikasi, atau penghapusan laporan terjadwal. Hapus laporan yang tidak perlu. Penghapusan permanen profil menghapus observasi dan laporan terkait bila skema tersedia.
+
+UJI LOCALWP (BELUM DIJALANKAN PADA PEMBUATAN)
+- Cadangkan situs. Gunakan contoh demo-fiktif.csv dari folder contoh pada situs privat, lalu terbitkan beberapa draf secara manual untuk pengujian lokal saja.
+- Impor contoh riwayat-v41-fiktif.csv. Rekaman NPSN DEMO0001 memuat dua periode; periksa dua observasi, impor ulang dan cek tidak bertambah. Jika memakai data demo versi lama, pastikan nama dan NPSN cocok. Jangan publikasikan data contoh di internet.
+- Uji 4 profil di perbandingan, penolakan pilihan ke-5, favorit setelah reload, filter fasilitas/jurusan dan pagination. Periksa tampilan mobile, mode tanpa JS dan cetak PDF.
+- Uji login pengguna biasa dan kirim koreksi; pastikan admin dapat meninjau dan profil tidak otomatis berubah. Periksa bahwa draf/private/password tidak muncul di perbandingan dan rekomendasi.
+- Periksa upgrade, WP-Cron, SEO, noindex, serta log PHP/MySQL. Hapus semua data fiktif sebelum produksi.
+
+BATASAN
+Belum diuji pada WordPress/MySQL nyata, browser, atau LocalWP; hanya smoke test PHP dengan stub WordPress/database, lint PHP/JS, inspeksi paket. Query JSON, dbDelta, penyimpanan favorit, proses moderasi dan interaksi AJAX perlu uji integrasi. Modul pengumpulan sumber pemerintah/AI tetap memiliki batasan versi sebelumnya. Belum ada optimasi/benchmark nasional. Tidak ada klaim pengambilan semua data pemerintah otomatis.

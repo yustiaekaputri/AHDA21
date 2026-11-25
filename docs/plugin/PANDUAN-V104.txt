@@ -1,0 +1,71 @@
+SEKOLAH DIRECTORY PRO — 10.0.0 RC4
+System Integration & Bug Fix | KANDIDAT STAGING, BUKAN RILIS STABIL
+
+Perubahan dari RC3:
+- Mesin save memeriksa payload NPSN, tipe/status artikel, metadata _sdp_npsn tunggal,
+  dan pemilik post_id pada indeks. Relasi yang salah ditolak; artikel yatim tidak diadopsi.
+- Artikel baru dibuat sebagai draf. Publikasi baru dilakukan setelah indeks tersimpan.
+- Penghapusan permanen: pembersihan usulan operator, klaim, riwayat/koreksi dan indeks
+  dipanggil setelah penghapusan artikel, dengan urutan prioritas 3,4,5,10.
+- Audit balik WP-CLI (artikel ke indeks), baca-saja, dengan cursor ID dan batas 25/100.
+- Tidak ada perubahan schema, cron, worker, atau aset frontend baru.
+
+INSTALASI
+1. Buat backup lengkap database dan file, dan uji pemulihan pada clone LocalWP.
+2. Hentikan otomatisasi, aktifkan SDP_SAFE_MODE saat pemeliharaan. Jangan jalankan impor bersamaan.
+3. Upload ZIP plugin RC4 melalui Plugins > Add New > Upload, ganti versi sebelumnya.
+4. Tema v7.0 tidak berubah. Jangan mengimpor ulang semua data.
+5. Pada Site Shell, pilih ID admin yang benar (contoh: 1). Jalankan:
+   wp sdp readiness --user=1
+   wp sdp readiness --audit --user=1
+   wp sdp integrity-posts --user=1
+   Jika next bukan null, lanjutkan audit maju dengan --after=<NPSN> dan audit balik
+   dengan --after=<ID>, menggunakan nilai keluaran masing-masing. Jangan menyalin
+   tanda kurung sudut secara literal pada shell. Audit tidak mengubah profil.
+6. Selesaikan temuan sebelum impor pilot; lihat PANDUAN-V103.txt untuk validator dan pilot.
+7. Uji pembuatan profil sebagai draf, pembaruan NPSN yang sama, persetujuan publikasi,
+   klaim operator, moderasi, REST, sitemap, pencarian, dan penghapusan permanen
+   menggunakan data uji di clone nonindeks. Jangan menghapus data nyata untuk pengujian.
+8. Uji kegagalan penyimpanan hanya pada clone terisolasi; jangan merusak tabel produksi.
+9. Setelah sehat, pulihkan pengaturan otomatisasi sesuai kebutuhan. Tetap mode hemat bawaan.
+
+ARTI FLAG AUDIT BALIK
+invalid_post_npsn: metadata hilang, ganda, atau tidak valid.
+orphan_post: artikel tanpa pemilik di tabel sekolah; jangan otomatis mengadopsinya.
+shared_post_id: lebih dari satu NPSN pada indeks menunjuk artikel yang sama.
+post_index_npsn_mismatch: NPSN metadata berbeda dari indeks.
+Audit maju (readiness --audit) juga mendeteksi payload rusak, relasi hilang,
+ketidaksesuaian indeks, data uji terpublikasi dan kesiapan SEO.
+
+PEMULIHAN
+Jika ada temuan, hentikan pekerjaan tulis, catat ID/NPSN dan backup. Bandingkan dengan
+cadangan yang diketahui baik dan sumber resmi. Pulihkan clone dari backup atau minta
+administrator database memperbaiki relasi setelah memverifikasi identitas dan data
+terkait. Tidak ada perintah penggabungan/penghapusan/rekonstruksi otomatis dalam RC4.
+Jika artikel baru menjadi draf karena indeks gagal, jangan ulangi impor sebelum
+menyelesaikan relasi tersebut. Jika indeks berhasil tetapi publikasi gagal, periksa
+status artikel, metadata dan audit sebelum melanjutkan.
+
+BATASAN
+Penyimpanan artikel dan indeks masih bukan transaksi atomik. Pembaruan artikel lama
+bisa berhasil sebagian jika penulisan indeks gagal. Hook pihak ketiga dan perubahan
+manual di luar save tidak tercakup penuh. Pembersihan setelah penghapusan permanen
+masih dapat gagal sebagian atau berbenturan dengan pekerjaan lain. Audit bukan snapshot
+konsisten, bukan pencarian semua duplikat metadata global, dan tidak memverifikasi
+kebenaran data resmi. Jalankan pada staging/maintenance. Batas jumlah hasil SQL tidak
+menjamin batas waktu pemindaian; pencarian orphan baru menambah kueri postmeta, yang
+perlu dibenchmark pada database besar. Tidak ada audit konflik otomatisasi baru,
+audit SEO menyeluruh, atau audit keamanan independen. WordPress/MySQL nyata belum
+diuji. Target 100 sekolah nyata RC3 belum terpenuhi.
+
+PENGUJIAN
+675 eksekusi regresi RC3 + 62 eksekusi pemeriksaan RC4 (31 per mode) = 737.
+PHP lint 28 file, Node syntax 2 file. Simulasi, bukan hasil produksi.
+Untuk menjalankan ulang: ekstrak ZIP pengujian dan folder sekolah-directory-pro
+bersebelahan; gunakan PHP CLI dan Python 3. Lihat laporan untuk kombinasi mode.
+
+VPS
+RAM 1 GB, CPU terbatas, bandwidth 10 GB (periode belum dikonfirmasi).
+Tidak ada pemindaian tambahan pada frontend. Pemeriksaan baru berjalan saat save
+atau audit manual. Kapasitas audit 25 mode hemat, 100 mode standar. Ukur biaya
+kueri dan memori secara nyata sebelum meningkatkan batch atau meluncurkan situs.

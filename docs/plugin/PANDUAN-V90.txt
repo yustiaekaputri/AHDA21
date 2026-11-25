@@ -1,0 +1,90 @@
+SEKOLAH DIRECTORY PRO 9.0.0 — KANDIDAT PRODUKSI (STAGING)
+
+1. UPGRADE
+Cadangkan database DAN seluruh file WordPress, khususnya wp-content/uploads,
+wp-config.php dan plugin/tema. Verifikasi bahwa backup dapat dipulihkan pada
+instalasi terpisah. Uji pada clone LocalWP/staging terlebih dahulu, bukan produksi.
+Upload ZIP plugin via Plugins > Add New > Upload > Replace current with uploaded.
+Tema v7.0 tidak berubah. Database lama dipertahankan. Jangan uninstall plugin.
+Buka WP Admin > Direktori Sekolah > Kesiapan Produksi. Periksa setiap baris.
+Tabel wilayah bersifat opsional. Pemeriksaan kolom hanya memeriksa subset yang
+dibutuhkan; bukan verifikasi tipe, indeks, integritas seluruh schema atau hak akses.
+Marker sdp_db_version dapat masih menunjukkan versi lama setelah replace plugin;
+versi kode dan versi marker tidak harus sama. Jangan menjalankan DDL hanya untuk
+mengubah angka marker jika tabel sehat.
+
+2. MODE DARURAT
+Pada wp-config.php sebelum baris akhir konfigurasi, tambahkan:
+    define('SDP_SAFE_MODE', true);
+Ini menahan pekerjaan otomatis kolektor/engine lama dan scheduler v8.7,
+termasuk langkah manual melalui scheduler v8.7. Pekerjaan yang sudah berjalan
+tidak dapat dibatalkan secara retroaktif. Tindakan manual pada modul lain,
+cron WordPress/plugin lain, dan akses publik tidak diblokir. Jadwal lama dapat
+tersisa sampai diproses atau direkonsiliasi. Buka Performa & Cache > Periksa /
+Pulihkan Jadwal Kolektor agar jadwal kolektor lama dibersihkan ketika mode darurat
+aktif. Untuk kembali bekerja, hapus konstanta, periksa jadwal kolektor lagi, dan
+buat/pulihkan sesi scheduler secara eksplisit bila diperlukan. Jangan aktifkan
+SDP_LOW_RESOURCE_NETWORK_CRON tanpa izin dan anggaran jaringan.
+
+3. AUDIT DATA
+Audit berurutan menurut NPSN (25 per putaran hemat, 100 standar). Masukkan nilai
+next dari hasil sebelumnya untuk melanjutkan. Data yang terlalu besar (>256 KiB)
+atau JSON rusak ditandai; tidak ditampilkan atau diperbaiki otomatis. Hasil hanya
+berisi NPSN dan kode masalah. Memeriksa NPSN/payload, indeks, kelengkapan identitas,
+post yang hilang/berbeda tipe, profil fiktif publik, dan syarat SEO dasar. Tidak
+memeriksa semua fakta di dunia nyata, izin sumber, semua duplikasi post, atau
+profil tanpa indeks. Tidak menjamin kualitas populasi dari satu sampel.
+Audit dan diagnostik tidak menulis profil atau mengambil data jaringan.
+WP-CLI: wp sdp readiness
+WP-CLI: wp sdp readiness --audit
+WP-CLI: wp sdp readiness --audit --after=12345678
+
+4. PERBAIKAN SCHEMA
+Hanya di staging atau jendela pemeliharaan: hentikan pekerjaan manual/CLI lain,
+aktifkan SDP_SAFE_MODE, verifikasi backup, lalu gunakan tombol periksa/perbaiki
+schema inti. Menggunakan dbDelta dan lock kolektor; operasi DDL dapat mengunci
+tabel dan tidak atomik. Tidak memperbaiki schema modul lain/payload/indeks
+sekunder secara menyeluruh. Untuk schema modul lain periksa log, cadangan, dan
+prosedur upgrade modul. Jangan menghapus marker atau tabel secara sembarangan.
+
+5. CHECKLIST SEBELUM PUBLIKASI
+[ ] WordPress/MySQL/PHP aktual kompatibel dan masih mendapat pembaruan keamanan.
+[ ] PHP extension sesuai kebutuhan (mysqli/json; curl/openssl untuk jaringan,
+    GD untuk media, Zip/XMLReader untuk XLSX, DOM untuk parser bila diperlukan).
+[ ] Uji instalasi baru, upgrade dari v8.9 dan pemulihan backup.
+[ ] Uji halaman profil, filter wilayah, pagination, REST, shortcode statistik,
+    portal operator dengan dua akun, klaim, moderasi, status privat.
+[ ] Pastikan subscriber tidak dapat mengedit/menerbitkan profil langsung.
+[ ] Uji impor 100 profil valid di clone; verifikasi sumber/izin dan tidak ada
+    data fiktif publik. Jangan migrasikan database benchmark ke produksi.
+[ ] Uji cron manual/otomatis dan mode darurat. Firewall egress untuk SSRF:
+    blok tujuan internal, metadata cloud dan port tidak diperlukan; validasi DNS.
+[ ] Pastikan HTTPS, debug off, akun admin kuat, pembaruan rutin, backup offsite.
+[ ] Page cache hanya untuk konten publik; kecualikan akun/operator, preview,
+    admin, nonce/form pribadi dan respons yang berbeda menurut pengguna.
+[ ] Cek sitemap, noindex, canonical, robots, dan visibilitas search setelah
+    migrasi. Jangan membuka indeks untuk staging atau data uji.
+[ ] Benchmark v8.9 di lingkungan lokal terpisah; ukur penggunaan RAM, load,
+    error dan latensi VPS melalui alat hosting, bukan pengujian beban produksi.
+
+6. VPS AWAL RAM 1 GB
+Pertahankan SDP_LOW_RESOURCE default (true). Mulai dengan Nginx/PHP-FPM dan
+MariaDB yang diatur konservatif; page cache publik, gambar terkompresi, CDN bila
+sesuai. Jangan wajibkan Redis/Ollama. Pengolahan massal pada LocalWP. CPU 1 vCPU
+masih asumsi; kuota 10 GB belum diketahui periodenya. Ukur sebelum menaikkan
+worker. Setelah upgrade dan benchmark, gunakan SDP_LOW_RESOURCE=false bila
+perlu. Mode hemat bukan pembatas total bandwidth atau jaminan kapasitas.
+
+7. MIGRASI DAN ROLLBACK
+Gunakan alat migrasi WordPress terpercaya atau WP-CLI dengan backup terverifikasi.
+Uji pada staging; ganti URL menggunakan alat yang menangani data serialized,
+periksa domain/HTTPS, permalink, media, API key dan pengaturan cron. Matikan
+benchmark dan hilangkan data fiktif sebelum membuka publik. Jika ada masalah,
+aktifkan mode darurat, hentikan perubahan, dan pulihkan file + database dari
+snapshot yang sama setelah memastikan tidak ada perubahan pengguna yang hilang.
+Jangan sekadar downgrade file jika schema sudah berubah. Jangan publikasikan
+backup, wp-config.php, atau laporan administrator berisi detail server.
+
+Batasan: belum ada uji WordPress/MySQL nyata, uji browser, uji keamanan menyeluruh,
+benchmark VPS atau verifikasi dataset nasional. Tidak ada wizard instalasi penuh,
+backup otomatis, atau migrasi seluruh schema otomatis. Diagnostik hanya on demand.

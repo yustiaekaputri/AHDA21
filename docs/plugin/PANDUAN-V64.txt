@@ -1,0 +1,29 @@
+SEKOLAH DIRECTORY PRO 6.4.0 — SCHOOL MEDIA COLLECTOR (BETA)
+
+UPGRADE
+1. Backup situs dan database. Di WP Admin > Plugins > Add New Plugin > Upload Plugin, pilih sekolah-directory-pro-v6.4.0.zip, lalu Replace current with uploaded. Semua modul 6.3 disertakan.
+2. Start Site di LocalWP. PHP 8.0+ dan WordPress 6.4+ sesuai persyaratan plugin. Periksa GD di Open Site Shell: php -m (CLI dapat berbeda dari PHP web). Menu Media Sekolah menampilkan status GD PHP web. Aktifkan ekstensi GD bila diperlukan. Tidak perlu API key.
+3. Pastikan profil nyata sudah terbit, tanpa kata sandi. Data demo ditolak. Untuk uji, gunakan satu sekolah yang memiliki izin foto. Jangan memublikasikan data fiktif sebagai sekolah sungguhan.
+
+TAMBAHKAN MEDIA
+Direktori Sekolah > Media Sekolah > masukkan NPSN > Buka profil.
+Pilih Unggah file atau URL gambar langsung. File JPEG/PNG/WebP statis, maksimal 5 MB, 5000 px per sisi dan 12 juta piksel. URL harus HTTPS publik, domain persis sama dengan website resmi yang dicatat, tanpa redirect, port, query, fragmen atau kredensial. Akses 60 detik per domain berbagi batas dengan Website Collector; tidak ada crawl atau pemindaian foto.
+Pilih logo, foto utama, gedung, sarana prasarana atau galeri. Maksimal 12 media per profil, satu logo dan satu foto utama. Foto utama menjadi featured image bila belum ada thumbnail. Tema menentukan apakah thumbnail tampil di luar galeri; tema harus mendukung post thumbnails. Tidak menimpa thumbnail lama.
+Isi alt text faktual, kredit pencipta/pemegang hak, URL bukti jika ada, dan catatan izin privat. Untuk Creative Commons pilih hanya versi yang memang berlaku: CC0 1.0, CC BY 4.0, CC BY-SA 4.0, sertakan URL sumber dan konfirmasi lisensi. Hasil olahan harus mengikuti syarat lisensi; pastikan atribusi cukup termasuk di tampilan tema. Akses publik tidak otomatis berarti boleh digunakan ulang. Periksa file asli dan izin sebelum menyimpan. Centang kedua konfirmasi izin dan privasi. Klik Simpan media publik.
+
+HASIL
+File baru di Media Library diproses melalui GD menjadi raster baru (bukan salinan file sumber; EXIF/IPTC tidak disalin ke raster baru). Logo maksimal 800 px, foto maksimal 1600 px, tidak memperbesar gambar. WebP kualitas 82 jika didukung; fallback JPEG kualitas 85 / PNG tingkat kompresi 6. Format keluaran diverifikasi ulang. Tidak menjamin hasil lebih kecil dari file asal, atau orientasi/warna persis sama pada semua konfigurasi. Alt text disimpan, galeri ditampilkan pada profil publik dengan lazy loading dan kredit. Jika tidak ada gambar, placeholder teks. Bukti privat dan hash tidak ditampilkan dalam galeri/API direktori. Hash SHA-256 mendeteksi file yang identik dalam satu sekolah, bukan duplikasi visual atau lintas sekolah.
+
+PRIVASI DAN PENARIKAN IZIN
+Jangan memasukkan data pribadi siswa, foto anak yang dapat dikenali tanpa dasar izin yang sesuai, atau materi yang tidak boleh diterbitkan. File Media Library dapat diakses publik langsung meskipun profil kemudian privat, draf atau dihapus. Bila izin ditarik, hapus media dari Media Library atau melalui tombol Hapus pada profil yang masih terbit. Hapus permanen juga dapat memengaruhi halaman lain yang menggunakan gambar. Periksa cache, CDN, dan cadangan; plugin tidak dapat menghapus salinan dari pihak lain. Jangan menaruh bukti izin sensitif pada URL publik. Tidak ada verifikasi hak cipta independen; administrator bertanggung jawab atas izin.
+
+UJI LOCALWP
+- Cek plugin aktif dan menu Media Sekolah muncul.
+- Buka profil nyata terbit tanpa sandi. Unggah foto berizin, isi seluruh data, periksa Media Library dan halaman profil. Cek dimensi, tipe, alt text, atribusi, dan orientasi.
+- Unggah file identik kembali, harus ditolak. Coba SVG/GIF atau file terlalu besar, harus ditolak. Tambahkan foto utama, cek thumbnail pada tema. Coba logo kedua, harus ditolak.
+- Coba ambil URL gambar yang diizinkan, dari domain tercatat. Jangan mencoba melewati penolakan akses. Cek jika sumber 403/429/502, tidak menambah media.
+- Cek profil privat/draf/sandi tidak dapat menerima gambar; pastikan URL file yang sudah dibuat publik tidak diperlakukan sebagai privat.
+- Hapus media uji dengan konfirmasi; periksa bahwa galeri tidak lagi memuat gambar. Uji lagi impor profil dan pencarian lama.
+
+BATASAN PENGUJIAN
+381 pemeriksaan total: 325 regresi + 56 baru. Uji baru memakai file raster sintetik asli (JPEG/PNG/WebP), header PNG dimensi berlebih, file animasi, dan HTTP/DB/WordPress simulasi. PHP GD tidak tersedia di lingkungan ini; cabang penolakan GD diuji, konversi aktual, upload browser, sideload, penghapusan media, featured image, WordPress/MySQL dan tampilan nyata belum diuji. Tidak ada klaim kapasitas produksi nasional atau verifikasi akses web nyata. Pengambilan gambar hanya berdasarkan URL yang diberikan admin, bukan pencarian otomatis. Galeri disimpan via metadata attachment, tidak menambah tabel sekolah.

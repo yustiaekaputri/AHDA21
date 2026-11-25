@@ -1,0 +1,85 @@
+SEKOLAH DIRECTORY PRO v3.0.0 — SEO & AI ENGINE
+
+UPGRADE LOCALWP
+1. Backup situs dan database melalui LocalWP. Jalankan situs dan buka WP Admin.
+2. Plugins > Add New Plugin > Upload Plugin > sekolah-directory-pro-v3.0.0.zip.
+3. Replace current with uploaded, pastikan aktif. Jangan hapus profil atau database.
+4. Direktori Sekolah > SEO & AI. Simpan pengaturan sesuai kebutuhan.
+5. Klik Indeks ulang 100 profil. Ulangi hingga akhir untuk data lama. Proses ini hanya
+   menulis metadata kesiapan dan skor, bukan mengganti artikel atau status publikasi.
+6. Buka profil terbit dan lihat ringkasan, skor, FAQ, dan sekolah terkait.
+7. Jika memakai SEO native WordPress, cek /wp-sitemap.xml (permalink dan visibilitas
+   situs harus mendukung sitemap). Profil layak terbit yang sudah diindeks ulang akan
+   muncul dalam sitemap CPT sdp_school. Cek source HTML untuk meta description,
+   robots dan JSON-LD. Canonical tetap ditangani WordPress.
+
+ATURAN KELENGKAPAN
+20 atribut inti: alamat, desa, kode_pos, akreditasi, tahun_akreditasi,
+sk_operasional, tanggal_pendirian, website, visi, misi, sejarah, kurikulum,
+tahun_data, jumlah_siswa, jumlah_guru, jumlah_rombel, luas_tanah, ruang_kelas,
+perpustakaan, internet. Setiap atribut terisi bernilai 5%; angka 0 valid.
+Syarat layak: skor >= 35%, NPSN, nama, jenjang, status, provinsi, kabupaten,
+kecamatan lengkap, dan tidak terdeteksi sebagai data simulasi. Ini indikator
+kelengkapan, bukan bukti validitas atau skor mutu sekolah. Data harus dicek admin.
+Default guard aktif: permintaan publikasi melalui impor/generator ditahan jika
+profil belum layak. Profil yang sudah terbit tetap terbit. Editor WP manual dapat
+menerbitkan draf; noindex tetap berlaku pada profil kurang lengkap dalam mode SEO
+native. Data fiktif yang dikenali (NPSN DEMO/SIMU/TEST atau nama/sumber bertanda
+fiktif/simulasi) tidak layak indeks. Untuk uji lokal, nonaktifkan guard sementara
+jika ingin menerbitkan demo; aktifkan kembali dan hapus demo sebelum produksi.
+Noindex bukan pengamanan akses dan bukan jaminan mesin pencari mengikuti aturan.
+
+SEO NATIVE
+Template ringkas/ lengkap mengubah blok tambahan pada profil, bukan tabel lama.
+FAQ menjawab fakta yang tersedia; tidak menghasilkan FAQ rich-result markup.
+Schema School atau EducationalOrganization berisi identitas, alamat, dan koordinat
+bila tersedia. Bukan jaminan rich results atau posisi Google.
+Pencarian/filter/paginasi direktori memakai noindex untuk mengurangi duplikasi.
+Sitemap memanfaatkan WordPress core; bukan sitemap terpisah. Profil lama yang belum
+reindex belum masuk sitemap CPT. WordPress core menangani sitemap situs lainnya.
+Jika Yoast, Rank Math, AIOSEO, atau SEOPress terdeteksi, meta description dan schema
+SDP tidak dicetak untuk menghindari duplikasi; pengaturan robots dan sitemap pada
+plugin eksternal perlu diuji sendiri. Jangan menonaktifkan plugin SEO produksi
+semata-mata untuk mencoba SDP; gunakan salinan LocalWP. Core SEO direkomendasikan
+untuk uji pertama.
+
+HALAMAN WILAYAH
+SEO & AI > Halaman wilayah. Masukkan provinsi, opsional kabupaten, kecamatan,
+jenjang persis sesuai database. Kecamatan memerlukan kabupaten. Minimal 3 profil
+terbit yang cocok, bukan jaminan nilai tambah SEO. Draf halaman dibuat dengan scope
+filter terkunci; cek melalui Pages dan terbitkan jika bernilai bagi pengunjung.
+Nama halaman mengandung wilayah; slug memiliki hash untuk mencegah tabrakan.
+Tambahkan konteks asli yang terverifikasi melalui editor bila diperlukan. Bila
+jumlah profil turun di bawah 3, noindex berlaku di mode native; halaman regional
+masih dapat tercantum di sitemap halaman biasa hingga admin mengelolanya.
+Tautan terkait menampilkan maksimal 5 sekolah terbit di kabupaten/provinsi sama.
+
+ASISTEN AI (OPSIONAL, EKSPERIMENTAL)
+Fitur inti berjalan tanpa AI. AI hanya menghasilkan usulan narasi privat selama 10
+menit (transient WordPress), bukan tulisan terbit. Admin harus memeriksa setiap
+klaim. Salin narasi yang sudah diverifikasi jika diperlukan; edit artikel langsung
+dapat ditimpa saat profil diregenerasi. Tidak ada API call otomatis saat impor.
+OpenAI/Gemini: buat API key sendiri dari penyedia, tambahkan konstanta pada
+wp-config.php sebelum baris berhenti mengedit. Jangan gunakan contoh sebagai key.
+  define('SDP_OPENAI_API_KEY', 'KUNCI_ANDA');
+  define('SDP_GEMINI_API_KEY', 'KUNCI_ANDA');
+Gunakan ID model yang memang tersedia pada akun. API dapat menimbulkan biaya;
+langganan ChatGPT tidak otomatis mencakup biaya OpenAI API.
+Ollama: instal Ollama dan unduh model lokal, pastikan PHP LocalWP dapat mengakses
+http://127.0.0.1:11434. Masukkan ID model lokal. Tidak memerlukan key. Endpoint
+sengaja tetap untuk mencegah penyalahgunaan URL. Pada lingkungan yang terisolasi,
+127.0.0.1 mungkin bukan host Ollama dan fitur akan gagal koneksi.
+Pilih NPSN, provider, ID model dan konfirmasi izin pemrosesan. Hanya field institusi
+terpilih dikirim; email, telepon, kepala sekolah dan visi/misi tidak dikirim.
+Kunci tidak disimpan dalam opsi WP; jangan bagikan wp-config.php. Permintaan
+maksimal satu per menit per admin; timeout 45 detik, tanpa redirect.
+Dokumentasi: https://developers.openai.com/api/reference/chat-completions/overview
+https://ai.google.dev/api/generate-content
+https://docs.ollama.com/api/chat
+
+UJI DAN BATASAN
+41 pemeriksaan fungsi dasar menggunakan stub WP, PHP lint semua 5 file PHP.
+Belum diuji dengan WordPress/MySQL/LocalWP nyata, plugin SEO eksternal, jaringan
+API, atau data nasional. Pengumpulan sumber pemerintah masih mengikuti batasan
+v2.1 (lihat PANDUAN-V21.txt). Tidak ada scraping massal baru atau API pemerintah
+langsung. Uji pada salinan situs sebelum produksi. WP-Cron memerlukan situs hidup.

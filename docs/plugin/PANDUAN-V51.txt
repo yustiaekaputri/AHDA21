@@ -1,0 +1,72 @@
+SEKOLAH DIRECTORY PRO v5.1.0 — HARDENING & LOCALWP ACCEPTANCE
+
+Rilis kumulatif v5.0.0 + perbaikan. Tidak mengubah struktur tabel maupun 68 atribut.
+Status beta, bukan audit keamanan lengkap atau sertifikasi produksi.
+
+UPGRADE
+1. Buat backup file situs dan database (LocalWP > Export atau WP-CLI).
+2. Uji di salinan situs LocalWP, bukan situs produksi. Jalankan situs > WP Admin.
+3. Plugins > Add New > Upload Plugin > sekolah-directory-pro-v5.1.0.zip.
+4. Pilih Replace current with uploaded; pastikan plugin aktif. Jangan uninstall.
+5. Settings > Permalinks > Save Changes bila tautan profil 404.
+6. Buka Direktori Sekolah > Skala Nasional. Periksa statistik dan antrean.
+7. Menu Sumber Resmi/Pengumpul Data tetap mendukung CSV/JSON langsung, tetapi
+   URL yang mengembalikan redirect HTTP 3xx sekarang ditolak. Gunakan URL HTTPS
+   akhir yang diizinkan oleh pemilik data. Jangan bypass login/limit sumber.
+
+PERUBAHAN PERILAKU
+- Tanda kurung siku pada konten profil sekolah diperlakukan sebagai teks biasa.
+  Ini mencakup profil lama saat dirender. Shortcode yang sengaja ditambahkan
+  pada artikel profil juga tidak dijalankan. Shortcode halaman direktori tetap bekerja.
+- Update profil lama menggunakan wp_update_post, bukan wp_insert_post dengan ID,
+  sehingga field WordPress yang tidak dikirim (password, author) dipertahankan
+  oleh mekanisme merge WordPress. Status private, trash, future dipertahankan
+  ketika impor meminta publikasi. Kelola status tersebut melalui editor WP.
+- Kegagalan pembacaan indeks, payload JSON rusak, ID post 0, kegagalan baca
+  pencarian dan antrean tidak diperlakukan sebagai data kosong atau sukses.
+- Respons dataset dibatasi 5 MB dan HTTP redirect tidak diikuti.
+- Tidak ada perubahan API publik, shortcode, database, ataupun penyedia AI.
+
+UJI PENERIMAAN LOCALWP (belum dijalankan dalam WordPress nyata)
+Gunakan situs uji tertutup. Data contoh fiktif tidak boleh dipublikasikan ke internet.
+A. Jalankan Open Site Shell pada LocalWP:
+   wp plugin list
+   wp sdp health
+   wp db check
+   wp cron event list
+   Hasil yang diharapkan: plugin aktif versi 5.1.0, tabel dan antrean dapat dibaca,
+   DB check sukses, sdp_collector_tick terjadwal. Jika perintah db check gagal
+   karena klien mysql lokal tidak tersedia, periksa database melalui LocalWP.
+B. Buka Direktori Sekolah > Impor CSV, gunakan contoh/demo-fiktif.csv di dalam
+   ZIP (atau dataset contoh eksternal), tanpa publikasi. Uji hanya pada situs
+   kosong atau pastikan NPSN demo tidak bertabrakan dengan data lama.
+   - 5 profil draf baru jika belum pernah diimpor.
+   - Ulangi CSV: tidak ada duplikasi NPSN, edit satu atribut dan cek pembaruan.
+   - Buka profil, periksa tabel data dan sumber.
+C. Pilih salah satu profil fiktif pada situs lokal privat, atur private melalui
+   editor WordPress. Impor kembali dengan opsi publikasi; status tetap private.
+   Ulangi untuk profil password-protected: sandi tetap ada setelah impor.
+   Hapus profil fiktif setelah pengujian. Untuk status trash, lakukan uji pada
+   salinan yang memang boleh dihapus. Uji future dengan jadwal masa depan.
+D. Cek direktori [direktori_sekolah], filter bertingkat, pencarian nama/NPSN,
+   perbandingan, favorit, REST /wp-json/sdp/v1/schools dan wp-sitemap.xml.
+   Profil draf/private/trash/password-protected tidak boleh tampil di API/portal.
+   WP sitemap bawaan seharusnya tidak mengindeks profil demo dengan guard SEO.
+E. Uji literal shortcode: masukkan [direktori_sekolah] sebagai teks visi sekolah.
+   Setelah disimpan, halaman profil harus menampilkan teks tersebut, bukan portal.
+F. Uji Pengumpul Data dengan CSV contoh, preview, antrekan, proses 20. Uji
+   WP-CLI dengan file kecil. Jangan jalankan benchmark nasional sebelum backup.
+G. Periksa error log melalui LocalWP > Logs; kirim pesan error lengkap tanpa
+   API key, password, data pribadi siswa atau informasi rahasia.
+
+KETERBATASAN
+- 159 pemeriksaan simulasi PHP lulus (136 regresi + 23 baru), lint 8 PHP dan 2 JS.
+- Tidak ada WordPress/MySQL/WP-CLI terpasang di lingkungan pembuatan; unduhan
+  WordPress gagal karena DNS. Uji A–G belum dijalankan di LocalWP nyata.
+- Performa nasional, keamanan menyeluruh, plugin pihak ketiga dan integrasi
+  sumber resmi/AI belum tervalidasi. Update data dan WordPress belum atomic;
+  bila indeks gagal setelah penulisan post, impor ulang untuk pemulihan sesuai
+  pesan error. Backup wajib. Statistik antarperiode masih memerlukan audit
+  penggabungan data terkini pada versi lanjutan.
+- Target v6.0: konektor yang telah dikonfirmasi izin dan akses, uji data riil
+  Indramayu, validasi sumber/periode, bukan scrape tanpa batas.

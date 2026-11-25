@@ -1,0 +1,25 @@
+SEKOLAH DIRECTORY PRO 8.3.0 — MASTER WILAYAH INDONESIA
+
+Tujuan: mengurangi duplikasi nama wilayah sebelum impor profil. Master resmi tidak disertakan; administrator memasukkan CSV yang sah. Sistem Kemendagri dan BPS dipisahkan per edisi; tidak membuat pemetaan silang atau mengklaim keabsahan kode hanya berdasarkan format.
+
+INSTALASI
+1. Backup database dan wp-content. Upload ZIP melalui Plugins > Add New > Upload Plugin, replace versi lama.
+2. Buka Direktori Sekolah > Master Wilayah > Siapkan / periksa tabel. Tabel wp_sdp_regions (prefix sesuai instalasi) dibuat hanya atas permintaan. Tidak ada perubahan pada tabel profil atau cron baru.
+3. Pilih sistem dan edisi. Gunakan edisi sesuai metadata publikasi, misalnya 2025-s2. Isi sumber (judul/rujukan dataset). Konfirmasi izin penggunaan.
+4. CSV UTF-8, pemisah koma; header tepat kode,kode_induk,jenis,nama. Jenis: provinsi,kabupaten,kota,kecamatan,desa,kelurahan. Induk provinsi kosong. Format yang didukung: Kemendagri bertitik 2/2/2/4 digit, BPS tanpa titik 2/4/7/10 digit kumulatif. Simpan kode sebagai teks. Cek format dan hierarki terhadap publikasi yang dipilih.
+5. Maksimal 200 baris dan 2 MiB per file mode hemat, 1000 baris/5 MiB mode standar. Urutkan file induk dahulu, kemudian anak. Dalam satu file parser mengurutkan induk terlebih dahulu. Impor bersifat tambah saja dalam edisi yang sama. Jika terjadi kegagalan tulis parsial, ulangi file yang sama. Kode dengan nama berbeda pada edisi sama ditolak; gunakan edisi baru setelah memeriksa perubahan.
+6. Contoh uji lokal: pilih Kemendagri, edisi DEMO, sumber Fiktif, unggah contoh/v83-master-wilayah-fiktif.csv. Lima baris baru; impor ulang lima tidak berubah. Semua kode dan nama contoh fiktif, jangan digunakan di produksi.
+7. Pilih sistem/edisi yang sama, unggah contoh/v83-sekolah-wilayah-fiktif.csv, klik Normalisasi CSV sekolah dan unduh. Nama Kabupaten Contoh menjadi konsisten. Hasil tidak mengubah profil.
+8. Gunakan CSV sekolah dengan header standar plugin (lihat contoh/template-sekolah.csv), minimal npsn,provinsi; sertakan kabupaten,kecamatan,desa bila ada. Pencocokan kasus dan spasi serta awalan administratif umum, tanpa fuzzy matching. Jika kota/kabupaten bernama sama, tulis jenis eksplisit. Jika induk tidak ada atau tidak cocok, satu file gagal diekspor; perbaiki sumber lalu ulangi. Sel berpotensi formula ditolak.
+9. Periksa CSV hasil dan impor via Pengumpul Data, mode isi kolom kosong untuk data baru. Untuk profil lama, pembaruan nama wilayah membutuhkan pemeriksaan terpisah dan mode perbarui dengan hanya kolom yang memang ingin diganti; atribut terkunci tetap mengikuti Validasi & Konflik. Jangan menimpa profil secara massal tanpa backup.
+
+CLI (dari Open Site Shell)
+wp sdp regions "D:/data/master.csv" --system=kemendagri --edition=2025-s2 --source="Judul dataset" --authorized=1
+Perintah yang sama aman diulang, batas per file mengikuti mode aktif. Import CLI tidak memerlukan akses jaringan.
+
+SUMBER RUJUKAN (bukan endpoint otomatis)
+https://pelita.kemendagri.go.id/
+https://www.bps.go.id/
+Periksa edisi dan lisensi/persyaratan penggunaan pada sumber. Dataset nasional resmi belum dibundel atau diuji.
+
+VPS: default mode hemat 1 GB. Tidak ada query master di frontend, cron baru, koneksi HTTP, atau preload seluruh master. Indeks system/edition/parent/level/name_key dipakai untuk pencocokan per tingkat. Nama kanonik mengalir ke filter wilayah lama setelah impor. Belum mengubah URL lama, belum menyimpan kode pada profil sekolah, belum menyediakan dropdown master langsung di frontend atau cache wilayah baru. Master belum memiliki UI penghapusan edisi; gunakan backup dan proses migrasi terencana. Benchmark MySQL dan integrasi WordPress nyata belum dilakukan. Gunakan LocalWP untuk data besar.

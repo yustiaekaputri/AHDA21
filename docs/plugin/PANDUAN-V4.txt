@@ -1,0 +1,66 @@
+SEKOLAH DIRECTORY PRO 4.0.0 — PORTAL DIREKTORI
+
+PERSYARATAN
+WordPress 6.4+, PHP 8.0+, MySQL/MariaDB, LocalWP atau hosting WordPress.
+REST API WordPress aktif agar pencarian AJAX berjalan. Tidak perlu Elementor,
+API key, library peta eksternal, atau model AI untuk fitur portal.
+
+UPGRADE
+1. Cadangkan situs dan database LocalWP. Simpan ZIP v3.0 untuk rollback.
+2. WP Admin > Plugins > Add New Plugin > Upload Plugin. Pilih ZIP 4.0.0.
+3. Install Now > Replace current with uploaded. Pastikan plugin aktif.
+4. Buka Direktori Sekolah > Portal & Tampilan. Shortcode lama tetap berlaku.
+5. Buka halaman direktori lama dan refresh. Tidak perlu impor ulang atau migrasi.
+6. Jika URL profil gagal, Settings > Permalinks > Save Changes; bersihkan cache.
+7. Jika perlu rollback, cadangkan data terbaru lalu ganti dengan ZIP v3.0.
+
+BERANDA
+Buat halaman WordPress baru atau gunakan halaman direktori yang sudah tersedia.
+Tambahkan blok Shortcode dengan [direktori_sekolah] (alias [portal_sekolah]).
+Opsional tambahkan blok kedua: [statistik_sekolah].
+Jika ingin menjadikan halaman itu beranda, Settings > Reading > A static page.
+Gunakan template full-width jika tema mendukung. Plugin mengatur area shortcode,
+bukan header, footer, menu, atau tema WordPress. Shortcode statistik tidak mengikuti
+filter AJAX; atur wilayahnya lewat atribut shortcode.
+Contoh: [statistik_sekolah provinsi="Jawa Barat" kabupaten="Indramayu"]
+Nama wilayah harus sesuai dengan nilai database. Statistik menghitung profil
+terbit dan tidak dilindungi sandi, bukan jumlah resmi seluruh sekolah Indonesia.
+
+UJI DENGAN DATA NYATA ATAU FIKTIF
+Contoh lama ada di folder contoh/. Data fiktif hanya untuk situs lokal privat.
+1. Impor demo-fiktif.csv dari menu Impor CSV sebagai draf.
+2. Buka menu Artikel profil; terbitkan secara manual 2–5 profil fiktif hanya pada
+   situs uji lokal, sebab guard SEO v3 memang menahan publikasi otomatis demo.
+3. Buka portal. Pilih provinsi, lalu kabupaten, lalu kecamatan. Pilihan anak
+   diperbarui dan direset ketika induknya berubah; hasil seharusnya tanpa reload.
+4. Ketik awalan nama atau NPSN (min. dua karakter), tunggu saran maks. 8 profil.
+   Klik saran atau tekan Cari untuk pencarian substring. Uji filter jenjang/status.
+5. Uji paginasi dengan >20 sekolah terbit. URL mempertahankan filter.
+6. Buka kartu profil. Grafik menampilkan hanya angka tersedia, termasuk nol valid.
+   Rasio siswa/guru hanya dihitung bila kedua angka tersedia dan guru >0.
+7. Buka bagian Jelajahi lokasi. Plot hanya memuat koordinat valid di halaman
+   hasil saat ini (maks. 20 profil). Klik titik untuk profil atau tautan OSM
+   untuk peta dasar eksternal. Plot ini bukan basemap dan bukan alat navigasi.
+8. Uji tampilan mobile, tombol Reset dan browser Back. Nonaktifkan JavaScript
+   sementara untuk menguji fallback GET. Jika REST diblokir, JS akan membuka
+   halaman hasil biasa. Periksa Settings > Permalinks dan kebijakan REST hosting.
+9. Pastikan profil draf, privat, sampah, atau dilindungi sandi tidak muncul di
+   hasil, saran, statistik, atau rekomendasi portal. Periksa profil fiktif noindex.
+10. Hapus permanen seluruh profil fiktif sebelum publikasi situs sungguhan.
+
+BATASAN DAN KEPUTUSAN DESAIN
+- Tidak ada perubahan tabel/index database dari v3.0; semua modul lama disertakan.
+- Peta sederhana berupa plot koordinat relatif (tanpa tile/basemap); tautan
+  OpenStreetMap untuk peta dasar. Titik berdekatan bisa bertumpuk; daftar tersedia.
+- Tidak ada perbandingan sekolah atau histori statistik pada versi ini.
+- Opsi dropdown berasal dari profil terbit, bukan master kode wilayah nasional.
+  Maksimum 1.000 pilihan per dropdown. Kabupaten memerlukan provinsi; kecamatan
+  memerlukan kabupaten untuk menampilkan daftar baru. Nama wilayah perlu konsisten.
+- Pencarian menggunakan SQL terparameterisasi dengan LIKE; masih perlu benchmark
+  dan optimasi untuk ratusan ribu sekolah dan trafik tinggi. REST publik read-only,
+  perlu cache/rate limit produksi. Tidak semua tema/plugin diuji.
+- Versi ini tidak menambah konektor pemerintah atau mengubah batasan kolektor v2.1.
+- PHP: 72 tes lulus dengan stub WordPress dan DB simulasi (41 regresi v3, 31 baru).
+  PHP lint dan Node syntax check lulus. Percobaan Chromium tidak dapat berjalan
+  karena ERR_BLOCKED_BY_ADMINISTRATOR. AJAX/visual belum diuji langsung di browser
+  atau instalasi WordPress nyata. Uji LocalWP wajib sebelum produksi.

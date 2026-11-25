@@ -1,0 +1,28 @@
+name: Pengujian
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint PHP
+        run: find plugin theme tests -type f -name '*.php' -print0 | xargs -0 -n 1 php -l
+      - name: Simulasi PHP
+        run: |
+          for test in tests/simulasi/test*.php; do
+            php "$test"
+            php "$test" --standard
+          done
+          php tests/simulasi/test87.php --network
+          php tests/simulasi/test88.php --nocache
+          php tests/simulasi/test90.php --safe
+          php tests/simulasi/test90.php --safe --standard
+      - name: Simulasi Python
+        run: |
+          python3 -m unittest discover -s tests/simulasi
+          python3 tests/localwp/test-runner.py

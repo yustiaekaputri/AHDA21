@@ -1,0 +1,14 @@
+test_confirmation (__main__.Runner.test_confirmation) ... ok
+test_missing_file (__main__.Runner.test_missing_file) ... ok
+test_preflight_blockers (__main__.Runner.test_preflight_blockers) ... ok
+test_smoke_error (__main__.Runner.test_smoke_error) ... ok
+test_success (__main__.Runner.test_success) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.243s
+
+OK
+No syntax errors detected in /mnt/data/sdp-localwp-oneclick/sdp-preflight-local.php
+No syntax errors detected in /mnt/data/sdp-localwp-oneclick/sdp-run-localwp.php
+No syntax errors detected in /mnt/data/sdp-localwp-oneclick/sdp-smoke-rc6.php
+Errors parsing /mnt/data/sdp-localwp-oneclick/test-runner.php

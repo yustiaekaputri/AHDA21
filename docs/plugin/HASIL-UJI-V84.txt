@@ -1,0 +1,61 @@
+SDP 8.4.0 — HASIL PENGUJIAN
+Regresi: 489 inti + 28 hemat + 1 opt-in jaringan + 12 helper PHP Excel + 13 Python XLSX + 28 master wilayah = 571. Baru: 55. Total: 626 pemeriksaan lulus.
+PHP lint: 19 file; seluruh JavaScript plugin node --check lulus.
+Pengujian baru: parser, skor, validasi URL/IP, API dan rate limit simulasi, logika persetujuan. Bukan uji integrasi WordPress/HTTP/DNS sungguhan.
+PASS 1 low resource limits
+PASS 2 canonical host
+PASS 3 reject URL http://melati.sch.id/
+PASS 4 reject URL https://127.0.0.1/
+PASS 5 reject URL https://[::1]/
+PASS 6 reject URL https://intranet.local/
+PASS 7 reject URL https://example.org:444/
+PASS 8 reject URL https://user:pass@example.org/
+PASS 9 reject URL https://example.org/?x=1
+PASS 10 reject URL https://example.org/#x
+PASS 11 reject URL https://example.org/\evil
+PASS 12 reject URL https://2130706433/
+PASS 13 reject URL https://example.org/ bad
+PASS 14 school suffix signal
+PASS 15 social candidate
+PASS 16 suffix boundary
+PASS 17 NPSN query leading zero
+PASS 18 name-only query excludes private email and NPSN
+PASS 19 reject nonpublic 127.0.0.1
+PASS 20 reject nonpublic 10.0.0.1
+PASS 21 reject nonpublic 192.168.1.1
+PASS 22 reject nonpublic 169.254.169.254
+PASS 23 reject nonpublic 100.64.0.1
+PASS 24 reject nonpublic ::1
+PASS 25 reject nonpublic ::ffff:127.0.0.1
+PASS 26 reject nonpublic fc00::1
+PASS 27 reject nonpublic fe80::1
+PASS 28 reject nonpublic 224.1.1.1
+PASS 29 reject nonpublic 192.0.2.1
+PASS 30 reject nonpublic 198.18.0.1
+PASS 31 reject nonpublic 2001:db8::1
+PASS 32 public IP examples
+PASS 33 matching identity score
+PASS 34 different NPSN overrides score
+PASS 35 domain alone not enough
+PASS 36 script ignored
+PASS 37 name and district candidate
+PASS 38 name only insufficient
+PASS 39 body byte limit
+PASS 40 invalid UTF8
+PASS 41 reviewed candidate fill
+PASS 42 changed identity rejected
+PASS 43 conflicting review rejected
+PASS 44 existing website protected
+PASS 45 social cannot become website
+PASS 46 invalid JSON
+PASS 47 search body cap
+PASS 48 candidate dedup and cap
+PASS 49 empty search allowed
+PASS 50 API key optional
+PASS 51 mock search API returns candidates
+PASS 52 search bounded no redirect
+PASS 53 rate limit no second request
+PASS 54 reject local target before DNS
+PASS 55 social not fetched
+V84 TOTAL 55 PASS
+Tidak diuji: API Brave dengan key asli, DNS/HTTP website sekolah nyata, UI, MySQL/LocalWP, beban VPS dan izin sumber.

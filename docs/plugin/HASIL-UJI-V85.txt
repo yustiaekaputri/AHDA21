@@ -1,0 +1,81 @@
+SDP 8.5.0 — HASIL PENGUJIAN
+626 regresi + 51 pemeriksaan baru = 677.
+Regresi: 489 inti + 28 hemat + 1 opt-in + 12 PHP Excel + 13 Python XLSX + 28 wilayah + 55 discovery.
+PHP lint: 20 file. JavaScript node --check: lulus.
+Pengujian crawler: parser robots, pencocokan aturan, URL, batas halaman/depth, ekstraksi, checkpoint simulasi, pratinjau.
+Belum diuji: DNS/HTTP crawler secara langsung, tindakan admin melalui browser, WordPress/MySQL nyata, performa VPS.
+
+V84 TOTAL 55 PASS
+PASS 1 low mode bounds
+PASS 2 valid seed
+PASS 3 reject https://else.sch.id/profil
+PASS 4 reject https://www.melati.sch.id/?x=1
+PASS 5 reject https://www.melati.sch.id/%2e%2e/visi
+PASS 6 reject https://www.melati.sch.id/../visi
+PASS 7 reject https://www.melati.sch.id//visi
+PASS 8 reject https://www.melati.sch.id/wp-admin/
+PASS 9 reject https://www.melati.sch.id/visi.pdf
+PASS 10 reject http://www.melati.sch.id/
+PASS 11 reject https://www.melati.sch.id/visi#x
+PASS 12 relative path
+PASS 13 root relative
+PASS 14 scheme relative excluded
+PASS 15 honor longer crawl delay
+PASS 16 deny prefix
+PASS 17 longer allow
+PASS 18 wildcard suffix
+PASS 19 suffix anchored
+PASS 20 unmatched path
+PASS 21 specific group selected
+PASS 22 merge specific groups
+PASS 23 retain first specific group
+PASS 24 tie allow
+PASS 25 fail closed invalid robots
+PASS 26 fail closed invalid robots
+PASS 27 fail closed invalid robots
+PASS 28 fail closed invalid robots
+PASS 29 fail closed invalid robots
+PASS 30 fail closed invalid robots
+PASS 31 empty robots
+PASS 32 missing policy deny
+PASS 33 relevant links dedup; exclude external, script and nofollow
+PASS 34 base ambiguity ignored
+PASS 35 start no fetch
+PASS 36 identity current
+PASS 37 changed website rejected
+PASS 38 one page adds only allowed links
+PASS 39 extract vision candidate
+PASS 40 review preserves source
+PASS 41 no write to school
+PASS 42 depth cap
+PASS 43 nofollow header no proposals
+PASS 44 conflict stops
+PASS 45 stopped review blocked
+PASS 46 missing identity stops
+PASS 47 meta noindex honored
+PASS 48 page budget
+PASS 49 robots denies seed before fetch
+PASS 50 expires after 24h
+PASS 51 social seed rejected
+V85 TOTAL 51 PASS
+
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-seo.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-region.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-national.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-portal.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-resource.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-operator.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-collector.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-analytics.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-engine.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-discovery.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-crawler.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-sources.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-education.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-excel.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-intelligence.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-ai.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-media.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-missing.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-website.php
+No syntax errors detected in sekolah-directory-pro/sekolah-directory-pro.php

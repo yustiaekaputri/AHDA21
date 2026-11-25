@@ -1,0 +1,524 @@
+SEKOLAH DIRECTORY PRO v8.0.0 — HASIL UJI
+PHP CLI 8.4; simulasi WordPress, database, autentikasi, HTTP.
+439 regresi + 50 pemeriksaan baru = 489 lulus.
+15 file PHP lint valid; seluruh JS node --check valid; CSS baru parser top-level valid.
+Tidak diuji WordPress/MySQL/browser/WP-CLI aktual atau skala nasional.
+
+PASS 1 68 atribut lama
+PASS 2 score 7/20
+PASS 3 zero recognized
+PASS 4 missing placeholder
+PASS 5 ready threshold
+PASS 6 thin rejected
+PASS 7 hold thin
+PASS 8 preserve publish
+PASS 9 ready publish
+PASS 10 respect draft
+PASS 11 demo noindex
+PASS 12 demo local override
+PASS 13 summary zero
+PASS 14 missing facts omitted
+PASS 15 title NPSN
+PASS 16 unicode excerpt
+PASS 17 FAQ recorded facts
+PASS 18 FAQ no guessed claims
+PASS 19 schema type and NPSN
+PASS 20 missing geo omitted
+PASS 21 geo numeric
+PASS 22 meta ready
+PASS 23 meta demo
+PASS 24 sitemap filter
+PASS 25 unrelated sitemap untouched
+PASS 26 region valid
+PASS 27 region invalid
+PASS 28 slug stable
+PASS 29 slug distinct
+PASS 30 AI allowlist
+PASS 31 reject provider
+PASS 32 reject model injection
+PASS 33 key required
+PASS 34 fixed local endpoint
+PASS 35 Ollama parser
+PASS 36 OpenAI parser
+PASS 37 Gemini parser excludes thought
+PASS 38 empty output rejected
+PASS 39 old CSV works
+PASS 40 old validation works
+PASS 41 old HTML generator
+TOTAL 41 PASS
+PASS 42 scope enforced and non-scalar filter ignored
+PASS 43 page cap
+PASS 44 Unicode query cap
+PASS 45 published and nonpassworded SQL
+PASS 46 literal wildcard escaping
+PASS 47 bound filter parameters
+PASS 48 prefix suggestion SQL
+PASS 49 dependent options initially empty
+PASS 50 province expands district only
+PASS 51 district expands subdistrict
+PASS 52 fixed option
+PASS 53 zero distinct from missing
+PASS 54 null island placeholder ignored
+PASS 55 invalid latitude
+PASS 56 valid coordinate
+PASS 57 equatorial valid coordinate
+PASS 58 map markers escaped
+PASS 59 empty map
+PASS 60 zero shown and ratio valid
+PASS 61 zero denominator omitted
+PASS 62 missing chart
+PASS 63 pagination clamped
+PASS 64 card escaped
+PASS 65 summary accurate fixture
+PASS 66 fixed scope omitted from URL
+PASS 67 empty state
+PASS 68 API scope forced
+PASS 69 short suggestion no query
+PASS 70 SSR fallback form
+PASS 71 portal enhancement markup
+PASS 72 regional stats qualified
+COMBINED TOTAL 72 PASS
+PASS 73 comparison ID dedupe and cap
+PASS 74 nested input ignored
+PASS 75 numeric input rejected
+PASS 76 favorite cap
+PASS 77 no invented period
+PASS 78 placeholder period rejected
+PASS 79 empty observation rejected
+PASS 80 explicit period zero retained
+PASS 81 no synthetic carry forward
+PASS 82 invalid period type ignored
+PASS 83 student teacher ratio
+PASS 84 zero numerator valid
+PASS 85 zero denominator rejected
+PASS 86 missing denominator rejected
+PASS 87 haversine 1 degree
+PASS 88 coincident points
+PASS 89 antimeridian distance
+PASS 90 facility filter positive numeric
+PASS 91 jurusan wildcard escaped
+PASS 92 unlisted facility ignored
+PASS 93 filter query persists
+PASS 94 comparison ordered by request
+PASS 95 unknown NPSN omitted by result defense
+PASS 96 comparison excludes private and passworded via query
+PASS 97 comparison HTML escaping
+PASS 98 period and missing distinction
+PASS 99 comparison noindex
+PASS 100 favorites mode
+PASS 101 nearby disclaimer
+PASS 102 missing coordinate no distance
+PASS 103 portal controls
+PASS 104 accessible selection state
+V41 TOTAL 104 PASS
+PASS 105 NPSN normalized
+PASS 106 invalid identifier rejected
+PASS 107 bounded REST limit
+PASS 108 bounded CLI batch
+PASS 109 BOM and aliases
+PASS 110 duplicate headers blocked
+PASS 111 missing NPSN blocked
+PASS 112 blank header blocked
+PASS 113 header count capped
+PASS 114 checkpoint deterministic
+PASS 115 changed config/file separate checkpoint
+PASS 116 API published nonpassworded only
+PASS 117 cursor bound
+PASS 118 region bound
+PASS 119 prefix wildcard escaped
+PASS 120 unknown filter ignored
+PASS 121 invalid cursor rejected
+PASS 122 strict public allowlist
+PASS 123 zero preserved and missing null
+PASS 124 public permalink
+PASS 125 next cursor from returned row
+PASS 126 last page cursor null
+PASS 127 moderated approval/rejection
+PASS 128 revocation only
+PASS 129 invalid claim transitions blocked
+PASS 130 optional indexes defined
+PASS 131 first batch checkpoint invalid record
+PASS 132 resume skips earlier records
+PASS 133 third batch checkpoint
+PASS 134 EOF completion
+PASS 135 completed job idempotent
+PASS 136 explicit restart resets checkpoint
+V50 TOTAL 136 PASS
+PASS 137 generated profile neutralizes shortcode
+PASS 138 HTML escaped
+PASS 139 literal encoding idempotent
+PASS 140 existing school content protected
+PASS 141 directory page shortcode retained
+PASS 142 preserve status private
+PASS 143 preserve status trash
+PASS 144 preserve status future
+PASS 145 existing post uses merge update
+PASS 146 password/author not overwritten by update arguments
+PASS 147 save retains private status
+PASS 148 database read failure fails closed
+PASS 149 corrupt stored JSON not overwritten
+PASS 150 invalid WP post ID never indexed
+PASS 151 portal DB failure detected
+PASS 152 error distinct from no results
+PASS 153 REST portal DB failure returns error
+PASS 154 queue fails closed
+PASS 155 queue error not marked success
+PASS 156 nonstring dataset rejected
+PASS 157 direct HTTPS download without redirects
+PASS 158 redirect rejected
+PASS 159 oversize response rejected
+V51 TOTAL 159 PASS
+PASS 160 valid campaign filter
+PASS 161 reject invalid filter 0
+PASS 162 reject invalid filter 1
+PASS 163 reject invalid filter 2
+PASS 164 reject invalid filter 3
+PASS 165 reject invalid filter 4
+PASS 166 reject invalid filter 5
+PASS 167 reject invalid filter 6
+PASS 168 exclude demo identifiers
+PASS 169 bounded preview with next cursor
+PASS 170 prepared region and limit
+PASS 171 exclude passworded candidates
+PASS 172 manual by default
+PASS 173 empty preview rejected
+PASS 174 duplicate NPSN rejected
+PASS 175 pause preserves checkpoint
+PASS 176 resume
+PASS 177 skip requires pause
+PASS 178 manual skip advances
+PASS 179 completion disables cron
+PASS 180 cancel
+PASS 181 only allowed empty fields
+PASS 182 conflict rejected npsn
+PASS 183 conflict rejected nama
+PASS 184 conflict rejected jenjang
+PASS 185 conflict rejected status
+PASS 186 conflict rejected provinsi
+PASS 187 conflict rejected kabupaten
+PASS 188 conflict rejected kecamatan
+PASS 189 no new data
+PASS 190 cron opt-in only
+PASS 191 pending dataset pauses scheduling
+PASS 192 HTTP 403 pauses without advancing
+PASS 193 HTTP 429 pauses without advancing
+PASS 194 HTTP 502 pauses without advancing
+PASS 195 HTTP 302 pauses without advancing
+PASS 196 rate limit prevents request
+PASS 197 wrong remote NPSN stops campaign
+PASS 198 synthetic response saves missing field and checkpoint
+PASS 199 old values retained
+PASS 200 per-field source recorded
+PASS 201 deleted profile skipped
+PASS 202 existing-only save refuses recreation
+PASS 203 locked identity rechecked
+V60 TOTAL 203 PASS
+PASS 204 same host HTTPS
+PASS 205 reject URL http://sekolah.sch.id/profil/
+PASS 206 reject URL https://evil.sch.id/profil/
+PASS 207 reject URL https://sub.sekolah.sch.id/
+PASS 208 reject URL https://sekolah.sch.id.evil.com/
+PASS 209 reject URL https://sekolah.sch.id:443/
+PASS 210 reject URL https://user@sekolah.sch.id/
+PASS 211 reject URL https://sekolah.sch.id/?token=secret
+PASS 212 reject URL https://sekolah.sch.id/#x
+PASS 213 reject URL https://127.0.0.1/
+PASS 214 reject URL https://[::1]/
+PASS 215 reject URL https://sekolah.sch.id\@evil.com/
+PASS 216 reject local host
+PASS 217 normalize heading
+PASS 218 combined heading not guessed
+PASS 219 extract vision and entity
+PASS 220 list extraction
+PASS 221 history extraction
+PASS 222 ignore unrelated section and footer
+PASS 223 reject conflicting NPSN even when name matches
+PASS 224 reject missing identity
+PASS 225 reject no recognized section
+PASS 226 reject oversized body
+PASS 227 reject invalid UTF8
+PASS 228 reject unclosed script
+PASS 229 only selected empty recognized fields
+PASS 230 changed website invalidates preview
+PASS 231 concurrent filled field protected
+PASS 232 edited value size capped
+PASS 233 no selection rejected
+PASS 234 mock HTTP fetch and parse
+PASS 235 HTTP safeguards
+PASS 236 rate limit
+PASS 237 stop HTTP 301
+PASS 238 stop HTTP 403
+PASS 239 stop HTTP 429
+PASS 240 stop HTTP 502
+PASS 241 reject non HTML
+PASS 242 reject unsupported charset
+PASS 243 load valid draft
+PASS 244 password protected excluded
+PASS 245 private excluded
+PASS 246 demo excluded
+PASS 247 DB read failure rejected
+PASS 248 approved fields saved through core
+PASS 249 preserve old and store source
+PASS 250 draft status maintained
+V61 TOTAL 250 PASS
+PASS 251 missing audit scope
+PASS 252 reject array filter
+PASS 253 bounded scan
+PASS 254 all 68 attributes counted
+PASS 255 zero known
+PASS 256 placeholder manual only
+PASS 257 reference blank
+PASS 258 website blank
+PASS 259 website source recommendation
+PASS 260 stats source recommendation
+PASS 261 accreditation recommendation
+PASS 262 local UTC age
+PASS 263 invalid date unknown
+PASS 264 future date unknown
+PASS 265 demo payload excluded
+PASS 266 corrupt JSON rejected
+PASS 267 mismatched identity rejected
+PASS 268 batch totals
+PASS 269 cursor independent of priority and skipped demo
+PASS 270 lowest completeness first
+PASS 271 field aggregates
+PASS 272 age totals
+PASS 273 category aggregate
+PASS 274 prepared scope and private exclusion
+PASS 275 priority engine preview
+PASS 276 compatible with existing campaign constructor
+PASS 277 empty engine preview rejected
+PASS 278 all filled no reference candidate
+PASS 279 CSV formula neutralized
+PASS 280 CSV leading whitespace and zero
+PASS 281 CSV export roundtrip
+PASS 282 empty scan
+PASS 283 database error not empty result
+V62 TOTAL 283 PASS
+PASS 284 newer calendar period
+PASS 285 semester chronological
+PASS 286 unknown semester incomparable
+PASS 287 calendar academic incomparable
+PASS 288 invalid academic year
+PASS 289 field-specific accreditation priority
+PASS 290 field-specific stats and website priority
+PASS 291 unknown source type not rated
+PASS 292 SD excludes vocational fields and NSM
+PASS 293 MAK retains vocational fields and NSM
+PASS 294 MTs retains NSM
+PASS 295 unknown level conservative, zero counts
+PASS 296 valid candidate
+PASS 297 reject invalid field
+PASS 298 reject invalid value
+PASS 299 reject invalid type
+PASS 300 reject invalid url
+PASS 301 reject invalid period
+PASS 302 reject invalid note
+PASS 303 reject URL credentials
+PASS 304 conflict and period assessment
+PASS 305 load valid unprotected school
+PASS 306 exclude password profile
+PASS 307 approved candidate saves through core
+PASS 308 approved value locked
+PASS 309 per-field period recorded without relabeling other values
+PASS 310 before/after audit
+PASS 311 approval preserves draft
+PASS 312 locked overwrite rejected before write
+PASS 313 related period overwrite rejected
+PASS 314 stale preview rejected under lock
+PASS 315 fill retains lock and adds blank field
+PASS 316 ignored fill conflict logged
+PASS 317 repeat ignored conflict deduplicated
+PASS 318 ordinary unverified overwrite audited
+PASS 319 bounded audit retention
+PASS 320 audit excluded from public API
+PASS 321 private note excluded from profile
+PASS 322 missing monitor relevant score
+PASS 323 public profile shows exact field period
+PASS 324 FAQ uses explicit field period
+PASS 325 API exposes explicit public field period only
+V63 TOTAL 325 PASS
+PASS 326 valid media consent and attribution
+PASS 327 reject invalid media authorized
+PASS 328 reject invalid media privacy
+PASS 329 reject invalid media role
+PASS 330 reject invalid media rights
+PASS 331 reject invalid media mode
+PASS 332 reject invalid media alt
+PASS 333 reject invalid media credit
+PASS 334 reject invalid media proof
+PASS 335 reject invalid media source
+PASS 336 reject invalid media url
+PASS 337 CC requires source
+PASS 338 CC requires explicit version confirmation
+PASS 339 correct CC license link
+PASS 340 reject evidence credentials
+PASS 341 reject non-HTTPS evidence
+PASS 342 real image header png
+PASS 343 real image header jpg
+PASS 344 real image header webp
+PASS 345 reject test.gif
+PASS 346 reject fake.svg
+PASS 347 reject large.png
+PASS 348 reject oversize.bin
+PASS 349 reject test2.png
+PASS 350 reject missing.png
+PASS 351 photo resize maintains aspect
+PASS 352 logo resize maintains aspect
+PASS 353 no upscaling
+PASS 354 original exact SHA256
+PASS 355 allow first media
+PASS 356 exact duplicate blocked
+PASS 357 one logo only
+PASS 358 existing thumbnail protected
+PASS 359 limit 12
+PASS 360 published school load
+PASS 361 reject draft
+PASS 362 reject private
+PASS 363 reject trash
+PASS 364 reject password
+PASS 365 reject demo NPSN
+PASS 366 database error closed
+PASS 367 remote response fixture saved to temp
+PASS 368 bounded HTTPS request
+PASS 369 shared domain rate limit
+PASS 370 stop HTTP 301
+PASS 371 stop HTTP 403
+PASS 372 stop HTTP 429
+PASS 373 stop HTTP 502
+PASS 374 reject content type mismatch
+PASS 375 reject HTML
+PASS 376 reject different domain
+PASS 377 public gallery attribution and lazy image
+PASS 378 private permission note omitted
+PASS 379 empty placeholder
+PASS 380 cannot remove foreign post
+PASS 381 missing GD fails closed
+V64 TOTAL 381 PASS
+PASS 382 operator candidate normalized
+PASS 383 zero valid
+PASS 384 operator cannot suggest npsn
+PASS 385 operator cannot suggest nama
+PASS 386 operator cannot suggest akreditasi
+PASS 387 operator cannot suggest sumber
+PASS 388 operator cannot suggest tahun_data
+PASS 389 operator cannot suggest jurusan
+PASS 390 operator cannot suggest mitra_industri
+PASS 391 operator cannot suggest __proto__
+PASS 392 vocational field relevant
+PASS 393 reject invalid candidate period
+PASS 394 reject invalid candidate value
+PASS 395 reject invalid candidate url
+PASS 396 reject invalid candidate note
+PASS 397 reject invalid candidate field
+PASS 398 reject demo NPSN
+PASS 399 reject mismatched identity
+PASS 400 authorized media request accepted
+PASS 401 reject media authorized
+PASS 402 reject media value
+PASS 403 reject media url
+PASS 404 reject media note
+PASS 405 approved owner
+PASS 406 other user denied
+PASS 407 other school denied
+PASS 408 revoked denied
+PASS 409 pending with active claim reviewable
+PASS 410 reapproved claim token invalidated
+PASS 411 cannot approve twice
+PASS 412 native registration allowed for subscriber
+PASS 413 registration UI disabled for privileged default role
+PASS 414 portal excluded from page sitemap
+PASS 415 school sitemap unaffected
+PASS 416 actual submit handler queues candidate
+PASS 417 submission does not update school
+PASS 418 owner and pending status stored server side
+PASS 419 actual submit rejects wrong owner
+PASS 420 pending quota enforced
+PASS 421 hourly quota enforced
+PASS 422 submit checks nonce
+PASS 423 operator cannot approve
+PASS 424 admin cannot approve revoked claim
+PASS 425 stale admin snapshot denied
+PASS 426 admin approval handler succeeds
+PASS 427 approved candidate changes and locks field
+PASS 428 proposal status approved
+PASS 429 processed proposal cannot replay
+PASS 430 rejection leaves profile unchanged
+PASS 431 media review no import
+PASS 432 negative student count rejected
+PASS 433 logged-out portal no private records
+PASS 434 portal requests cache exclusion
+PASS 435 portal robots noindex
+PASS 436 approved owner sees proposal form
+PASS 437 claims and history SQL explicitly scoped to current user
+PASS 438 feed never renders private dashboard
+PASS 439 other owner does not see edit form
+V71 TOTAL 439 PASS
+PASS 440 period canonicalized
+PASS 441 reject invalid academic period
+PASS 442 reject orphan county
+PASS 443 reject orphan district
+PASS 444 reject invalid level
+PASS 445 reject array filter
+PASS 446 slots bounded
+PASS 447 national grouped by province
+PASS 448 province grouped by county
+PASS 449 county grouped by district
+PASS 450 district grouped by level
+PASS 451 exclude demo and corrupt payload
+PASS 452 same period student sum includes known zero
+PASS 453 teachers only explicit matching period
+PASS 454 weighted ratio on matched cohort only
+PASS 455 facility zero versus missing
+PASS 456 facility availability
+PASS 457 accreditation categories retain unknown
+PASS 458 province grouping
+PASS 459 relevant completeness
+PASS 460 empty denominators not zero
+PASS 461 duplicate/out-of-order cursor rejected
+PASS 462 payload index mismatch excluded
+PASS 463 demo prefix excluded
+PASS 464 group bound fails explicitly
+PASS 465 public methodology and aggregates
+PASS 466 no individual records or evidence
+PASS 467 CSV header aligned with distribution
+PASS 468 CSV total
+PASS 469 missing snapshot message
+PASS 470 completed snapshot renders
+PASS 471 start writes checkpoint
+PASS 472 second active job rejected
+PASS 473 first batch capped 100
+PASS 474 partial results not published
+PASS 475 query public and cursor constrained
+PASS 476 next batch completes without double count
+PASS 477 complete snapshot persisted
+PASS 478 can refresh slot
+PASS 479 query failure preserves checkpoint
+PASS 480 old snapshot retained during refresh failure
+PASS 481 lock contention rejected
+PASS 482 compare same scope and period kind
+PASS 483 duplicate period rejected
+PASS 484 different scopes rejected
+PASS 485 mixed academic and calendar periods rejected
+PASS 486 mixed semester and annual periods rejected
+PASS 487 comparison labels period and coverage
+PASS 488 duplicate slot rejected
+PASS 489 incomplete slot rejected
+V80 TOTAL 489 PASS
+
+LINT PHP
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-seo.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-national.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-portal.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-operator.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-collector.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-analytics.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-engine.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-sources.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-education.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-intelligence.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-ai.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-media.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-missing.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-website.php
+No syntax errors detected in sekolah-directory-pro/sekolah-directory-pro.php

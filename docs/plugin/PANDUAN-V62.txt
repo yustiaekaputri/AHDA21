@@ -1,0 +1,25 @@
+SEKOLAH DIRECTORY PRO 6.2.0 — MISSING DATA FINDER
+Beta pengujian lokal. Membutuhkan WordPress 6.4+ dan PHP 8.0+.
+
+INSTALASI / UPGRADE
+1. Cadangkan situs dan database LocalWP. Jalankan situs, buka WP Admin.
+2. Plugins > Add New Plugin > Upload Plugin, pilih ZIP v6.2.0. Replace current with uploaded jika upgrade. Aktifkan.
+3. Impor dataset identitas yang diizinkan jika belum ada. Gunakan data nyata terverifikasi dalam lingkungan uji, sebagai draf.
+4. Direktori Sekolah > Kelengkapan Data. Masukkan nama provinsi persis seperti database; opsional kabupaten/kota, kecamatan, jenjang. Batas 1–100, klik Periksa kelengkapan.
+5. Periksa ringkasan, kategori, rincian 68 atribut, dan sekolah prioritas. Klik nama sekolah untuk membuka editor. Batch berikutnya memakai cursor NPSN, bukan skor. Statistik dan urutan prioritas hanya dalam batch yang dipindai, bukan ranking seluruh wilayah. Dataset berubah di antara batch dapat mengubah hasil.
+6. Ekspor batch CSV untuk ditinjau. Ekspor melakukan pembacaan ulang. NPSN adalah teks, atur tipe kolom teks ketika membuka di spreadsheet. Nilai yang menyerupai formula diberi apostrof; CSV bukan dataset untuk impor ulang.
+7. Kirim kandidat ke pratinjau Mesin Pengayaan jika ada kolom kosong yang cocok. Pratinjau hanya memilih profil yang memiliki kolom kosong untuk kolektor Referensi Data Pendidikan; bukan jaminan bahwa sumber memiliki datanya. Konfirmasi izin dan mulai kampanye dari menu Mesin Pengayaan seperti versi 6.0. Tidak ada akses jaringan atau perubahan artikel pada tahap audit/pratinjau.
+8. Tinjau website: membuka kolektor website dengan NPSN terisi. Masukkan URL halaman resmi yang diizinkan, lakukan pratinjau dan persetujuan seperti v6.1. Jika masih ada pratinjau sebelumnya, periksa NPSN sebelum menyimpan.
+
+INTERPRETASI
+- Semua 68 atribut dihitung. Skor mentah = jumlah slot berisi / 68. Tidak mengubah skor SEO 20 atribut. Skor bukan penilaian mutu sekolah, kebenaran fakta, atau kewajiban mengisi semua atribut. NSS, NSM, jurusan SMK, dan sejumlah kolom lain tidak selalu berlaku untuk semua jenjang.
+- Nol merupakan nilai tercatat. Placeholder umum seperti '-', 'n/a', 'Data belum tersedia' terhitung kurang; nilai nonkosong tersebut harus diperiksa manual, tidak dianggap dapat ditimpa oleh mode isi kosong.
+- Profil publish/draft/pending tanpa password diikutkan; profil privat, trash, future, berpassword, fiktif terdeteksi, dan indeks tanpa post terkait tidak ikut. Payload rusak dilaporkan terpisah. Data fiktif yang tidak diberi tanda dapat lolos filter.
+- Umur >=180 hari dihitung dari updated_at (UTC), bukan tanggal sumber atau validitas faktual. Tanggal invalid/masa depan menjadi tidak diketahui.
+- Tidak menambah tabel, tidak menghapus data, tidak melakukan sinkronisasi otomatis, tidak menambahkan API pemerintah. Tidak otomatis mengisi placeholder atau menyelesaikan konflik. Tidak ada agregat seluruh provinsi jika lebih dari satu batch.
+
+UJI LOKAL
+Uji dengan profil nyata yang diizinkan, satu memiliki nilai 0, satu kosong, satu placeholder. Pastikan angka nol terisi dan placeholder masuk daftar kurang. Periksa filter wilayah, CSV, dua batch dengan limit 1, dan pratinjau Mesin Pengayaan. Pastikan profil privat dan berpassword tidak muncul. Profil demo yang disertakan sengaja dikecualikan dari audit; jangan gunakan demo untuk menguji jumlah hasil audit kecuali menguji pengecualian.
+
+HASIL PENGUJIAN PENGEMBANGAN
+283 pemeriksaan PHP dengan stub WordPress/database/HTTP (250 regresi + 33 baru). PHP lint dan JS syntax check. Belum dijalankan di WordPress, MySQL/MariaDB, browser, atau LocalWP nyata; belum benchmark nasional. Lihat HASIL-UJI-V62.txt.

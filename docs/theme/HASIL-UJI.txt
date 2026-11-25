@@ -1,0 +1,58 @@
+Sekolah Directory Theme v7.0.0 — Laporan pengujian
+PHP simulated WordPress:
+PASS: Lifecycle hooks registered
+PASS: Directory shortcode active
+PASS: No page configured
+PASS: Public directory page accepted
+PASS: Draft rejected
+PASS: Password-protected page rejected
+PASS: Non-page rejected
+PASS: Page without shortcode rejected
+PASS: Unknown page rejected
+PASS: Front page priority
+PASS: Scoped region is not main directory
+PASS: Falls back from draft
+PASS: Customizer fallback
+PASS: Level query compatible
+PASS: Comparison page accepted
+PASS: Private comparison excluded
+PASS: Fallback navigation
+PASS: Level navigation
+PASS: Graceful missing plugin
+PASS: Comparison shortcode missing
+PASS: Fallback menu without plugin
+TOTAL: 21 passed
+
+JavaScript simulated DOM:
+PASS: Defaults to light
+PASS: System dark preference
+PASS: Saved light overrides system dark
+PASS: Saved dark overrides system light
+PASS: Invalid preference uses system
+PASS: Control visible when script active
+PASS: Toggle and persist
+PASS: System change honored before explicit choice
+PASS: Explicit choice not overridden
+PASS: Blocked local storage does not break toggle
+PASS: Legacy matchMedia listener
+PASS: Missing control is harmless
+TOTAL: 12 passed
+
+PHP lint:
+No syntax errors detected in sekolah-directory-theme/404.php
+No syntax errors detected in sekolah-directory-theme/comments.php
+No syntax errors detected in sekolah-directory-theme/footer.php
+No syntax errors detected in sekolah-directory-theme/front-page.php
+No syntax errors detected in sekolah-directory-theme/functions.php
+No syntax errors detected in sekolah-directory-theme/header.php
+No syntax errors detected in sekolah-directory-theme/index.php
+No syntax errors detected in sekolah-directory-theme/page.php
+No syntax errors detected in sekolah-directory-theme/sidebar.php
+No syntax errors detected in sekolah-directory-theme/single-sdp_school.php
+No syntax errors detected in sekolah-directory-theme/single.php
+No syntax errors detected in sekolah-directory-theme/template-parts/card.php
+
+JavaScript syntax: PASS
+CSS: 122 qualified rules parsed using tinycss2; no syntax parse errors.
+Plugin v6.4.0 ZIP: integrity checked; no new regression run of plugin itself in this theme build.
+Limitations: no live WordPress/MySQL/LocalWP, real browser rendering, AJAX or accessibility audit; Chromium headless attempt timed out.

@@ -1,0 +1,32 @@
+PASS off nginx -t: nginx: the configuration file /tmp/sdp-nginx-v97h8481/nginx.conf syntax is ok
+nginx: configuration file /tmp/sdp-nginx-v97h8481/nginx.conf test is successful
+PASS off FastCGI response
+PASS off never reused
+PASS deny /wp-config.php
+PASS deny /.env
+PASS deny /backup.sql
+PASS deny /wp-content/uploads/evil.php
+PASS static browser cache
+PASS HTTP redirects fixed HTTPS host
+PASS on nginx -t: nginx: the configuration file /tmp/sdp-nginx-egzl94kn/nginx.conf syntax is ok
+nginx: configuration file /tmp/sdp-nginx-egzl94kn/nginx.conf test is successful
+PASS on FastCGI response
+PASS anonymous allowlist cache MISS then HIT
+PASS cookie bypass
+PASS authorization bypass
+PASS query bypass
+PASS range bypass
+PASS post bypass
+PASS school bypass
+PASS operator bypass
+PASS case bypass
+PASS api bypass
+PASS private nginx -t: nginx: the configuration file /tmp/sdp-nginx-3t8qsnv1/nginx.conf syntax is ok
+nginx: configuration file /tmp/sdp-nginx-3t8qsnv1/nginx.conf test is successful
+PASS private FastCGI response
+PASS private never reused
+PASS cookie nginx -t: nginx: the configuration file /tmp/sdp-nginx-fbhhtrhl/nginx.conf syntax is ok
+nginx: configuration file /tmp/sdp-nginx-fbhhtrhl/nginx.conf test is successful
+PASS cookie FastCGI response
+PASS cookie never reused
+TOTAL 27 checks

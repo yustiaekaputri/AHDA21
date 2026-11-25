@@ -1,0 +1,181 @@
+SDP v5.1.0 — HASIL PENGUJIAN
+PHP 8.4.24 CLI, WordPress dan DB disimulasikan; bukan uji integrasi.
+136 regresi + 23 baru = 159 pemeriksaan.
+PASS 1 68 atribut lama
+PASS 2 score 7/20
+PASS 3 zero recognized
+PASS 4 missing placeholder
+PASS 5 ready threshold
+PASS 6 thin rejected
+PASS 7 hold thin
+PASS 8 preserve publish
+PASS 9 ready publish
+PASS 10 respect draft
+PASS 11 demo noindex
+PASS 12 demo local override
+PASS 13 summary zero
+PASS 14 missing facts omitted
+PASS 15 title NPSN
+PASS 16 unicode excerpt
+PASS 17 FAQ recorded facts
+PASS 18 FAQ no guessed claims
+PASS 19 schema type and NPSN
+PASS 20 missing geo omitted
+PASS 21 geo numeric
+PASS 22 meta ready
+PASS 23 meta demo
+PASS 24 sitemap filter
+PASS 25 unrelated sitemap untouched
+PASS 26 region valid
+PASS 27 region invalid
+PASS 28 slug stable
+PASS 29 slug distinct
+PASS 30 AI allowlist
+PASS 31 reject provider
+PASS 32 reject model injection
+PASS 33 key required
+PASS 34 fixed local endpoint
+PASS 35 Ollama parser
+PASS 36 OpenAI parser
+PASS 37 Gemini parser excludes thought
+PASS 38 empty output rejected
+PASS 39 old CSV works
+PASS 40 old validation works
+PASS 41 old HTML generator
+TOTAL 41 PASS
+PASS 42 scope enforced and non-scalar filter ignored
+PASS 43 page cap
+PASS 44 Unicode query cap
+PASS 45 published and nonpassworded SQL
+PASS 46 literal wildcard escaping
+PASS 47 bound filter parameters
+PASS 48 prefix suggestion SQL
+PASS 49 dependent options initially empty
+PASS 50 province expands district only
+PASS 51 district expands subdistrict
+PASS 52 fixed option
+PASS 53 zero distinct from missing
+PASS 54 null island placeholder ignored
+PASS 55 invalid latitude
+PASS 56 valid coordinate
+PASS 57 equatorial valid coordinate
+PASS 58 map markers escaped
+PASS 59 empty map
+PASS 60 zero shown and ratio valid
+PASS 61 zero denominator omitted
+PASS 62 missing chart
+PASS 63 pagination clamped
+PASS 64 card escaped
+PASS 65 summary accurate fixture
+PASS 66 fixed scope omitted from URL
+PASS 67 empty state
+PASS 68 API scope forced
+PASS 69 short suggestion no query
+PASS 70 SSR fallback form
+PASS 71 portal enhancement markup
+PASS 72 regional stats qualified
+COMBINED TOTAL 72 PASS
+PASS 73 comparison ID dedupe and cap
+PASS 74 nested input ignored
+PASS 75 numeric input rejected
+PASS 76 favorite cap
+PASS 77 no invented period
+PASS 78 placeholder period rejected
+PASS 79 empty observation rejected
+PASS 80 explicit period zero retained
+PASS 81 no synthetic carry forward
+PASS 82 invalid period type ignored
+PASS 83 student teacher ratio
+PASS 84 zero numerator valid
+PASS 85 zero denominator rejected
+PASS 86 missing denominator rejected
+PASS 87 haversine 1 degree
+PASS 88 coincident points
+PASS 89 antimeridian distance
+PASS 90 facility filter positive numeric
+PASS 91 jurusan wildcard escaped
+PASS 92 unlisted facility ignored
+PASS 93 filter query persists
+PASS 94 comparison ordered by request
+PASS 95 unknown NPSN omitted by result defense
+PASS 96 comparison excludes private and passworded via query
+PASS 97 comparison HTML escaping
+PASS 98 period and missing distinction
+PASS 99 comparison noindex
+PASS 100 favorites mode
+PASS 101 nearby disclaimer
+PASS 102 missing coordinate no distance
+PASS 103 portal controls
+PASS 104 accessible selection state
+V41 TOTAL 104 PASS
+PASS 105 NPSN normalized
+PASS 106 invalid identifier rejected
+PASS 107 bounded REST limit
+PASS 108 bounded CLI batch
+PASS 109 BOM and aliases
+PASS 110 duplicate headers blocked
+PASS 111 missing NPSN blocked
+PASS 112 blank header blocked
+PASS 113 header count capped
+PASS 114 checkpoint deterministic
+PASS 115 changed config/file separate checkpoint
+PASS 116 API published nonpassworded only
+PASS 117 cursor bound
+PASS 118 region bound
+PASS 119 prefix wildcard escaped
+PASS 120 unknown filter ignored
+PASS 121 invalid cursor rejected
+PASS 122 strict public allowlist
+PASS 123 zero preserved and missing null
+PASS 124 public permalink
+PASS 125 next cursor from returned row
+PASS 126 last page cursor null
+PASS 127 moderated approval/rejection
+PASS 128 revocation only
+PASS 129 invalid claim transitions blocked
+PASS 130 optional indexes defined
+PASS 131 first batch checkpoint invalid record
+PASS 132 resume skips earlier records
+PASS 133 third batch checkpoint
+PASS 134 EOF completion
+PASS 135 completed job idempotent
+PASS 136 explicit restart resets checkpoint
+V50 TOTAL 136 PASS
+PASS 137 generated profile neutralizes shortcode
+PASS 138 HTML escaped
+PASS 139 literal encoding idempotent
+PASS 140 existing school content protected
+PASS 141 directory page shortcode retained
+PASS 142 preserve status private
+PASS 143 preserve status trash
+PASS 144 preserve status future
+PASS 145 existing post uses merge update
+PASS 146 password/author not overwritten by update arguments
+PASS 147 save retains private status
+PASS 148 database read failure fails closed
+PASS 149 corrupt stored JSON not overwritten
+PASS 150 invalid WP post ID never indexed
+PASS 151 portal DB failure detected
+PASS 152 error distinct from no results
+PASS 153 REST portal DB failure returns error
+PASS 154 queue fails closed
+PASS 155 queue error not marked success
+PASS 156 nonstring dataset rejected
+PASS 157 direct HTTPS download without redirects
+PASS 158 redirect rejected
+PASS 159 oversize response rejected
+V51 TOTAL 159 PASS
+
+PHP lint:
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-seo.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-national.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-portal.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-collector.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-analytics.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-sources.php
+No syntax errors detected in sekolah-directory-pro/includes/class-sdp-ai.php
+No syntax errors detected in sekolah-directory-pro/sekolah-directory-pro.php
+JavaScript syntax:
+PASS sekolah-directory-pro/assets/analytics.js
+PASS sekolah-directory-pro/assets/portal.js
+LocalWP / MySQL / browser / sumber pemerintah: belum diuji.

@@ -1,0 +1,13 @@
+// Tambahkan sebelum require_once ABSPATH . 'wp-settings.php';
+// Jangan menduplikasi konstanta yang sudah ada.
+define('WP_ENVIRONMENT_TYPE', 'production');
+define('WP_DEBUG', false);
+define('WP_DEBUG_DISPLAY', false);
+define('DISALLOW_FILE_EDIT', true);
+define('SDP_LOW_RESOURCE', true);
+// Default jaringan terjadwal pada mode hemat tetap off.
+define('SDP_LOW_RESOURCE_NETWORK_CRON', false);
+// Aktifkan hanya setelah cron sistem teruji:
+// define('DISABLE_WP_CRON', true);
+// Untuk migrasi/pemeliharaan sementara:
+// define('SDP_SAFE_MODE', true);

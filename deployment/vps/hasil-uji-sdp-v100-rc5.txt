@@ -1,0 +1,41 @@
+RC5 deployment candidate — hasil pengujian
+Plugin RC4 tidak diubah. SHA-256: 34846f83304098c04099bf9401990dc4f23e47d59d009d6a3f053e18145104cd
+737 eksekusi regresi PHP/Python berhasil (simulasi).
+27 pemeriksaan Nginx 1.26.3 berhasil (loopback, FastCGI sintetis, 4 konfigurasi nginx -t).
+28 file PHP dan 2 JavaScript lolos sintaks.
+Diagnostik shell lolos sh -n.
+Belum diuji pada PHP-FPM, MariaDB, WordPress nyata, LocalWP, CDN, VPS atau domain asli.
+Tidak ada pengukuran penghematan RAM/CPU/bandwidth.
+
+PASS off nginx -t: nginx: the configuration file /tmp/sdp-nginx-v97h8481/nginx.conf syntax is ok
+nginx: configuration file /tmp/sdp-nginx-v97h8481/nginx.conf test is successful
+PASS off FastCGI response
+PASS off never reused
+PASS deny /wp-config.php
+PASS deny /.env
+PASS deny /backup.sql
+PASS deny /wp-content/uploads/evil.php
+PASS static browser cache
+PASS HTTP redirects fixed HTTPS host
+PASS on nginx -t: nginx: the configuration file /tmp/sdp-nginx-egzl94kn/nginx.conf syntax is ok
+nginx: configuration file /tmp/sdp-nginx-egzl94kn/nginx.conf test is successful
+PASS on FastCGI response
+PASS anonymous allowlist cache MISS then HIT
+PASS cookie bypass
+PASS authorization bypass
+PASS query bypass
+PASS range bypass
+PASS post bypass
+PASS school bypass
+PASS operator bypass
+PASS case bypass
+PASS api bypass
+PASS private nginx -t: nginx: the configuration file /tmp/sdp-nginx-3t8qsnv1/nginx.conf syntax is ok
+nginx: configuration file /tmp/sdp-nginx-3t8qsnv1/nginx.conf test is successful
+PASS private FastCGI response
+PASS private never reused
+PASS cookie nginx -t: nginx: the configuration file /tmp/sdp-nginx-fbhhtrhl/nginx.conf syntax is ok
+nginx: configuration file /tmp/sdp-nginx-fbhhtrhl/nginx.conf test is successful
+PASS cookie FastCGI response
+PASS cookie never reused
+TOTAL 27 checks

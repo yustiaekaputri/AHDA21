@@ -1,0 +1,35 @@
+SEKOLAH DIRECTORY PRO v8.0.0 — NATIONAL EDUCATION INTELLIGENCE
+Beta untuk pengujian lokal. Tema v7.0 tetap terpisah.
+
+INSTALASI / UPGRADE
+1. Backup website dan database LocalWP; jangan gunakan situs produksi untuk tes awal.
+2. WP Admin > Plugins > Add New Plugin > Upload Plugin. Pilih sekolah-directory-pro-v8.0.0.zip. Replace current with uploaded, aktifkan.
+3. Semua modul lama tetap disertakan. Tidak ada tabel baru untuk modul statistik; snapshot disimpan dalam options non-autoload.
+4. Pastikan profil sekolah nyata yang boleh digunakan sudah diimpor dan diterbitkan. Draft, privat dan berpassword tidak dipindai. Data demo terdeteksi dikecualikan. Jika hanya memakai contoh fiktif bawaan, hasil statistik dapat kosong; itu perilaku yang diharapkan.
+
+MEMBUAT SNAPSHOT
+1. Direktori Sekolah > Statistik Pendidikan.
+2. Pilih slot 1–10. Kosongkan semua filter wilayah untuk cakupan seluruh direktori; nama wilayah harus persis seperti database. Kabupaten memerlukan provinsi, kecamatan memerlukan kabupaten. Jenjang boleh kosong.
+3. Masukkan periode statistik, contoh 2025, 2025/2026, atau 2025/2026 ganjil. Angka contoh bukan data nasional. Pilih periode yang sesuai dataset.
+4. Klik Mulai lalu Proses 100 berikutnya. Jika ada banyak profil, gunakan Open Site Shell: wp sdp education --rounds=10. Ulangi sampai complete. Rounds 1–100, maksimal 10.000 rekaman per pemanggilan; mulai dari 10 atau lebih kecil. Tidak berjalan sendiri di latar belakang.
+5. Jika gagal, perbaiki database lalu lanjutkan. Checkpoint disimpan tiap batch; satu pekerjaan aktif. Batalkan pekerjaan jika konfigurasi salah. Snapshot sebelumnya tetap tersedia sampai pengganti selesai; membatalkan tidak menghapus snapshot lama.
+6. Batas 1.000 kelompok per snapshot. Jika melebihi batas, batalkan dan gunakan wilayah lebih sempit.
+7. Selesai: klik Unduh CSV, atau buat halaman WordPress dengan shortcode [statistik_pendidikan slot="1"]. Tambahkan halaman ke menu tema. Slot yang belum selesai menampilkan pesan ketersediaan. Untuk menghapus snapshot gunakan tombol Hapus snapshot di admin; kosongkan cache halaman/CDN jika digunakan.
+
+CONTOH SLOT
+1 = semua wilayah; 2 = Jawa Barat; 3 = Jawa Barat / Kabupaten Cirebon (nama persis pada database); 4 = snapshot periode lain dengan cakupan yang sama seperti slot 3. Slot bebas dipilih. Perbandingan provinsi muncul di snapshot nasional; kabupaten di snapshot provinsi; kecamatan di snapshot kabupaten; jenjang di snapshot kecamatan.
+Untuk membandingkan dua atau lebih slot dengan cakupan sama, gunakan [perbandingan_periode_pendidikan slots="3,4"]. Periode harus berbeda, jenis periode sama. Grafik adalah perbandingan agregat snapshot, bukan perkembangan kohort sekolah yang sama. Snapshot tahun lama tidak bisa direkonstruksi otomatis dari data terbaru. Riwayat observasi v4.1 tetap tersedia pada profil individual.
+
+METODOLOGI
+- Hanya profil sdp_school terbit dan tanpa password pada saat dibaca. Profil fiktif yang terdeteksi (awalan DEMO/SIMU/TEST, nama/sumber berlabel fiktif atau simulasi), payload rusak, dan indeks yang tidak cocok dikeluarkan.
+- Total siswa/guru dihitung secara terpisah hanya jika nilai nonnegatif valid dan periode eksplisit per atribut (_field_sources) cocok tepat dengan periode snapshot. Tahun kalender, tahun ajaran, dan semester tidak dicampur. Tahun global saja tidak cukup. Data lama yang belum memiliki periode per atribut mungkin tidak ikut dihitung; isi ulang melalui sumber terverifikasi atau peninjauan v6.3. Jangan menetapkan periode dengan menebak.
+- Rasio = total siswa / total guru pada subset yang memiliki kedua nilai pada periode tersebut dan jumlah guru >0, bukan rerata rasio sekolah. Nol sah tetap dihitung bila periode diketahui.
+- Fasilitas (kelas, lab, perpustakaan, toilet): jumlah sekolah dengan nilai >0, nilai diketahui (termasuk 0), serta belum diketahui. Periode fasilitas dan akreditasi dapat bervariasi. Kelengkapan = jumlah atribut terisi / jumlah atribut relevan menurut aturan v6.3; bukan kualitas sekolah.
+- Snapshot mencakup rekaman yang dibaca selama rentang waktu UTC, bukan transaksi database konsisten pada satu titik. Hindari impor/perubahan profil selama scan. Perubahan, penghapusan dan perubahan privasi sesudah scan tidak otomatis memperbarui agregat; hapus/segarkan snapshot dan cache bila diperlukan. Tidak memuat NPSN, akun, catatan verifikasi atau payload individual. Agregat kecil mungkin setara dengan angka satu sekolah yang saat itu sudah publik.
+- Cakupan direktori bukan cakupan nasional sebenarnya. Tidak ada data nasional yang disertakan. Tidak ada API pemerintah baru. CSV berisi total, kelompok, cakupan, periode, indikator fasilitas dan distribusi jenjang/status/akreditasi, bukan daftar individual.
+
+PENGUJIAN LOCALWP
+- Backup, aktifkan, cek wp plugin list dan wp sdp health.
+- Uji dengan beberapa profil nyata yang telah diizinkan, dari dua wilayah, dengan periode atribut yang jelas dan beberapa data kosong. Simpan satu profil sebagai draft/private/password untuk memastikan tidak dihitung. Cek angka secara manual. Jangan gunakan data nyata yang salah/fiktif untuk publikasi.
+- Uji snapshot kecil, lanjutkan CLI, ekspor CSV, shortcode desktop/mobile, tema v7.0, dan penggantian slot. Buat snapshot periode lain dari data yang memang berbeda dan periksa perbandingan.
+- 489 pemeriksaan PHP simulasi (439 regresi + 50 baru) lulus pada PHP 8.4. Sintaks 15 file PHP dan semua JS lulus; CSS baru lolos parser top-level. Belum diuji dengan WordPress, MySQL/MariaDB, browser, WP-CLI sungguhan, database skala nasional atau hosting produksi. SQL lock dan checkpoint diuji dengan mock, bukan server nyata. Tidak ada klaim performa skala nasional atau audit keamanan menyeluruh.

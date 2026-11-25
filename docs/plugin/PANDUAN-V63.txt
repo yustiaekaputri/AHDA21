@@ -1,0 +1,23 @@
+SEKOLAH DIRECTORY PRO v6.3.0 — DATA INTELLIGENCE ENGINE
+Status: beta pengujian lokal. Tidak memerlukan API AI.
+
+INSTALASI
+Cadangkan database dan wp-content melalui LocalWP. Upload ZIP lewat Plugins > Add New Plugin > Upload Plugin. Pilih Replace current with uploaded. Aktifkan. Tidak perlu mengimpor ulang profil. Modul lama disertakan; metadata baru disimpan di payload JSON sekolah, tanpa tabel baru. Gunakan situs uji privat.
+
+VALIDASI & KONFLIK
+1. Buka Direktori Sekolah > Validasi & Konflik atau tautan Validasi pada Kelengkapan Data.
+2. Masukkan NPSN profil yang sudah ada, tanpa password, status draft/pending/publish. Data demo, privat, trash dikecualikan. Untuk uji, gunakan sekolah nyata dengan data yang penggunaannya diizinkan. Jangan menyamarkan data fiktif sebagai fakta publik.
+3. Pilih satu atribut, isi nilai kandidat, kategori sumber, URL bukti publik HTTP/HTTPS, periode bila diketahui (YYYY atau YYYY/YYYY [ganjil/genap]), dan catatan pemeriksaan privat. Jangan memasukkan token, URL privat, atau informasi personal yang tidak perlu. Sistem tidak mengambil URL atau mengecek hak akses/keaslian secara otomatis; URL sumber akan ditampilkan pada profil publik setelah disetujui.
+4. Klik Bandingkan. Sistem memperlihatkan nilai lama dan kandidat, konflik, prioritas kategori 1-3, periode dan status kunci. Kategori sumber dinyatakan admin, bukan hasil pemeriksaan independen. Nilai 0 untuk sumber lama berarti kategori belum diketahui. Tahun kalender dan tahun akademik berbeda tidak dibandingkan; periode kosong tidak dianggap baru.
+5. Periksa bukti sebenarnya. Centang konfirmasi dan klik Setujui & kunci. Pratinjau per admin berlaku 10 menit, terikat pada kandidat dan snapshot profil. Perubahan profil sejak preview menolak persetujuan. Tolak kandidat jika bukti tidak cukup. Tidak ada publikasi baru secara otomatis.
+6. Atribut yang sudah dikunci tidak dapat diubah oleh overwrite biasa. Seluruh rekaman ditolak jika ada konflik nilai terkunci. Impor fill mempertahankan nilai lama, mengisi nilai kosong, mencatat konflik yang diterima core save. Untuk memperbarui nilai terkunci, ulangi peninjauan melalui menu ini; tidak ada tombol buka kunci terpisah.
+7. Perubahan tahun_data atau tahun_akreditasi dalam overwrite biasa juga ditolak jika kelompok terkait memuat atribut terkunci. Peninjauan satu atribut tidak memperbarui seluruh kelompok. Pastikan kelompok data dan periode umum diperiksa secara konsisten. Periode eksplisit per atribut ditampilkan pada tabel, FAQ, perbandingan dan field_periods API. Periode umum pada profil tidak menjamin semua atribut berasal dari periode sama. Rasio tetap memakai angka yang tercatat dan bisa berasal dari periode berbeda.
+
+RIWAYAT & SKOR
+- Maksimal 40 kejadian terbaru per sekolah dalam payload; perubahan lama sebelum versi ini tidak direkonstruksi. update = perubahan biasa; review = persetujuan; conflict_fill = kandidat tidak diterapkan. Konflik identik pada fill dideduplikasi selama masih ada dalam riwayat. Tidak semua penolakan otomatis dicatat: konektor yang menyaring sebelum memanggil save dan overwrite yang diblokir tidak membuat kejadian. Catatan privat dan identitas admin tidak tampil di API publik atau profil.
+- Prioritas kategori heuristik: BAN-PDM untuk akreditasi, dataset statistik untuk statistik, website/operator untuk narasi, referensi/Kemenag untuk identitas. Tidak menghasilkan probabilitas kebenaran atau keputusan otomatis.
+- Kelengkapan Data masih menyajikan skor mentah 68 atribut dan skor relevan tambahan. Jurusan/mitra industri tidak dihitung untuk jenjang umum selain SMK/MAK; NSM hanya untuk RA/MI/MTs/MA/MAK. Jenjang LAINNYA/PESANTREN/tidak dikenal tetap 68. Ini heuristik; kebutuhan sekolah dapat berbeda. Prioritas batch lama tetap berdasarkan skor mentah.
+
+UJI LOKAL
+- Gunakan profil nyata yang sah di situs lokal. Bandingkan kandidat yang sesuai bukti, setujui, periksa nilai dan sumber. Uji impor overwrite dengan nilai berbeda dan pastikan ditolak. Uji fill, pastikan nilai lama tetap dan konflik tercatat. Periksa pratinjau kedaluwarsa/perubahan profil dari tab lain. Periksa halaman dan /wp-json/sdp/v1/schools/NPSN tanpa login; riwayat internal tidak muncul. Pastikan profil draft tetap draft. Uji impor lama, antrean, pencarian, dan WP-CLI.
+- Riwayat tambahan dapat memperbesar payload; belum dibenchmark nasional. Tidak ada verifikasi silang live, API pemerintah baru, audit keamanan penuh, atau pengujian langsung WordPress/MySQL/LocalWP. Pengujian saat ini menggunakan stub WordPress dan database. Jangan langsung deploy ke produksi.

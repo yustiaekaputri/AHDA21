@@ -1,0 +1,86 @@
+SEKOLAH DIRECTORY PRO 10.0.0-rc.1 — KANDIDAT INTEGRASI, BUKAN PRODUKSI STABIL
+
+1. PERUBAHAN
+- Hak tulis CPT sdp_school menggunakan manage_options (termasuk edit/publish/delete).
+  Editor, Author, Subscriber tidak boleh edit/hapus melalui REST standar atau WP Admin.
+  Pembuatan langsung via CPT tetap diblokir; gunakan menu SDP. Administrator
+  masih dapat mengedit artikel; perubahan manual tidak menyinkronkan indeks SDP.
+  Kustomisasi role/plugin pihak ketiga yang memberi manage_options bisa memberi hak itu.
+- Alur SDP_Directory::save menahan demo (kode/nama/sumber yang terdeteksi) sebagai
+  draf di luar lingkungan local + blog_public=0, bahkan jika guard SEO dinonaktifkan.
+  Status private/trash dipertahankan. Ini bukan pembersihan data lama atau blokir
+  mutlak publikasi manual oleh admin, WP-CLI, atau plugin lain. Audit data lama.
+- Tidak ada cron, aset frontend, atau tabel baru. Tidak ada klaim penghematan terukur.
+
+2. INSTALASI PERTAMA DI LOCALWP (BUKAN VPS)
+Buat situs LocalWP baru yang dapat dibuang, atau clone yang tidak memuat profil sekolah.
+Jangan gunakan situs dengan data penting untuk smoke test. Nonaktifkan plugin eksternal
+untuk pengujian pertama. Jangan mengekspos situs uji melalui Live Link/tunnel/internet.
+Instal ZIP plugin melalui Plugins > Add New > Upload Plugin. Aktifkan. Instal tema
+v7.0 melalui Appearance > Themes > Add New > Upload Theme (tema opsional untuk smoke).
+Buka WP Admin agar upgrade schema modul berjalan. Buka Settings > Reading, centang
+Discourage search engines from indexing this site; ini bukan pengamanan akses jaringan.
+Pastikan lokasi file sdp-smoke-local.php di luar docroot web (misalnya folder unduhan).
+Pada wp-config.php sebelum pemuatan wp-settings.php, tambahkan jika belum ada:
+    define('WP_ENVIRONMENT_TYPE', 'local');
+    define('SDP_SAFE_MODE', true);
+    define('SDP_SMOKE_TEST_ENABLED', true);
+Hindari definisi ganda. Jangan menambahkan SDP_SMOKE_TEST_ENABLED ke VPS.
+
+3. PENGUJIAN WORDPRESS NYATA (HARUS DIJALANKAN PENGGUNA)
+Pada Site Shell LocalWP:
+    wp core version
+    wp plugin list
+    wp sdp readiness
+    wp option get blog_public
+    wp user list --fields=ID,user_login,roles
+Nilai blog_public harus 0. Gunakan username admin situs lokal, bukan nama asumsi.
+    wp --user=USERNAME_ADMIN eval-file "/PATH/KE/sdp-smoke-local.php"
+Windows: masukkan path file absolut (gunakan tanda kutip).
+Skrip menolak lingkungan nonlocal, multisite, URL nonlocal, Safe Mode nonaktif,
+blog_public aktif, tabel sekolah tidak kosong, versi plugin berbeda, atau user nonadmin.
+Skrip membuat satu profil TEST0001 dan dua akun sementara, menahan lalu mengizinkan
+publikasi fiktif hanya untuk test lokal, memeriksa REST anonim, peran editor/subscriber,
+status draft/password/private, indeks NPSN, periode data, cache wilayah dan audit.
+Skrip mencoba menghapus profil dan akun sementara serta memulihkan pengaturan SEO.
+Jika gagal atau terputus, artefak uji bisa tertinggal; buang seluruh situs uji.
+Bukan uji browser, nonce HTTP nyata, beban paralel, database migration penuh atau
+sertifikasi keamanan. Tidak menguji semua modul; WP HTTP diblok dalam proses skrip,
+namun tidak menjamin plugin lain atau proses lain tidak menggunakan jaringan.
+Jangan gunakan hasil ini sebagai izin langsung untuk deployment produksi.
+
+4. UPGRADE PADA CLONE WEBSITE LAMA
+Cadangkan database dan file; uji restore. Jangan uninstall plugin lama.
+Upload ZIP RC1, Replace current with uploaded. Aktifkan bila perlu; buka WP Admin.
+Periksa Kesiapan Produksi dan jalankan audit bertahap. Periksa profil, portal operator,
+filter, galeri, statistik, sitemap, REST, scheduler, cache, rollback. Hak editor lama
+untuk CPT berubah secara sengaja; admin tetap dapat menggunakan menu SDP.
+Jangan jalankan smoke test pada clone dengan data sekolah. Gunakan uji manual.
+
+5. DATA NYATA & GATE PRODUKSI
+Impor 10-100 profil dari dataset sah yang benar-benar memiliki NPSN dan izin penggunaan.
+Jangan menganggap data dari berbagai periode bisa dijumlahkan. Periksa sampel secara
+manual di sumber resmi: NPSN, nama, alamat, akreditasi, periode, asal media dan narasi.
+Dataset nasional dan konektor pemerintah baru TIDAK termasuk dalam paket RC1.
+Uji dua akun operator terpisah: klaim, penolakan klaim, pembaruan, pencabutan, akses silang.
+Uji scheduler dan safe mode, periksa bahwa antrean kosong tidak menimbulkan cron baru.
+Uji restore backup, HTTPS, firewall egress, cache privat, debug off, sitemap dan robots.
+Gunakan alat benchmark v8.9 hanya di lingkungan lokal terpisah. Catat P95, error,
+RAM tersedia, swap dan load server. Semua P0 harus lulus sebelum menamai versi stabil.
+
+6. VPS RAM 1 GB (CPU 1 vCPU ASUMSI; KUOTA 10 GB PERIODE BELUM DIKETAHUI)
+Mode hemat bawaan, tidak ada Redis/Ollama wajib. Gunakan page cache khusus halaman
+publik, Nginx/PHP-FPM/MariaDB dengan worker yang ditentukan dari pengukuran nyata.
+Jangan mengaktifkan jaringan otomatis sebelum izin, firewall dan anggaran diperiksa.
+Pengolahan massal di LocalWP. Saat migrasi awal gunakan SDP_SAFE_MODE=true, lalu
+aktifkan pekerjaan bertahap setelah smoke test manual dan pemantauan resource.
+Hapus SDP_SMOKE_TEST_ENABLED dan SDP_BENCHMARK_ENABLED di produksi. Pastikan tidak
+ada profil fiktif sebelum publikasi. Upgrade VPS jika resource atau latensi aktual
+menunjukkan kebutuhan; mode standar opsional, bukan otomatis berdasarkan traffic.
+Rincian mode darurat, rollback dan migrasi: PANDUAN-V90.txt di dalam plugin.
+
+7. STATUS PAKET
+613 eksekusi pemeriksaan (575 PHP regresi + 32 PHP baru + 6 Python) lulus di lingkungan
+simulasi. Sintaks 25 PHP plugin, satu script smoke, dua JS lulus. Tidak ada WordPress,
+MySQL/MariaDB server atau mysqli di lingkungan pembuat paket; download WordPress gagal DNS.
+Skrip smoke hanya diperiksa sintaks. Belum ada pengujian integrasi nyata atau kapasitas VPS.

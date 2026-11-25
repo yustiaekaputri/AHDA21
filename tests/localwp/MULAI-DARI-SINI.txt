@@ -1,0 +1,26 @@
+SEKOLAH DIRECTORY — LOCALWP VALIDATION (RC6, RUNNER TERPADU)
+Versi plugin tetap 10.0.0-rc.4, tema 7.0.0. Tidak ada perubahan pada plugin atau tema.
+
+PENTING: gunakan situs WordPress lokal baru, kosong, sekali pakai, tanpa live link, tunnel, akses publik atau koneksi database produksi. Smoke test menulis artikel fiktif, akun uji, opsi SEO, lalu mencoba membersihkannya. Buang clone setelah selesai, termasuk jika gagal. Jangan migrasikan clone uji ke VPS. Jangan jalankan pada situs yang berisi data nyata. Script tidak dapat membuktikan bahwa tidak ada tunnel atau koneksi eksternal.
+
+1. Di LocalWP buat situs baru sekolah-directory-test. Instal dan aktifkan plugin RC4 dan tema v7.0 dari paket RC6. Buka WP Admin > Direktori Sekolah untuk menyelesaikan migrasi modul.
+2. Settings > Reading > aktifkan Discourage search engines from indexing this site. Pastikan blog_public=0.
+3. Edit wp-config.php (app/public), sebelum require wp-settings.php. Ubah konstanta yang sudah ada, jangan duplikat:
+   define('WP_ENVIRONMENT_TYPE', 'local');
+   define('SDP_LOW_RESOURCE', true);
+   define('SDP_SAFE_MODE', true);
+   define('SDP_SMOKE_TEST_ENABLED', true);
+   SDP_BENCHMARK_ENABLED tidak boleh true.
+4. Ekstrak folder sdp-localwp-oneclick ke luar document root, misalnya Downloads. Buka Site Shell dari LocalWP. Cek ID admin dengan:
+   wp user list --role=administrator --fields=ID,user_login
+5. Jalankan perintah berikut (sesuaikan path absolut dan ID admin):
+   wp eval-file "C:/Users/Anda/Downloads/sdp-localwp-oneclick/sdp-run-localwp.php" DISPOSABLE-LOCAL-ONLY --user=1
+   Pada macOS/Linux gunakan /Users/... atau /home/.... Kata DISPOSABLE-LOCAL-ONLY merupakan konfirmasi eksplisit bahwa situs lokal ini kosong dan boleh dibuang.
+   Bila hanya ingin pemeriksaan baca-saja (tanpa smoke), jalankan sdp-preflight-local.php secara terpisah menggunakan wp eval-file dengan --user yang sama, tanpa argumen konfirmasi.
+6. Runner memanggil preflight, lalu smoke hanya jika preflight lulus. Bila gagal, perbaiki penyebabnya; jangan paksa lanjut. Bila berhasil, output menampilkan marker COMPLETE setelah smoke berhasil. Tidak ada hasil otomatis yang dikirim ke mana pun.
+7. Salin output terminal (PASS/FAIL, JSON pemeriksaan, pesan akhir), atau screenshot. Periksa dan hilangkan informasi rahasia, path pribadi jika perlu, serta kredensial sebelum berbagi. Jangan kirim wp-config.php. Untuk uji berikutnya gunakan clone baru.
+8. Setelah smoke berhasil, gunakan clone TERPISAH untuk pilot 100 sekolah nyata dari dataset yang telah disetujui. Bukti penerimaan manual ada di acceptance.json dan acceptance.py. Smoke tidak memenuhi seluruh 12 gate produksi.
+
+HASIL PENGEMBANGAN
+737 eksekusi regresi PHP/Python lulus. Lima unit test runner lulus, mencakup 13 eksekusi skenario: satu sukses, sembilan pemblokiran preflight, satu tanpa konfirmasi, satu file hilang, satu smoke gagal. Runner diuji dengan WordPress stub dan pengganti smoke; bukan integrasi nyata. Sintaks tiga alat PHP lulus. Simulasi memerlukan PHP 8+ dan opsi disable_functions=extension_loaded agar stub dapat menggantikan fungsi itu (jangan gunakan opsi tersebut pada WordPress nyata).
+Perbaikan: hasil pencarian portal dengan error database tidak lagi dianggap berhasil hanya karena jumlah hasil nol pada tes privasi. Tidak ada perubahan plugin. WordPress, MariaDB, mysqli tidak tersedia di lingkungan pembuat; curl ke wordpress.org gagal DNS. Tidak ada hasil smoke nyata, pengukuran VPS atau sertifikasi produksi. Tidak ada cron, worker, tabel, atau aset frontend baru.

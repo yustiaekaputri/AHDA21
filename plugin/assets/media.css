@@ -1,0 +1,6 @@
+.sdp64-media { margin: 2rem 0; }
+.sdp64-gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
+.sdp64-gallery figure { margin:0; border:1px solid #cbd5e1; border-radius:12px; overflow:hidden; background:transparent; }
+.sdp64-gallery img { display:block; width:100%; height:clamp(150px,22vw,240px); object-fit:contain; background:#f1f5f9; }
+.sdp64-gallery figcaption { padding:.75rem; font-size:.88em; overflow-wrap:anywhere; }
+.sdp64-placeholder { border:1px dashed #94a3b8; padding:1.25rem; border-radius:12px; }

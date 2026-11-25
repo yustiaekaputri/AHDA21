@@ -1,0 +1,73 @@
+SEKOLAH DIRECTORY PRO 8.9.0 — LOCAL BENCHMARK
+
+Tujuan: alat ukur, bukan klaim kapasitas. Tidak ada cron, tabel, endpoint,
+worker, atau CSS/JS baru. Kelas benchmark hanya dimuat oleh WP-CLI.
+Mode hemat tetap default. Tidak otomatis mengubah konfigurasi server.
+
+1. Backup; gunakan site LocalWP TERPISAH dengan database disposable. Jangan
+   gunakan database asli atau VPS produksi. Nonaktifkan seluruh kolektor,
+   integrasi jaringan, dan scheduler. Pastikan site uji tidak dapat diakses
+   publik. Data fiktif bisa menjadi profil publik apabila diimpor --publish;
+   jangan pernah migrasikan database ini ke produksi. Hapus site uji setelah selesai.
+2. Upgrade ZIP melalui Plugins > Add New > Upload > Replace. Tema v7.0 tetap.
+3. Generator CSV: Python 3.8+ standar library, tanpa pip. Di terminal lokal:
+   python benchmark_local.py generate sekolah-100.csv --rows 100
+   python benchmark_local.py generate sekolah-1000.csv --rows 1000
+   python benchmark_local.py generate sekolah-10000.csv --rows 10000
+   Batas 500000 baris; streaming, nama dan kode TEST fiktif, tidak menimpa
+   file lama. Generator tidak mengimpor atau mengirim data ke jaringan.
+   Dataset lebih besar menguji kapasitas disk, bukan RAM generator saja.
+4. Buka Site Shell LocalWP. Untuk mengimpor profil publik di site uji saja:
+   wp sdp import /path/sekolah-100.csv --authorized=1 --source="Dataset simulasi" --limit=100 --publish --user=admin
+   Ganti path dan admin dengan akun admin lokal. Ulangi perintah identik
+   sampai checkpoint menyatakan done. Gunakan file berbeda untuk jumlah lebih
+   besar, atau site uji baru. Kode TEST sama pada dataset ukuran berbeda;
+   impor yang tumpang tindih akan memperbarui profil lama, bukan menambah duplikat.
+   Catat waktu tiap batch secara manual. Waktu generator bukan waktu impor WP.
+5. Hanya pada wp-config.php site uji, tetapkan sebelum wp-settings.php:
+   define('WP_ENVIRONMENT_TYPE', 'local');
+   define('SDP_BENCHMARK_ENABLED', true);
+   Jika WP_ENVIRONMENT_TYPE sudah didefinisikan, ubah definisi yang ada.
+   wp sdp benchmark --yes --repeats=3 --q="Sekolah Fiktif" --provinsi="Provinsi Fiktif 01" --facets
+   --facets opsional. Mode hemat max 3 ulangan per kasus, standar 10.
+   Kasus: daftar tanpa filter, daftar terfilter, halaman target 100 (portal
+   membatasi halaman sesuai total aktual), opsional dropdown filter.
+   15/30 detik soft limit diperiksa antarpanggilan, bukan timeout SQL keras.
+   Laporan stdout JSON: waktu milidetik, jumlah sampel dan hasil, delta query
+   wpdb, memori allocated awal/akhir/peak seluruh proses PHP. Tidak menyimpan
+   data profil dalam laporan. Tidak mengubah data sekolah. Facet dapat menulis
+   cache bounded normal. Kesalahan facet internal bisa ditangani portal sebagai
+   opsi kosong. Hasil ini bukan profiler SQL per query. Untuk cache off,
+   define('SDP_FACET_CACHE', false); di wp-config.php lokal dan ulangi pada
+   proses baru. Catat perbedaan dataset, warm cache, mode dan jumlah ulangan.
+   Jangan gunakan p95 sampel kecil untuk keputusan kapasitas final.
+6. HTTP benchmark lokal dari komputer LocalWP:
+   python benchmark_local.py http http://127.0.0.1:8080/ --local-test --requests 10 --workers 1
+   Ganti port dan path dengan site uji yang benar. Jika router LocalWP
+   memakai virtual host, --host nama-site.local dapat digunakan. Contoh:
+   python benchmark_local.py http http://127.0.0.1/ --host sekolah.local --local-test --requests 20 --workers 2
+   Hanya HTTP loopback literal (IPv4/IPv6), virtual host .local/.test, tanpa
+   redirect atau kredensial. Tidak dapat langsung menguji host HTTPS. Maks 100
+   permintaan, 4 worker, default 10 dan 1. Berhenti setelah batch pertama
+   yang gagal; jeda 100ms per batch. Respons maksimal 2 MiB + 1 byte deteksi;
+   timeout socket 5 detik, soft limit respons 10 detik dan sesi 60 detik.
+   Soft limit tidak menjamin penghentian persis pada batas waktu.
+   Jangan arahkan loopback ke proxy produksi atau endpoint yang mengubah data.
+   JSON memuat status, error, p50/p95, throughput, byte body (identity).
+   Tidak memuat CSS, JS, gambar, header atau overhead TLS, bukan bandwidth browser.
+7. Interpretasi: mulai 100 profil, 1 worker, 10 request. Ulangi setelah cache
+   hangat. Naikkan dataset, bukan seluruh parameter sekaligus. Stop bila
+   terjadi error, swap berat, atau waktu respons memburuk. Gunakan top/free,
+   monitoring hosting dan log web server untuk mengukur RAM/CPU dan trafik.
+   Bandwidth: body transfer rata-rata dikali request, ditambah aset, bot,
+   backup dan trafik lain. Gunakan log transfer aktual sebagai acuan 10 GB.
+   VPS produksi: ukur trafik alami; tidak ada load test otomatis. Jangan
+   menjadikan rekomendasi upgrade sebagai jaminan kapasitas nasional.
+8. Setelah selesai, hapus SDP_BENCHMARK_ENABLED atau set false. Hapus site uji.
+   Pertahankan mode hemat pada VPS sampai data pemantauan menunjukkan kebutuhan.
+
+Batasan: tidak ada benchmark WordPress/MySQL nyata dalam lingkungan pembuat.
+Pengujian PHP simulasi dan HTTP fixture Python, bukan website WordPress.
+Tidak mengukur QPS database nasional, import throughput otomatis, CPU OS,
+Redis, latensi CDN, atau beban pengunjung nyata. Tidak ada dashboard benchmark
+publik/admin baru. Tidak ada pengujian produksi atau akses VPS pengguna.

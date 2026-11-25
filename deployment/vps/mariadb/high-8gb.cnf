@@ -1,0 +1,8 @@
+[mysqld]
+bind-address = 127.0.0.1
+innodb_buffer_pool_size = 1024M
+max_connections = 60
+tmp_table_size = 8M
+max_heap_table_size = 8M
+thread_cache_size = 4
+performance_schema = OFF

@@ -1,0 +1,6 @@
+kode,kode_induk,jenis,nama
+99,,provinsi,Provinsi Fiktif
+99.01,99,kabupaten,Kabupaten Contoh
+99.02,99,kota,Kota Contoh
+99.01.02,99.01,kecamatan,Contoh Kecamatan
+99.01.02.0001,99.01.02,desa,Contoh Desa
