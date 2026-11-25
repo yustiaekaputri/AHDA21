@@ -5,6 +5,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+defaults:
+  run:
+    shell: bash
 jobs:
   integration:
     runs-on: ubuntu-24.04
@@ -28,10 +31,6 @@ jobs:
           --health-interval=10s --health-timeout=5s --health-retries=12
     env:
       SDP_DB_PASSWORD: disposable-ci-only
-      SDP_DB_PORT: ${{ job.services.mariadb.ports[3306] }}
-      SDP_WP_ROOT: ${{ runner.temp }}/sdp-wordpress
-      SDP_WP_CLI: ${{ runner.temp }}/wp-cli.phar
-      SDP_PREVIEW_MANIFEST: ${{ runner.temp }}/sdp-preview.json
       SDP_PREVIEW_URL: http://127.0.0.1:8080
     steps:
       - uses: actions/checkout@v4
@@ -40,6 +39,16 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: mysqli, pdo_mysql, curl, mbstring, xml, zip, gd, intl
           coverage: none
+      - name: Initialize disposable paths
+        env:
+          DB_PORT: ${{ job.services.mariadb.ports[3306] }}
+        run: |
+          {
+            echo "SDP_DB_PORT=$DB_PORT"
+            echo "SDP_WP_ROOT=$RUNNER_TEMP/sdp-wordpress"
+            echo "SDP_WP_CLI=$RUNNER_TEMP/wp-cli.phar"
+            echo "SDP_PREVIEW_MANIFEST=$RUNNER_TEMP/sdp-preview.json"
+          } >> "$GITHUB_ENV"
       - name: Install WP-CLI
         run: curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$SDP_WP_CLI"
       - name: Actual WordPress and MariaDB smoke test
