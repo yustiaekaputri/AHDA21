@@ -1,0 +1,72 @@
+name: WordPress Integration and Preview
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3']
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: sdp_test
+          MARIADB_USER: sdp_test
+          MARIADB_PASSWORD: disposable-ci-only
+          MARIADB_RANDOM_ROOT_PASSWORD: '1'
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=12
+    env:
+      SDP_DB_PASSWORD: disposable-ci-only
+      SDP_DB_PORT: ${{ job.services.mariadb.ports[3306] }}
+      SDP_WP_ROOT: ${{ runner.temp }}/sdp-wordpress
+      SDP_WP_CLI: ${{ runner.temp }}/wp-cli.phar
+      SDP_PREVIEW_MANIFEST: ${{ runner.temp }}/sdp-preview.json
+      SDP_PREVIEW_URL: http://127.0.0.1:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, pdo_mysql, curl, mbstring, xml, zip, gd, intl
+          coverage: none
+      - name: Install WP-CLI
+        run: curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$SDP_WP_CLI"
+      - name: Actual WordPress and MariaDB smoke test
+        run: |
+          mkdir -p artifacts
+          bash scripts/setup-preview.sh 2>&1 | tee artifacts/integration.log
+      - name: Install Chromium
+        run: |
+          python3 -m venv "$RUNNER_TEMP/sdp-venv"
+          "$RUNNER_TEMP/sdp-venv/bin/pip" install playwright==1.51.0
+          "$RUNNER_TEMP/sdp-venv/bin/playwright" install --with-deps chromium
+      - name: Actual browser preview
+        run: |
+          bash scripts/start-preview.sh > artifacts/preview-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS "$SDP_PREVIEW_URL/" >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS "$SDP_PREVIEW_URL/" >/dev/null
+          "$RUNNER_TEMP/sdp-venv/bin/python" tests/browser/test_preview.py 2>&1 | tee artifacts/browser.log
+      - name: Save screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wordpress-preview-php-${{ matrix.php }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 7
