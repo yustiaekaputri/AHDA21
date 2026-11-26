@@ -4,6 +4,57 @@ use PHPUnit\Framework\TestCase;
 
 final class WordPressTest extends TestCase
 {
+    public function testClaudeNarrativeUsesOnlySelectedFacts(): void
+    {
+        $previousKey = getenv('ANTHROPIC_API_KEY');
+        $requests = 0;
+        $intercept = static function ($response, $args, $url) use (&$requests) {
+            ++$requests;
+            self::assertSame('https://api.anthropic.com/v1/messages', $url);
+            self::assertSame('ci-placeholder', $args['headers']['x-api-key']);
+            self::assertSame('2023-06-01', $args['headers']['anthropic-version']);
+            self::assertSame(0, $args['redirection']);
+            $body = json_decode($args['body'], true, 512, JSON_THROW_ON_ERROR);
+            self::assertSame('claude-model-example', $body['model']);
+            self::assertSame(512, $body['max_tokens']);
+            self::assertNotEmpty($body['system']);
+            self::assertSame('user', $body['messages'][0]['role']);
+            self::assertSame(
+                ['nama' => 'Sekolah FIKTIF', 'npsn' => 'TEST0001'],
+                json_decode($body['messages'][0]['content'], true, 512, JSON_THROW_ON_ERROR)
+            );
+            return [
+                'response' => ['code' => 200],
+                'body' => wp_json_encode([
+                    'stop_reason' => 'end_turn',
+                    'content' => [
+                        ['type' => 'thinking', 'thinking' => 'Abaikan blok ini.'],
+                        ['type' => 'text', 'text' => '<b>Usulan narasi.</b>'],
+                    ],
+                ]),
+            ];
+        };
+        add_filter('pre_http_request', $intercept, 10, 3);
+        try {
+            putenv('ANTHROPIC_API_KEY=');
+            $missing = SDP_AI::generate('claude', 'claude-model-example', []);
+            self::assertInstanceOf(WP_Error::class, $missing);
+            self::assertSame('key', $missing->get_error_code());
+            self::assertSame(0, $requests);
+            putenv('ANTHROPIC_API_KEY=ci-placeholder');
+            self::assertSame('Usulan narasi.', SDP_AI::generate('claude', 'claude-model-example', [
+                'npsn' => 'TEST0001', 'nama' => 'Sekolah FIKTIF', 'telepon' => '123', 'email' => 'uji@example.invalid',
+            ]));
+            self::assertSame(1, $requests);
+            self::assertInstanceOf(WP_Error::class, SDP_AI::extract('claude', [
+                'stop_reason' => 'max_tokens', 'content' => [['type' => 'text', 'text' => 'Terpotong']],
+            ]));
+        } finally {
+            remove_filter('pre_http_request', $intercept, 10);
+            putenv($previousKey === false ? 'ANTHROPIC_API_KEY' : 'ANTHROPIC_API_KEY=' . $previousKey);
+        }
+    }
+
     public static function setUpBeforeClass(): void
     {
         if (wp_get_environment_type() !== 'local' || DB_NAME !== 'sdp_development') {

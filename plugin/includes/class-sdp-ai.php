@@ -11,7 +11,7 @@ final class SDP_AI {
 			}
 		}return $out;}
 	public static function request( $provider, $model, $d ) {
-		if ( ! in_array( $provider, array( 'openai', 'gemini', 'ollama' ), true ) || ! preg_match( '~^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,127}$~D', $model ) ) {
+		if ( ! in_array( $provider, array( 'openai', 'gemini', 'ollama', 'claude' ), true ) || ! preg_match( '~^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,127}$~D', $model ) ) {
 			return new WP_Error( 'model', 'Penyedia atau ID model tidak valid.' );
 		}if ( 'gemini' === $provider && ! preg_match( '/^[A-Za-z0-9_.-]+$/D', $model ) ) {
 			return new WP_Error( 'model', 'Gunakan ID model Gemini tanpa awalan models/.' );
@@ -53,6 +53,20 @@ final class SDP_AI {
 				),
 				'generationConfig'   => array( 'maxOutputTokens' => 900 ),
 			);
+		} elseif ( 'claude' === $provider ) {
+			$key = defined( 'SDP_CLAUDE_API_KEY' ) ? SDP_CLAUDE_API_KEY : getenv( 'ANTHROPIC_API_KEY' );
+			if ( ! is_string( $key ) || ! preg_match( '/^[!-~]+$/D', $key ) ) {
+				return new WP_Error( 'key', 'Konfigurasikan SDP_CLAUDE_API_KEY atau ANTHROPIC_API_KEY di server.' );
+			}
+			$headers['x-api-key']         = $key;
+			$headers['anthropic-version'] = '2023-06-01';
+			$url                          = 'https://api.anthropic.com/v1/messages';
+			$body                         = array(
+				'model'      => $model,
+				'system'     => $system,
+				'messages'   => array( $messages[1] ),
+				'max_tokens' => 512,
+			);
 		} else {
 			$url  = 'http://127.0.0.1:11434/api/chat';
 			$body = array(
@@ -83,6 +97,15 @@ final class SDP_AI {
 			}
 		} elseif ( 'openai' === $provider ) {
 			$text = $r['choices'][0]['message']['content'] ?? '';
+		} elseif ( 'claude' === $provider ) {
+			$blocks = $r['content'] ?? null;
+			if ( 'end_turn' === ( $r['stop_reason'] ?? '' ) && is_array( $blocks ) ) {
+				foreach ( $blocks as $block ) {
+					if ( 'text' === ( $block['type'] ?? '' ) && is_string( $block['text'] ?? null ) ) {
+						$text .= $block['text'] . "\n";
+					}
+				}
+			}
 		} else {
 			$text = $r['message']['content'] ?? '';
 		}

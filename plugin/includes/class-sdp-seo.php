@@ -421,9 +421,9 @@ final class SDP_SEO {
 		foreach ( self::SCOPE as $k ) {
 			echo '<p><label>' . esc_html( ucfirst( $k ) ) . ' <input name="' . esc_attr( $k ) . '" ' . ( 'provinsi' === $k ? 'required' : '' ) . '></label></p>';
 		}submit_button( 'Buat draf halaman wilayah', 'secondary' );
-		echo '</form><h2>Asisten narasi AI (opsional)</h2><p>Hanya mengirim fakta institusi yang dipilih ke penyedia. Hasil berupa pratinjau privat, tidak disimpan dalam artikel dan wajib diperiksa. API berbayar dapat menimbulkan biaya. Kunci disediakan melalui wp-config.php (SDP_OPENAI_API_KEY / SDP_GEMINI_API_KEY); Ollama memakai 127.0.0.1:11434.</p>';
+		echo '</form><h2>Asisten narasi AI (opsional)</h2><p>Hanya mengirim fakta institusi yang dipilih ke penyedia. Hasil berupa pratinjau privat, tidak disimpan dalam artikel dan wajib diperiksa. API berbayar dapat menimbulkan biaya. Kunci disediakan melalui wp-config.php (SDP_OPENAI_API_KEY / SDP_GEMINI_API_KEY / SDP_CLAUDE_API_KEY). Claude juga membaca ANTHROPIC_API_KEY dari environment server. Ollama memakai 127.0.0.1:11434.</p>';
 		self::start( 'ai' );
-		echo '<p><label>NPSN <input name="npsn" maxlength="8" required></label></p><p><label>Penyedia <select name="provider"><option value="ollama">Ollama lokal</option><option value="gemini">Gemini</option><option value="openai">OpenAI</option></select></label></p><p><label>ID model <input name="model" required placeholder="ID model yang tersedia"></label></p><p><label><input type="checkbox" name="consent" required> Saya berhak memproses data ini dan memahami pengiriman data serta potensi biaya.</label></p>';
+		echo '<p><label>NPSN <input name="npsn" maxlength="8" required></label></p><p><label>Penyedia <select name="provider"><option value="ollama">Ollama lokal</option><option value="gemini">Gemini</option><option value="openai">OpenAI</option><option value="claude">Claude (Anthropic)</option></select></label></p><p><label>ID model <input name="model" required placeholder="ID model yang tersedia"></label></p><p><label><input type="checkbox" name="consent" required> Saya berhak memproses data ini dan memahami pengiriman data serta potensi biaya.</label></p>';
 		submit_button( 'Buat usulan narasi', 'secondary' );
 		echo '</form>';
 		$a = get_transient( 'sdp_ai_preview_' . get_current_user_id() );
