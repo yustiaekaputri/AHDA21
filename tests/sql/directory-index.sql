@@ -42,6 +42,12 @@ WHERE p.post_type='sdp_school' AND p.post_status='publish' AND p.post_password='
 SELECT 'ringkasan', COUNT(*), SUM(status='Negeri'), SUM(status='Swasta')
 FROM sdp_test_index_visible;
 SELECT DISTINCT 'provinsi', provinsi FROM sdp_test_index_visible WHERE provinsi<>'' ORDER BY provinsi LIMIT 1000;
+SELECT 'provinsi kandidat',
+    (SELECT s.provinsi FROM sdp_test_index_schools s JOIN sdp_test_index_posts p ON p.ID=s.post_id
+     WHERE p.post_type='sdp_school' AND p.post_status='publish' AND p.post_password=''
+       AND s.provinsi=facet.candidate LIMIT 1) AS value
+FROM (SELECT DISTINCT provinsi AS candidate FROM sdp_test_index_schools WHERE provinsi<>'') facet
+HAVING value IS NOT NULL ORDER BY value LIMIT 1000;
 UPDATE sdp_test_index_posts SET post_status='private' WHERE ID=1;
 UPDATE sdp_test_index_posts SET post_password='fixture' WHERE ID=2;
 SELECT 'terlihat setelah perubahan', COUNT(*) FROM sdp_test_index_visible;

@@ -116,7 +116,16 @@ final class SDP_Portal {
 			$keys          = array_values( array_unique( array_merge( $parents, array_keys( $scope ) ) ) );
 			[$from, $args] = self::from( $base, $keys );
 			$sql           = self::select_sql( "SELECT DISTINCT s.$k" . $from . " AND s.$k<>'' ORDER BY s.$k LIMIT 1000", $args );
-			$out[ $k ]     = SDP_Performance::facet(
+			if ( ! $keys && in_array( $k, array( 'jenjang', 'status', 'provinsi' ), true ) ) {
+				// Find an actual visible value for each distinct candidate, including when spellings collate equally.
+				$table = SDP_Directory::table();
+				$sql   = self::select_sql(
+					"SELECT (SELECT s.$k" . $from . " AND s.$k=facet.candidate LIMIT 1) AS value FROM"
+					. " (SELECT DISTINCT $k AS candidate FROM $table WHERE $k<>'') facet HAVING value IS NOT NULL ORDER BY value LIMIT 1000",
+					$args
+				);
+			}
+			$out[ $k ] = SDP_Performance::facet(
 				$sql,
 				static function () use ( $wpdb, $sql ) {
 					$v = $wpdb->get_col( $sql );

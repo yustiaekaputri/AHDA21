@@ -121,17 +121,23 @@ final class WordPressTest extends TestCase
             self::assertSame($initial, SDP_Portal::results($state)['total']);
             self::assertSame(1, $summaryQueries);
 
-            $result = SDP_Directory::save(['npsn' => 'TESTZ998', 'nama' => 'Profil FIKTIF cache'], false, 'fill', null, null, null, true);
+            $result = SDP_Directory::save(
+                ['npsn' => 'TESTZ998', 'nama' => 'Profil FIKTIF cache', 'jenjang' => 'Jenjang Fiktif Cache'],
+                false, 'fill', null, null, null, true
+            );
             self::assertNotInstanceOf(WP_Error::class, $result);
             $postId = (int) $result['id'];
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_status' => 'publish']));
             self::assertSame($initial + 1, SDP_Portal::results($state)['total']);
+            self::assertContains('Jenjang Fiktif Cache', SDP_Portal::options($state)['jenjang']);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_password' => 'fixture']));
             self::assertSame($initial, SDP_Portal::results($state)['total']);
+            self::assertNotContains('Jenjang Fiktif Cache', SDP_Portal::options($state)['jenjang']);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_password' => '']));
             self::assertSame($initial + 1, SDP_Portal::results($state)['total']);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_status' => 'private']));
             self::assertSame($initial, SDP_Portal::results($state)['total']);
+            self::assertNotContains('Jenjang Fiktif Cache', SDP_Portal::options($state)['jenjang']);
 
             $filtered = SDP_Portal::state(['sdp_q' => 'TESTZ998']);
             $before = $summaryQueries;

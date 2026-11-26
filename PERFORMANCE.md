@@ -87,3 +87,9 @@ Pengujian loopback pada WordPress 6.9, PHP 8.2.32, dan MariaDB 10.11 memakai ser
 | Permintaan berikutnya, cache aktif | 10 | 856 ms | 888 ms | 6 MiB |
 
 Jejak SQL terpisah setelah invalidasi berikutnya mencatat kueri pilihan jenjang 1.328 ms, status 800 ms, ringkasan 656 ms, dan provinsi 639 ms pada permintaan pertama. Pada dua permintaan berikutnya, jejak tersebut tidak mencatat ulang kueri ringkasan maupun opsi. Perbedaan antarpengulangan perlu ditelusuri sebelum memakai angka ini untuk memperkirakan kapasitas VPS. Pengukuran tidak mencakup aset susulan, cache proxy, atau beban serentak.
+
+## Kueri pilihan filter tanpa cakupan wilayah
+
+Untuk provinsi, jenjang, dan status tanpa cakupan tambahan, kueri mengambil kandidat unik dari indeks sekolah lalu mencari satu nilai dari profil yang terbit dan tidak bersandi untuk setiap kandidat. Pengambilan nilai dari profil yang terlihat juga berlaku ketika dua ejaan dianggap sama oleh kolasi database. Pilihan dengan cakupan dan opsi akreditasi memakai kueri sebelumnya.
+
+Pada 10.000 profil FIKTIF ditambah tiga profil uji yang disembunyikan, urutan dan nilai ketiga daftar identik. Median empat eksekusi setelah pemanasan turun dari 1.540,3 ke 0,7 ms untuk jenjang, dari 883,4 ke 0,7 ms untuk status, dan dari 757,7 ke 7,6 ms untuk provinsi. Angka ini mengukur kueri SQL terpisah di MariaDB. Tambahan pemeriksaan MySQL 8 mencocokkan hasil bentuk kueri baru pada fixture SQL.
