@@ -20,6 +20,7 @@ Rilis stabil masih memerlukan triase WPCS, audit keamanan menyeluruh, impor medi
 | Pemeriksaan | Bukti dan pekerjaan tersisa |
 | --- | --- |
 | Paket LocalWP | Akun staging berhasil masuk ke WordPress hasil pemulihan ZIP. Menu katalog, CSV/TXT dan Excel terbuka. Impor paket dan login lewat aplikasi LocalWP pada komputer pengguna masih perlu dikonfirmasi. |
+| Registrasi dan email akun | Registrasi melalui portal membuat akun subscriber pada clone terisolasi. Email WordPress diterima melalui SMTP loopback dan tautan penetapan kata sandi dapat digunakan untuk login. Menu SEO & AI menolak akun tersebut dengan HTTP 403. Pengiriman melalui SMTP produksi masih perlu diperiksa. |
 | Pembuatan dan pembaruan profil | Katalog NPSN, CSV, XLSX dan TXT sudah diuji. Pilot Tasikmalaya mencakup 100 NPSN resmi. Impor ulang mempertahankan ID profil, dan seluruh profil uji tetap berstatus draf. Dasar izin publikasi dan periode data masih perlu diverifikasi. |
 | Migrasi dan cadangan | Penggantian domain serta pemulihan database dan `wp-content` lulus pada clone Codex Cloud berisi 100 draf. Login HTTPS lulus dengan sertifikat uji. VPS tujuan belum diuji. |
 | Integritas setelah pemulihan | `wp sdp readiness --audit` dijalankan sampai cursor habis. Empat batch memeriksa 100 profil, tanpa temuan relasi indeks ke artikel. Pemeriksaan skema dan runtime tidak melaporkan error. |
