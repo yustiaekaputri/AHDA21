@@ -75,3 +75,15 @@ Job `mysql-index` menguji pembuatan dan penghapusan indeks artikel pada InnoDB d
 Ringkasan tanpa filter memakai cache facet yang sudah dibatasi jumlah slot dan masa berlakunya. Penyimpanan profil, perubahan status atau kata sandi, dan penghapusan membatalkan cache yang sama. Kueri dengan filter menjalankan ringkasan langsung dan tidak menambah variasi kunci cache.
 
 Pada 10.000 profil FIKTIF, panggilan daftar pertama setelah invalidasi memerlukan 707,8 ms. Tiga proses WP-CLI berikutnya memperoleh hasil identik dalam 8,1–8,8 ms, termasuk pengambilan 20 profil. Pengukuran ini tidak mencakup render halaman, opsi filter, atau akses HTTP.
+
+### Pengukuran HTTP setelah cache ringkasan
+
+Pengujian loopback pada WordPress 6.9, PHP 8.2.32, dan MariaDB 10.11 memakai server pengembangan bawaan PHP dan satu klien. Kontrol mematikan cache ringkasan dan opsi sekaligus melalui `SDP_FACET_CACHE=false`. Semua 16 permintaan terukur mendapat HTTP 200. Ringkasan HTML menunjukkan 10.000 sekolah dalam kedua kondisi dan badan respons tanpa kompresi sebesar 46.549 byte.
+
+| Kondisi | Permintaan | HTTP p50 | HTTP p95 | Puncak alokasi PHP |
+| --- | ---: | ---: | ---: | ---: |
+| Cache ringkasan dan opsi nonaktif | 5 | 4.171 ms | 4.499 ms | 6 MiB |
+| Permintaan pertama setelah invalidasi | 1 | 4.016 ms | 4.016 ms | 8 MiB |
+| Permintaan berikutnya, cache aktif | 10 | 856 ms | 888 ms | 6 MiB |
+
+Jejak SQL terpisah setelah invalidasi berikutnya mencatat kueri pilihan jenjang 1.328 ms, status 800 ms, ringkasan 656 ms, dan provinsi 639 ms pada permintaan pertama. Pada dua permintaan berikutnya, jejak tersebut tidak mencatat ulang kueri ringkasan maupun opsi. Perbedaan antarpengulangan perlu ditelusuri sebelum memakai angka ini untuk memperkirakan kapasitas VPS. Pengukuran tidak mencakup aset susulan, cache proxy, atau beban serentak.
