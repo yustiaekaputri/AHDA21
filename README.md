@@ -28,6 +28,8 @@ Di **Direktori Sekolah → Cari NPSN dari katalog**, administrator dapat mengung
 
 Ketik NPSN, klik **Cari NPSN**, lalu tinjau data dan sumbernya. **Simpan draf dari katalog** membuat profil baru untuk diperiksa sebelum publikasi. Jika NPSN sudah memiliki profil, klik **Buka profil tersimpan**. Jika NPSN belum ada di katalog, gunakan **Isi profil secara manual**. Pencarian memakai CSV yang sudah diunggah dan berjalan tanpa koneksi ke sumber resmi.
 
+Untuk beberapa sekolah sekaligus, buka **Impor daftar NPSN dari katalog**. Pilih TXT UTF-8 dengan satu NPSN per baris. Baris pertama boleh berisi judul `npsn`. Batasnya 50 baris data dalam mode hemat atau 200 dalam mode standar, dan ukuran maksimal 8 KiB. Baris berulang, profil yang sudah tersimpan, serta NPSN di luar katalog dilaporkan dan dilewati. Jika ada baris dengan format salah, unggahan dibatalkan sebelum ada draf yang dibuat.
+
 ### Memeriksa sampel resmi sebelum unggah
 
 Gunakan [panduan persiapan pilot](docs/plugin/PANDUAN-V103.txt) untuk memvalidasi CSV berizin dengan `tools/prepare_pilot.py` dan mencatat sumber, edisi, serta dasar izin. Pada clone LocalWP yang tidak diindeks, jalankan `wp sdp pilot-preview` dengan SHA-256 dari manifest. WordPress akan menandai calon profil baru, konflik, dan kondisi lain tanpa mengubah profil.

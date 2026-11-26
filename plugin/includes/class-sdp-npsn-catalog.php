@@ -15,11 +15,14 @@ final class SDP_NPSN_Catalog {
 	const OPTION   = 'sdp_npsn_catalog';
 	const MAX_ROWS = 1000;
 
+	private const LIST_MAX_BYTES = 8192;
+
 	/** Register the menu and authenticated form handlers. */
 	public static function boot() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ), 23 );
 		add_action( 'admin_post_sdp_npsn_upload', array( __CLASS__, 'upload' ) );
 		add_action( 'admin_post_sdp_npsn_create', array( __CLASS__, 'create' ) );
+		add_action( 'admin_post_sdp_npsn_batch', array( __CLASS__, 'create_batch' ) );
 	}
 
 	/** Add the catalog under the directory menu. */
@@ -148,6 +151,98 @@ final class SDP_NPSN_Catalog {
 		exit;
 	}
 
+	/**
+	 * Read a line-separated list in full before allowing any writes.
+	 *
+	 * @param string $contents Uploaded TXT contents.
+	 * @param int    $limit Maximum number of data lines.
+	 * @return string[]|WP_Error Validated identifiers or an error.
+	 */
+	private static function parse_list( $contents, $limit ) {
+		$contents = preg_replace( '/^\xEF\xBB\xBF/', '', $contents );
+		$lines    = preg_split( '/\r\n|\r|\n/', $contents );
+		$ids      = array();
+		foreach ( $lines as $index => $line ) {
+			$line = trim( $line, " \t" );
+			if ( '' === $line || ( 0 === $index && 'npsn' === strtolower( $line ) ) ) {
+				continue;
+			}
+			if ( count( $ids ) >= $limit ) {
+				return new WP_Error( 'limit', "Daftar NPSN melebihi $limit baris data." );
+			}
+			$npsn = SDP_National::npsn( $line );
+			if ( '' === $npsn ) {
+				return new WP_Error( 'npsn', 'NPSN tidak valid pada baris ' . ( $index + 1 ) . '. Gunakan 8 huruf atau angka.' );
+			}
+			$ids[] = $npsn;
+		}
+		return $ids ? $ids : new WP_Error( 'empty', 'Daftar tidak memuat NPSN.' );
+	}
+
+	/** Create drafts for valid NPSNs using the catalog currently loaded. */
+	public static function create_batch() {
+		self::require_admin();
+		check_admin_referer( 'sdp_npsn_batch' );
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- Upload metadata is type-checked and the path must be an HTTP upload.
+		$file = $_FILES['npsn_list'] ?? array();
+		$path = $file['tmp_name'] ?? null;
+		$name = $file['name'] ?? null;
+		$size = $file['size'] ?? null;
+		if ( ! is_string( $path ) || ! is_string( $name ) || ! is_int( $size )
+			|| UPLOAD_ERR_OK !== ( $file['error'] ?? UPLOAD_ERR_NO_FILE )
+			|| 'txt' !== strtolower( pathinfo( $name, PATHINFO_EXTENSION ) )
+			|| $size < 1 || $size > self::LIST_MAX_BYTES || ! is_uploaded_file( $path ) ) {
+			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( 'Pilih TXT yang valid dengan ukuran maksimal 8 KiB.' ) );
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Read the verified PHP upload with an explicit byte limit.
+		$contents = file_get_contents( $path, false, null, 0, self::LIST_MAX_BYTES + 1 );
+		if ( false === $contents || strlen( $contents ) > self::LIST_MAX_BYTES ) {
+			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( 'Berkas tidak dapat dibaca atau melebihi 8 KiB.' ) );
+		}
+		$ids = self::parse_list( $contents, SDP_Resource::cap( SDP_Directory::MAX_ROWS, 50 ) );
+		if ( is_wp_error( $ids ) ) {
+			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( $ids->get_error_message() ) );
+		}
+		$catalog = get_option( self::OPTION, array() );
+		if ( ! $catalog ) {
+			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( 'Unggah katalog sekolah terlebih dahulu.' ) );
+		}
+		$unique = array_unique( $ids );
+		$run    = static function () use ( $catalog, $unique ) {
+			$created = 0;
+			$exists  = 0;
+			$missing = 0;
+			$failed  = 0;
+			$details = array();
+			foreach ( $unique as $npsn ) {
+				$record = $catalog[ $npsn ] ?? null;
+				if ( ! is_array( $record ) ) {
+					++$missing;
+					$details[] = "$npsn tidak ditemukan di katalog.";
+					continue;
+				}
+				$result = SDP_Directory::save( $record, false, 'fill', null, null, null, true );
+				if ( ! is_wp_error( $result ) ) {
+					++$created;
+				} elseif ( 'exists' === $result->get_error_code() ) {
+					++$exists;
+				} else {
+					++$failed;
+					$details[] = "$npsn: " . $result->get_error_message();
+				}
+			}
+			return array( $created, $exists, $missing, $failed, $details );
+		};
+		$result = SDP_Resource::enabled() ? SDP_Collector::lock( $run ) : $run();
+		if ( is_wp_error( $result ) ) {
+			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( $result->get_error_message() ) );
+		}
+		list( $created, $exists, $missing, $failed, $details ) = $result;
+		$duplicates = count( $ids ) - count( $unique );
+		SDP_Directory::redirect( self::PAGE, "Selesai: $created draf baru, $exists profil sudah ada, $duplicates baris berulang, $missing NPSN di luar katalog, $failed gagal. Maksimal 30 detail ditampilkan.", $details );
+	}
+
 	/** Render the dataset form, lookup, and optional preview. */
 	public static function page() {
 		self::require_admin();
@@ -158,6 +253,7 @@ final class SDP_NPSN_Catalog {
 		$record  = $catalog[ $npsn ] ?? null;
 		$action  = admin_url( 'admin-post.php' );
 		echo '<div class="wrap"><h1>Cari NPSN dari katalog</h1>';
+		SDP_Directory::notice();
 		echo '<h2>Katalog lokal</h2><p>Unggah CSV berizin dengan kolom wajib <code>npsn,nama</code>, maksimal ' . (int) self::MAX_ROWS . ' rekaman dan 512 KiB. Unggahan valid mengganti katalog saat ini. Profil WordPress tetap tersimpan.</p>';
 		echo '<p>Rekaman katalog: ' . count( $catalog ) . '</p>';
 		echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( $action ) . '"><input type="hidden" name="action" value="sdp_npsn_upload">';
@@ -209,6 +305,18 @@ final class SDP_NPSN_Catalog {
 			} else {
 				echo '<p>NPSN tidak ditemukan di katalog lokal.</p>';
 			}
+		}
+		echo '<h2 id="sdp-npsn-batch">Impor daftar NPSN dari katalog</h2>';
+		if ( $catalog ) {
+			$limit = SDP_Resource::cap( SDP_Directory::MAX_ROWS, 50 );
+			echo '<p>Pilih TXT UTF-8 berisi satu NPSN per baris, hingga ' . (int) $limit . ' baris data dan 8 KiB. Judul kolom <code>npsn</code> boleh disertakan. Data sekolah diambil dari katalog di atas. Profil baru menjadi draf dan profil lama dilewati.</p>';
+			echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( $action ) . '"><input type="hidden" name="action" value="sdp_npsn_batch">';
+			wp_nonce_field( 'sdp_npsn_batch' );
+			echo '<p><label>Daftar NPSN (TXT) <input type="file" name="npsn_list" accept=".txt,text/plain" required></label></p>';
+			submit_button( 'Buat draf dari daftar NPSN' );
+			echo '</form>';
+		} else {
+			echo '<p>Unggah katalog sekolah sebelum menggunakan daftar NPSN.</p>';
 		}
 		echo '</div>';
 	}

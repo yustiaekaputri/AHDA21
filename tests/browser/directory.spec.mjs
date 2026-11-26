@@ -295,3 +295,43 @@ test('katalog menerima 689 sekolah dengan tautan sumber dan tanggal yang belum d
     await expect(page.getByText('https://example.org/FIK00688', { exact: true })).toBeVisible();
     await expect(page.locator('dt').filter({ hasText: /^Tanggal data$/ })).toHaveCount(0);
 });
+
+test('daftar TXT dari katalog membuat draf baru dan melewati NPSN berulang', async ({ page }) => {
+    await login(page, 'sdp-admin', process.env.SDP_ADMIN_PASSWORD);
+    const catalogPage = '/wp-admin/admin.php?page=sdp-npsn-catalog';
+    const first = `01${randomBytes(3).toString('hex').toUpperCase()}`;
+    const missing = `02${randomBytes(3).toString('hex').toUpperCase()}`;
+    await page.goto(catalogPage);
+    await page.getByLabel('CSV katalog').setInputFiles({
+        name: 'katalog-fiktif.csv', mimeType: 'text/csv',
+        buffer: Buffer.from(`npsn,nama\n${first},Sekolah FIKTIF Daftar TXT\n`),
+    });
+    await page.getByLabel('Nama sumber').fill('Sumber FIKTIF');
+    await page.getByLabel('Saya berhak menggunakan dataset ini.').check();
+    await page.getByRole('button', { name: 'Simpan katalog' }).click();
+    await expect(page.getByText('Rekaman katalog: 1')).toBeVisible();
+
+    await page.goto('/wp-admin/admin.php?page=sdp-import');
+    await page.getByRole('link', { name: 'Impor daftar NPSN dari katalog' }).click();
+    const upload = async (text) => {
+        await page.getByLabel('Daftar NPSN (TXT)').setInputFiles({
+            name: 'daftar.txt', mimeType: 'text/plain', buffer: Buffer.from(text),
+        });
+        await page.getByRole('button', { name: 'Buat draf dari daftar NPSN' }).click();
+    };
+    await upload(`${first}\nkeliru\n`);
+    await expect(page.getByText(/NPSN tidak valid pada baris 2/)).toBeVisible();
+    await upload(`${first}\n`.repeat(51));
+    await expect(page.getByText(/Daftar NPSN melebihi 50 baris data/)).toBeVisible();
+    const list = `\ufeffnpsn\r\n${first.toLowerCase()}\r\n\r\n${first}\r\n${missing}\r\n`;
+    await upload(list);
+    await expect(page.getByText(/1 draf baru, 0 profil sudah ada, 1 baris berulang, 1 NPSN di luar katalog, 0 gagal/)).toBeVisible();
+    await expect(page.getByText(`${missing} tidak ditemukan di katalog.`)).toBeVisible();
+    await upload(list);
+    await expect(page.getByText(/0 draf baru, 1 profil sudah ada, 1 baris berulang/)).toBeVisible();
+
+    await page.goto(`/wp-admin/admin.php?page=sdp-edit&npsn=${first}`);
+    await expect(page.locator('#sdp-npsn')).toHaveValue(first);
+    await expect(page.locator('#sdp-nama')).toHaveValue('Sekolah FIKTIF Daftar TXT');
+    expect((await page.request.get(`/wp-json/sdp/v1/schools/${first}`)).status()).toBe(404);
+});

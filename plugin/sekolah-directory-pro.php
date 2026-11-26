@@ -494,7 +494,14 @@ final class SDP_Directory {
 		} check_admin_referer( $nonce ); }
 	private static function admin_url( $page = 'sdp-directory' ) {
 		return admin_url( 'admin.php?page=' . $page ); }
-	private static function redirect( $page, $message, $errors = array() ) {
+	/**
+	 * Show an import result after redirecting to an admin screen.
+	 *
+	 * @param string   $page Target admin page slug.
+	 * @param string   $message Result summary.
+	 * @param string[] $errors Details for the administrator.
+	 */
+	public static function redirect( $page, $message, $errors = array() ) {
 		set_transient(
 			'sdp_notice_' . get_current_user_id(),
 			array(
@@ -506,7 +513,8 @@ final class SDP_Directory {
 		wp_safe_redirect( self::admin_url( $page ) );
 		exit;
 	}
-	private static function notice() {
+	/** Render the current administrator's import result once. */
+	public static function notice() {
 		$key    = 'sdp_notice_' . get_current_user_id();
 		$notice = get_transient( $key );
 		if ( ! $notice ) {
@@ -579,6 +587,7 @@ final class SDP_Directory {
 		}
 		echo '<div class="wrap"><h1>Impor CSV / TXT sekolah</h1>';
 		self::notice();
+		echo '<p>Jika berkas TXT hanya berisi NPSN, gunakan <a href="' . esc_url( self::admin_url( SDP_NPSN_Catalog::PAGE ) . '#sdp-npsn-batch' ) . '">Impor daftar NPSN dari katalog</a>.</p>';
 		echo '<p>CSV atau TXT UTF-8 dengan header. Gunakan koma atau titik koma. TXT juga mendukung tab. Maksimal ' . (int) SDP_Resource::cap( self::MAX_ROWS, 50 ) . ' baris data per impor dan maksimal ' . (int) SDP_Resource::cap( 5, 2 ) . ' MiB. Kolom wajib: <code>npsn,nama</code>. NPSN yang sama memperbarui profil lama; nilai kosong tidak menghapus data lama.</p><p><a href="' . esc_url( plugins_url( 'contoh/template-sekolah.csv', __FILE__ ) ) . '">Unduh template kosong</a> | <a href="' . esc_url( plugins_url( 'contoh/demo-fiktif.csv', __FILE__ ) ) . '">Unduh contoh fiktif</a></p><form method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp_import">';
 		wp_nonce_field( 'sdp_import' );
 		echo '<p><input type="file" name="csv" accept=".csv,.txt,text/csv,text/plain" required></p><p><label><input type="checkbox" name="publish" value="1"> Terbitkan profil baru langsung (hanya jika data benar dan boleh dipublikasikan)</label></p><p>Tanpa centang, profil baru menjadi draf. Profil yang sudah terbit tetap terbit saat diperbarui.</p>';
