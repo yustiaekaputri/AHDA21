@@ -53,3 +53,15 @@ Pada 10.000 profil FIKTIF yang sama, indeks tabel sekolah `(status, post_id)` da
 Indeks sementara `(post_type, post_status, post_password, ID)` pada tabel artikel WordPress menghasilkan median 21 ms untuk ringkasan tanpa petunjuk kueri. MariaDB tetap memilih rencana lambat untuk opsi provinsi, sekitar 843 ms. Ketika kueri opsi provinsi diarahkan memakai indeks artikel dan urutan join yang sesuai, mediannya 25 ms. Hash ringkasan dan daftar provinsi tetap identik di semua varian. Setiap median memakai empat eksekusi setelah pemanasan.
 
 Ketiga indeks eksperimen dihapus dari database uji. Sebelum mempertimbangkan konfigurasi opsional, ukur dampak indeks artikel terhadap penulisan, ukuran database, rencana kueri pada data campuran, dan kompatibilitas MySQL 8. Periksa hasil ketika profil privat, terlindungi sandi, dan dihapus pada skema yang sama.
+
+### Visibilitas dan biaya penulisan
+
+Pada benchmark MariaDB yang sama, 30 profil FIKTIF tambahan dibuat lewat plugin. Melalui API WordPress, 10 profil dijadikan privat, 10 dilindungi kata sandi, dan 10 dihapus. Dengan dan tanpa indeks artikel, total direktori kembali dari 10.030 ke 10.000, tiga pilihan provinsi uji hilang walaupun cache telah terisi, dan semua 30 permintaan REST anonim mengembalikan 404. Pada data campuran, hint indeks artikel menghasilkan total dan daftar provinsi yang identik dengan kueri standar.
+
+| Operasi | Sampel per kondisi | Median tanpa indeks | Median dengan indeks |
+| --- | ---: | ---: | ---: |
+| Buat profil melalui plugin | 30 | 50,05 ms | 49,20 ms |
+| Ubah status atau kata sandi via WordPress | 20 | 5,15 ms | 5,43 ms |
+| Hapus profil via WordPress | 10 | 12,46 ms | 13,09 ms |
+
+`INDEX_LENGTH` tabel artikel bertambah sekitar 1,5 MiB selama eksperimen. Setiap kondisi diukur sekali dengan sampel kecil, sehingga angka penulisan belum cukup untuk mengukur dampak impor massal atau variasi antar-run. Indeks dan fixture tambahan dihapus setelah pengujian. Kompatibilitas MySQL 8 dan pengukuran pada VPS tujuan masih terbuka.
