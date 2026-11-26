@@ -11,6 +11,7 @@ on:
       - 'scripts/probe-login.sh'
       - 'scripts/seed-preview.php'
       - 'scripts/test-import-integration.sh'
+      - 'scripts/test-summary-cache-small.sh'
       - '.github/workflows/mysql-integration.yml'
   workflow_dispatch:
 permissions:
@@ -66,6 +67,8 @@ jobs:
         run: bash scripts/setup-preview.sh 2>&1 | tee artifacts/integration.log
       - name: Actual MySQL CSV and XLSX integration
         run: bash scripts/test-import-integration.sh 2>&1 | tee artifacts/import-integration.log
+      - name: Opt-in summary cache and cross-process invalidation
+        run: bash scripts/test-summary-cache-small.sh 2>&1 | tee artifacts/summary-cache.log
       - name: Save compatibility logs
         if: always()
         uses: actions/upload-artifact@v4
