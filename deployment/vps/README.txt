@@ -77,6 +77,11 @@ high-8gb          8             192 MiB     192 MiB  1024 MiB     60
   dan DNS benar. Template tidak menangani ACME HTTP challenge otomatis.
 - Letakkan di sites-available dan aktifkan seperti kebijakan distro; jangan
   overwrite konfigurasi situs lain. nginx -t harus berhasil sebelum reload.
+- Untuk staging privat, sertakan nginx/sdp-staging-private.conf hanya di blok
+  server HTTPS staging. Buat berkas htpasswd secara lokal pada server, di luar
+  webroot, dan batasi akses bacanya ke administrator serta proses Nginx.
+  Setelah instalasi, periksa bahwa beranda, wp-admin, dan REST staging meminta
+  autentikasi HTTP. Login WordPress tetap dibutuhkan untuk dashboard.
 - Cache browser 7 hari pada aset publik di wp-content/wp-includes. Jangan simpan
   dokumen privat di uploads publik. Untuk aset sensitif, gunakan jalur akses
   terautentikasi di luar webroot. File backup tidak boleh berada di webroot

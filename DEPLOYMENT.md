@@ -22,3 +22,9 @@ Gunakan ZIP hasil build pada clone staging terlebih dahulu. Simpan dump database
    ```
 
 4. Rotasi kata sandi administrator hasil impor dan periksa pengaturan HTTPS, cache, serta Safe Mode. Uji jumlah rekaman katalog, tautan sumber, pencarian NPSN dan halaman profil. Pastikan draf tetap tersembunyi bagi pengunjung dan profil terbit memakai tautan domain tujuan. Simpan backup sebelum mengubah data di tujuan. Gunakan salinan database dan `wp-content` dari satu waktu pencadangan saat memulihkan.
+
+### Lindungi staging Nginx
+
+Untuk staging yang memakai Nginx, buat berkas `htpasswd` di luar webroot. Simpan dengan akses baca terbatas untuk proses Nginx. Tambahkan [konfigurasi staging privat](deployment/vps/nginx/sdp-staging-private.conf) ke blok `server` HTTPS staging dan sesuaikan lokasi berkas autentikasi. Gunakan `nginx -t` sebelum memuat ulang konfigurasi.
+
+Periksa bahwa beranda, `wp-admin`, dan REST staging meminta autentikasi HTTP. Setelah melewati autentikasi HTTP, `wp-admin` masih meminta login WordPress. Pertahankan cache HTML nonaktif pada staging privat. Sediakan sertifikat yang valid untuk domain staging.
