@@ -45,3 +45,11 @@ Pengukuran ulang di Codex Cloud menggunakan dataset FIKTIF yang sudah tersedia, 
 | Ambil 20 hasil dengan filter satu provinsi | 1,0 ms |
 
 Percobaan terpisah memaksa tabel artikel diproses lebih dulu dengan `STRAIGHT_JOIN`. Hash hasilnya identik untuk kedua kueri. Median empat eksekusi setelah pemanasan naik dari 750,8 ke 763,9 ms untuk ringkasan, dan dari 611,2 ke 952,2 ms untuk pilihan provinsi. Urutan join bawaan dipertahankan. Prioritas perbaikan adalah penghitungan total dan opsi filter ketika cache kosong. Pengukuran PHP pada proses ini mencapai puncak alokasi 51,3 MiB termasuk WP-CLI. Benchmark lebih besar ditunda karena ruang disk lingkungan uji terbatas.
+
+### Indeks MariaDB sementara
+
+Pada 10.000 profil FIKTIF yang sama, indeks tabel sekolah `(status, post_id)` dan `(provinsi, post_id)` dipilih oleh MariaDB, tetapi median naik dari 722 ke 777 ms untuk ringkasan dan dari 785 ke 927 ms untuk opsi provinsi. Kueri dengan pemaksaan indeks sekolah juga lebih lambat dari kondisi awal.
+
+Indeks sementara `(post_type, post_status, post_password, ID)` pada tabel artikel WordPress menghasilkan median 21 ms untuk ringkasan tanpa petunjuk kueri. MariaDB tetap memilih rencana lambat untuk opsi provinsi, sekitar 843 ms. Ketika kueri opsi provinsi diarahkan memakai indeks artikel dan urutan join yang sesuai, mediannya 25 ms. Hash ringkasan dan daftar provinsi tetap identik di semua varian. Setiap median memakai empat eksekusi setelah pemanasan.
+
+Ketiga indeks eksperimen dihapus dari database uji. Sebelum mempertimbangkan konfigurasi opsional, ukur dampak indeks artikel terhadap penulisan, ukuran database, rencana kueri pada data campuran, dan kompatibilitas MySQL 8. Periksa hasil ketika profil privat, terlindungi sandi, dan dihapus pada skema yang sama.
