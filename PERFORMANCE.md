@@ -64,4 +64,8 @@ Pada benchmark MariaDB yang sama, 30 profil FIKTIF tambahan dibuat lewat plugin.
 | Ubah status atau kata sandi via WordPress | 20 | 5,15 ms | 5,43 ms |
 | Hapus profil via WordPress | 10 | 12,46 ms | 13,09 ms |
 
-`INDEX_LENGTH` tabel artikel bertambah sekitar 1,5 MiB selama eksperimen. Setiap kondisi diukur sekali dengan sampel kecil, sehingga angka penulisan belum cukup untuk mengukur dampak impor massal atau variasi antar-run. Indeks dan fixture tambahan dihapus setelah pengujian. Kompatibilitas MySQL 8 dan pengukuran pada VPS tujuan masih terbuka.
+`INDEX_LENGTH` tabel artikel bertambah sekitar 1,5 MiB selama eksperimen. Setiap kondisi diukur sekali dengan sampel kecil, sehingga angka penulisan belum cukup untuk mengukur dampak impor massal atau variasi antar-run. Indeks dan fixture tambahan dihapus setelah pengujian.
+
+### Kompatibilitas MySQL 8
+
+Job `mysql-index` menguji pembuatan dan penghapusan indeks artikel pada InnoDB dengan `utf8mb4`. Fixture SQL mengecek ringkasan sebelum dan setelah memakai hint, urutan pilihan provinsi, serta pengecualian profil privat, draf, profil bersandi, artikel dengan tipe lain, dan artikel yang sudah dihapus. Fixture lulus pada MariaDB 10.11 dan pada MySQL 8.0 di GitHub Actions. Pemeriksaan ini belum mengukur latensi pada MySQL atau menguji seluruh plugin pada mesin tersebut. [Job MySQL 8](https://github.com/yustiaekaputri/AHDA21/actions/runs/45757538868/job/139699589858)
