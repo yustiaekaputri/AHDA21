@@ -28,3 +28,9 @@ Gunakan ZIP hasil build pada clone staging terlebih dahulu. Simpan dump database
 Untuk staging yang memakai Nginx, buat berkas `htpasswd` di luar webroot. Simpan dengan akses baca terbatas untuk proses Nginx. Tambahkan [konfigurasi staging privat](deployment/vps/nginx/sdp-staging-private.conf) ke blok `server` HTTPS staging dan sesuaikan lokasi berkas autentikasi. Gunakan `nginx -t` sebelum memuat ulang konfigurasi.
 
 Periksa bahwa beranda, `wp-admin`, dan REST staging meminta autentikasi HTTP. Setelah melewati autentikasi HTTP, `wp-admin` masih meminta login WordPress. Pertahankan cache HTML nonaktif pada staging privat. Sediakan sertifikat yang valid untuk domain staging.
+
+### Verifikasi email dan pemulihan akun
+
+Siapkan SMTP melalui relay server atau integrasi email WordPress yang didukung penyedia. Gunakan pengaturan TLS, domain pengirim terverifikasi, dan kredensial dari penyedia. Simpan kredensial di konfigurasi privat atau secret store di luar Git. Untuk staging gunakan kotak masuk uji yang Anda kendalikan.
+
+Dari jendela privat, buka **Lupa kata sandi** untuk akun uji. Periksa apakah pesan tiba dan tautan mengarah ke domain HTTPS yang sedang diuji. Gunakan autentikasi HTTP staging sebelum membuka tautan jika diminta. Tetapkan kata sandi baru, verifikasi login, lalu pastikan tautan lama tidak dapat digunakan lagi. Untuk registrasi terbuka, uji juga email penetapan kata sandi akun baru. Simpan hasil uji tanpa isi email atau tautan reset.
