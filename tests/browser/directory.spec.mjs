@@ -180,3 +180,27 @@ test('unggah XLSX, unduh CSV, dan impor draf lewat admin', async ({ page }) => {
     const response = await page.request.get(`/wp-json/sdp/v1/schools/${npsn}`);
     expect(response.status()).toBe(404);
 });
+
+test('impor XLSX langsung dan perbarui profil dengan TXT bertab', async ({ page }) => {
+    await login(page, 'sdp-admin', process.env.SDP_ADMIN_PASSWORD);
+    await page.goto('/wp-admin/admin.php?page=sdp-excel');
+    await page.locator('input[name="workbook"]').setInputFiles('tests/integration/import-fixture.xlsx');
+    await page.locator('input[name="authorized"]').check();
+    await page.getByRole('button', { name: 'Impor sebagai draf' }).click();
+    await expect(page.locator('#wpbody-content')).toContainText('1 profil baru, 0 diperbarui');
+
+    const uploadText = async (text) => {
+        await page.goto('/wp-admin/admin.php?page=sdp-import');
+        await page.locator('input[name="csv"]').setInputFiles({
+            name: 'sekolah.txt', mimeType: 'text/plain', buffer: Buffer.from(text),
+        });
+        await page.getByRole('button', { name: 'Impor dan buat artikel' }).click();
+    };
+    await uploadText('\ufeffnpsn\tnama\r\n09876543\tSekolah FIKTIF dari TXT\r\n');
+    await expect(page.locator('#wpbody-content')).toContainText('0 profil baru, 1 diperbarui');
+    await uploadText('09876543\n');
+    await expect(page.locator('#wpbody-content')).toContainText('Header harus unik dan memuat npsn,nama.');
+    await page.goto('/wp-admin/admin.php?page=sdp-edit&npsn=09876543');
+    await expect(page.locator('#sdp-nama')).toHaveValue('Sekolah FIKTIF dari TXT');
+    expect((await page.request.get('/wp-json/sdp/v1/schools/09876543')).status()).toBe(404);
+});

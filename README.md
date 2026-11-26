@@ -16,6 +16,12 @@ Kelima ZIP asli tersedia di akar repositori. Untuk instalasi di WordPress, ungga
 
 Workflow GitHub Actions mencakup lint PHP, simulasi mode hemat dan standar, serta tes Python. Pengujian penerimaan di WordPress dan basis data nyata dijalankan melalui LocalWP.
 
+## Impor profil sekolah
+
+Di menu **Direktori Sekolah → Impor CSV / TXT**, unggah berkas UTF-8 dengan kolom `npsn` dan `nama`. Gunakan pemisah koma atau titik koma. Berkas TXT dapat menggunakan tab. Daftar NPSN tanpa nama belum dapat digunakan untuk membuat profil.
+
+Di **Direktori Sekolah → Impor Excel**, pilih berkas `.xlsx` dan nomor sheet. **Impor sebagai draf** menyimpan profil langsung melalui aturan impor yang sama. **Konversi dan unduh CSV** tetap tersedia untuk memeriksa isi sebelum mengimpor. Simpan NPSN sebagai teks di Excel agar nol di awal tetap utuh.
+
 ## Menjalankan pratinjau
 
 Dengan Docker Compose, OpenSSL, dan Node.js LTS, jalankan `npm ci` lalu `make start`. WordPress pengembangan tersedia di port lokal 3000. Nama login admin lokal adalah `sdp-admin` dan kata sandinya dibuat otomatis di `.env`. Variabel `SDP_HTTP_PORT` dan `SDP_SITE_URL` mengatur alamat lokal. Data demo dibuat melalui API plugin di database pengembangan. Pada komputer yang menjalankan Docker, buka dashboard di `http://127.0.0.1:3000/wp-admin/admin.php?page=sdp-directory`. Jika Docker berjalan di Codex Cloud, gunakan browser Desktop di lingkungan Cloud yang sama atau tautan HTTP Preview dari Codex. Browser di komputer Anda memerlukan penerusan port agar dapat mencapai WordPress Cloud.

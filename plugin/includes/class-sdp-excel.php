@@ -265,7 +265,8 @@ final class SDP_Excel {
 		wp_nonce_field( 'sdp82_excel' );
 		echo '<p><label>File XLSX <input type="file" name="workbook" accept=".xlsx" required></label></p><p><label>Nomor sheet <input type="number" min="1" max="100" name="sheet" value="1" required></label></p><p><label><input type="checkbox" name="authorized" value="1" required> Saya berhak menggunakan dataset ini.</label></p>';
 		submit_button( 'Konversi dan unduh CSV' );
-		echo '</form><p>Periksa CSV, lalu unggah ke Pengumpul Data untuk pratinjau, filter wilayah, dan antrean. Tidak ada perubahan profil pada langkah konversi.</p></div>';}
+		submit_button( 'Impor sebagai draf', 'secondary', 'import_profiles' );
+		echo '</form><p>Impor sebagai draf memakai batas jumlah baris dari menu Impor CSV / TXT. Profil yang sudah terbit tetap terbit saat diperbarui. Untuk memeriksa data terlebih dahulu, unduh CSV.</p></div>';}
 	public static function action() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( 'Akses ditolak.' );
@@ -300,7 +301,18 @@ final class SDP_Excel {
 						wp_die( 'Teks berawalan karakter formula terdeteksi. Bersihkan sel tersebut sebelum konversi.' );
 				}
 			}
-		}fclose( $fp );
+		}
+
+		$rows = null;
+		if ( isset( $_POST['import_profiles'] ) ) {
+			rewind( $fp );
+			$rows = SDP_Directory::parse_import_stream( $fp );
+		}
+		fclose( $fp );
+
+		if ( null !== $rows ) {
+			SDP_Directory::save_import_result( $rows );
+		}
 		nocache_headers();
 		header( 'Content-Type: text/csv; charset=UTF-8' );
 		header( 'Content-Disposition: attachment; filename="sdp-excel.csv"' );

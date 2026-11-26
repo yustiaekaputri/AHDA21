@@ -481,7 +481,7 @@ final class SDP_Directory {
 	}
 	public static function menu() {
 		add_menu_page( 'Direktori Sekolah', 'Direktori Sekolah', 'manage_options', 'sdp-directory', array( __CLASS__, 'admin' ), 'dashicons-welcome-learn-more', 26 );
-		add_submenu_page( 'sdp-directory', 'Impor CSV', 'Impor CSV', 'manage_options', 'sdp-import', array( __CLASS__, 'admin_import' ) );
+		add_submenu_page( 'sdp-directory', 'Impor CSV / TXT', 'Impor CSV / TXT', 'manage_options', 'sdp-import', array( __CLASS__, 'admin_import' ) );
 		add_submenu_page( 'sdp-directory', 'Tambah / perbarui', 'Tambah / perbarui', 'manage_options', 'sdp-edit', array( __CLASS__, 'admin_edit' ) );
 		add_submenu_page( 'sdp-directory', 'Artikel profil', 'Artikel profil', 'manage_options', 'edit.php?post_type=' . self::TYPE );
 	}
@@ -574,67 +574,94 @@ final class SDP_Directory {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		echo '<div class="wrap"><h1>Impor CSV sekolah</h1>';
+		echo '<div class="wrap"><h1>Impor CSV / TXT sekolah</h1>';
 		self::notice();
-		echo '<p>CSV UTF-8, pemisah koma atau titik koma. Maksimal ' . (int) SDP_Resource::cap( self::MAX_ROWS, 50 ) . ' baris data per impor dan maksimal ' . (int) SDP_Resource::cap( 5, 2 ) . ' MiB. Kolom wajib: <code>npsn,nama</code>. NPSN yang sama memperbarui profil lama; nilai kosong tidak menghapus data lama.</p><p><a href="' . esc_url( plugins_url( 'contoh/template-sekolah.csv', __FILE__ ) ) . '">Unduh template kosong</a> | <a href="' . esc_url( plugins_url( 'contoh/demo-fiktif.csv', __FILE__ ) ) . '">Unduh contoh fiktif</a></p><form method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp_import">';
+		echo '<p>CSV atau TXT UTF-8 dengan header. Gunakan koma atau titik koma. TXT juga mendukung tab. Maksimal ' . (int) SDP_Resource::cap( self::MAX_ROWS, 50 ) . ' baris data per impor dan maksimal ' . (int) SDP_Resource::cap( 5, 2 ) . ' MiB. Kolom wajib: <code>npsn,nama</code>. NPSN yang sama memperbarui profil lama; nilai kosong tidak menghapus data lama.</p><p><a href="' . esc_url( plugins_url( 'contoh/template-sekolah.csv', __FILE__ ) ) . '">Unduh template kosong</a> | <a href="' . esc_url( plugins_url( 'contoh/demo-fiktif.csv', __FILE__ ) ) . '">Unduh contoh fiktif</a></p><form method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp_import">';
 		wp_nonce_field( 'sdp_import' );
-		echo '<p><input type="file" name="csv" accept=".csv,text/csv" required></p><p><label><input type="checkbox" name="publish" value="1"> Terbitkan profil baru langsung (hanya jika data benar dan boleh dipublikasikan)</label></p><p>Tanpa centang, profil baru menjadi draf. Profil yang sudah terbit tetap terbit saat diperbarui.</p>';
+		echo '<p><input type="file" name="csv" accept=".csv,.txt,text/csv,text/plain" required></p><p><label><input type="checkbox" name="publish" value="1"> Terbitkan profil baru langsung (hanya jika data benar dan boleh dipublikasikan)</label></p><p>Tanpa centang, profil baru menjadi draf. Profil yang sudah terbit tetap terbit saat diperbarui.</p>';
 		submit_button( 'Impor dan buat artikel' );
 		echo '</form><h2>Kolom yang didukung</h2><p><code style="overflow-wrap:anywhere">' . esc_html( implode( ', ', array_keys( self::labels() ) ) ) . '</code></p></div>';
 	}
-	public static function parse_csv( $path ) {
+	public static function parse_csv( $path, $allow_tabs = false ) {
 		$fp = fopen( $path, 'rb' );
 		if ( ! $fp ) {
 			return new WP_Error( 'file', 'CSV tidak dapat dibuka.' );
 		}
 		try {
-			$first = fgets( $fp );
-			if ( false === $first ) {
-				return new WP_Error( 'empty', 'CSV kosong.' );
-			} rewind( $fp );
-			$first     = preg_replace( '/^\xEF\xBB\xBF/', '', $first );
-			$delimiter = substr_count( $first, ';' ) > substr_count( $first, ',' ) ? ';' : ',';
-			$header    = fgetcsv( $fp, 0, $delimiter, '"', '' );
-			if ( ! is_array( $header ) ) {
-				return new WP_Error( 'header', 'Header CSV tidak valid.' );
-			}
-			$header = array_map( static fn( $v )=>strtolower( trim( preg_replace( '/^\xEF\xBB\xBF/', '', (string) $v ) ) ), $header );
-			if ( count( array_unique( $header ) ) !== count( $header ) || ! in_array( 'npsn', $header, true ) || ! in_array( 'nama', $header, true ) ) {
-				return new WP_Error( 'header', 'Header harus unik dan memuat npsn,nama.' );
-			}
-			$unknown = array_diff( $header, array_keys( self::labels() ) );
-			if ( $unknown ) {
-				return new WP_Error( 'header', 'Kolom tidak dikenal: ' . implode( ', ', $unknown ) );
-			}
-			$rows = array();
-			$line = 1;
-			while ( ( $values = fgetcsv( $fp, 0, $delimiter, '"', '' ) ) !== false ) {
-				++$line;
-				if ( count( $values ) === 1 && trim( (string) $values[0] ) === '' ) {
-					continue;
-				}
-				if ( count( $rows ) >= SDP_Resource::cap( self::MAX_ROWS, 50 ) ) {
-					return new WP_Error( 'limit', 'CSV melebihi ' . SDP_Resource::cap( self::MAX_ROWS, 50 ) . ' baris data. Pecah berkas; belum ada baris diimpor.' );
-				}
-				if ( count( $values ) !== count( $header ) ) {
-					return new WP_Error( 'columns', "Rekaman $line memiliki jumlah kolom berbeda. Belum ada baris diimpor." );
-				}
-				$rows[ $line ] = array_combine( $header, $values );
-			}
-			return $rows;
+			return self::parse_import_stream( $fp, $allow_tabs );
 		} finally {
-			fclose( $fp ); }
+			fclose( $fp );
+		}
 	}
+
+	/**
+	 * Read bounded profile rows from an open, seekable input stream.
+	 *
+	 * @param resource $fp Open input stream positioned at the beginning.
+	 * @param bool     $allow_tabs Whether the input accepts tab separators.
+	 * @return array|WP_Error Parsed rows keyed by record number or an error.
+	 */
+	public static function parse_import_stream( $fp, $allow_tabs = false ) {
+		$first = fgets( $fp );
+		if ( false === $first ) {
+			return new WP_Error( 'empty', 'Berkas impor kosong.' );
+		} rewind( $fp );
+		$first     = preg_replace( '/^\xEF\xBB\xBF/', '', $first );
+		$delimiter = substr_count( $first, ';' ) > substr_count( $first, ',' ) ? ';' : ',';
+		if ( $allow_tabs && substr_count( $first, "\t" ) > substr_count( $first, $delimiter ) ) {
+			$delimiter = "\t";
+		}
+		$header = fgetcsv( $fp, 0, $delimiter, '"', '' );
+		if ( ! is_array( $header ) ) {
+			return new WP_Error( 'header', 'Header berkas impor tidak valid.' );
+		}
+		$header = array_map( static fn( $v )=>strtolower( trim( preg_replace( '/^\xEF\xBB\xBF/', '', (string) $v ) ) ), $header );
+		if ( count( array_unique( $header ) ) !== count( $header ) || ! in_array( 'npsn', $header, true ) || ! in_array( 'nama', $header, true ) ) {
+			return new WP_Error( 'header', 'Header harus unik dan memuat npsn,nama.' );
+		}
+		$unknown = array_diff( $header, array_keys( self::labels() ) );
+		if ( $unknown ) {
+			return new WP_Error( 'header', 'Kolom tidak dikenal: ' . implode( ', ', $unknown ) );
+		}
+		$rows = array();
+		$line = 1;
+		while ( ( $values = fgetcsv( $fp, 0, $delimiter, '"', '' ) ) !== false ) {
+			++$line;
+			if ( count( $values ) === 1 && trim( (string) $values[0] ) === '' ) {
+				continue;
+			}
+			if ( count( $rows ) >= SDP_Resource::cap( self::MAX_ROWS, 50 ) ) {
+				return new WP_Error( 'limit', 'Berkas impor melebihi ' . SDP_Resource::cap( self::MAX_ROWS, 50 ) . ' baris data. Pecah berkas; belum ada baris diimpor.' );
+			}
+			if ( count( $values ) !== count( $header ) ) {
+				return new WP_Error( 'columns', "Rekaman $line memiliki jumlah kolom berbeda. Belum ada baris diimpor." );
+			}
+			$rows[ $line ] = array_combine( $header, $values );
+		}
+		return $rows;
+	}
+
 	public static function import_action() {
 		self::guard( 'sdp_import' );
-		$f    = $_FILES['csv'] ?? array();
-		$path = $f['tmp_name'] ?? null;
-		$name = $f['name'] ?? null;
-		$size = $f['size'] ?? null;
-		if ( ! is_string( $path ) || ! is_string( $name ) || ! is_int( $size ) || ( $f['error'] ?? 1 ) !== UPLOAD_ERR_OK || ! is_uploaded_file( $path ) || $size > SDP_Resource::cap( 5242880, 2097152 ) || strtolower( pathinfo( $name, PATHINFO_EXTENSION ) ) !== 'csv' ) {
-			self::redirect( 'sdp-import', 'Impor gagal.', array( 'Pilih file CSV valid sesuai batas mode aktif.' ) );
+		$f         = $_FILES['csv'] ?? array();
+		$path      = $f['tmp_name'] ?? null;
+		$name      = $f['name'] ?? null;
+		$size      = $f['size'] ?? null;
+		$extension = is_string( $name ) ? strtolower( pathinfo( $name, PATHINFO_EXTENSION ) ) : '';
+		if ( ! is_string( $path ) || ! is_string( $name ) || ! is_int( $size ) || ( $f['error'] ?? 1 ) !== UPLOAD_ERR_OK || ! is_uploaded_file( $path ) || $size > SDP_Resource::cap( 5242880, 2097152 ) || ! in_array( $extension, array( 'csv', 'txt' ), true ) ) {
+			self::redirect( 'sdp-import', 'Impor gagal.', array( 'Pilih file CSV atau TXT valid sesuai batas mode aktif.' ) );
 		}
-		$rows = self::parse_csv( $path );
+		self::save_import_result( self::parse_csv( $path, 'txt' === $extension ), isset( $_POST['publish'] ) && current_user_can( 'publish_posts' ) );
+	}
+
+	/**
+	 * Store validated import rows and redirect to the common result screen.
+	 *
+	 * @param array|WP_Error $rows    Parsed input or a validation error.
+	 * @param bool           $publish Whether new profiles may be published.
+	 * @return void
+	 */
+	public static function save_import_result( $rows, $publish = false ) {
 		if ( is_wp_error( $rows ) ) {
 			self::redirect( 'sdp-import', 'Impor dibatalkan.', array( $rows->get_error_message() ) );
 		}
@@ -642,7 +669,6 @@ final class SDP_Directory {
 		$updated = 0;
 		$held    = 0;
 		$errors  = array();
-		$publish = isset( $_POST['publish'] ) && current_user_can( 'publish_posts' );
 		$run     = function () use ( $rows, $publish, &$created, &$updated, &$held, &$errors ) {
 			foreach ( $rows as $line => $row ) {
 				$r = self::save( $row, $publish );
