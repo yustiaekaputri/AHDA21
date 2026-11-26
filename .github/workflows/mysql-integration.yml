@@ -1,0 +1,79 @@
+name: WordPress MySQL 8.4 Compatibility
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'plugin/**'
+      - 'theme/**'
+      - 'tests/**'
+      - 'scripts/setup-preview.sh'
+      - 'scripts/probe-login.sh'
+      - 'scripts/seed-preview.php'
+      - 'scripts/test-import-integration.sh'
+      - 'scripts/test-summary-cache-small.sh'
+      - '.github/workflows/mysql-integration.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  mysql:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: sdp_test
+          MYSQL_USER: sdp_test
+          MYSQL_PASSWORD: disposable-ci-only
+          MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s --health-timeout=5s --health-retries=18
+    env:
+      SDP_DB_PASSWORD: disposable-ci-only
+      SDP_LOGIN_PROBE: '1'
+      SDP_PREVIEW_URL: http://127.0.0.1:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, pdo_mysql, curl, mbstring, xml, zip, gd, intl
+          coverage: none
+      - name: Initialize disposable paths
+        env:
+          DB_PORT: ${{ job.services.mysql.ports[3306] }}
+        run: |
+          {
+            echo "SDP_DB_PORT=$DB_PORT"
+            echo "SDP_WP_ROOT=$RUNNER_TEMP/sdp-wordpress"
+            echo "SDP_WP_CLI=$RUNNER_TEMP/wp-cli.phar"
+            echo "SDP_PREVIEW_MANIFEST=$RUNNER_TEMP/sdp-preview.json"
+          } >> "$GITHUB_ENV"
+          mkdir -p artifacts
+      - name: Verify actual MySQL server and test database
+        run: |
+          php scripts/verify-mysql-ci.php | tee artifacts/mysql-version.log
+      - name: Install WP-CLI
+        run: curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$SDP_WP_CLI"
+      - name: Actual WordPress MySQL smoke and snapshot tests
+        run: bash scripts/setup-preview.sh 2>&1 | tee artifacts/integration.log
+      - name: Actual MySQL CSV and XLSX integration
+        run: bash scripts/test-import-integration.sh 2>&1 | tee artifacts/import-integration.log
+      - name: Opt-in summary cache and cross-process invalidation
+        run: bash scripts/test-summary-cache-small.sh 2>&1 | tee artifacts/summary-cache.log
+      - name: Save compatibility logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wordpress-mysql-8.4-php-8.3
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 7

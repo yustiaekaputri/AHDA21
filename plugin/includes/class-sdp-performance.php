@@ -18,7 +18,31 @@ final class SDP_Performance {
         add_action('admin_post_sdp88_maintenance',[__CLASS__,'action']);
     }
     public static function enabled(){return !defined('SDP_FACET_CACHE')||SDP_FACET_CACHE!==false;}
-    public static function invalidate(){self::$local=[];$ok=update_option(self::EPOCH,wp_generate_uuid4(),false);if(!$ok)for($i=0;$i<self::SLOTS;$i++)delete_transient('sdp88_facet_'.$i);return $ok;}
+    const SUMMARY_KEY='sdp_preview_public_summary';
+    const SUMMARY_TTL=30;
+    // Experimental, opt-in. Only the unrestricted public aggregate; never cache rows.
+    public static function summary_enabled(){return defined('SDP_SUMMARY_CACHE')&&SDP_SUMMARY_CACHE===true;}
+    public static function summary_eligible($state){
+        if(!self::summary_enabled())return false;
+        foreach(array_merge(['q','fasilitas','jurusan'],array_keys(SDP_Portal::FILTERS)) as $k)if(($state[$k]??'')!=='')return false;
+        return true;
+    }
+    public static function summary($sql,$query){
+        if(!self::summary_enabled())return $query();
+        $epoch=(string)get_option(self::EPOCH,'0');
+        $hash=hash('sha256',$epoch.'|'.$sql);
+        $entry=get_transient(self::SUMMARY_KEY);
+        if(is_array($entry)&&($entry['hash']??'')===$hash&&($entry['until']??0)>time()&&is_array($entry['values']??null)){
+            $v=$entry['values'];
+            if(isset($v['total'],$v['negeri'],$v['swasta'])&&is_int($v['total'])&&is_int($v['negeri'])&&is_int($v['swasta'])&&min($v)>=0&&$v['negeri']+$v['swasta']<=$v['total'])return $v;
+        }
+        $v=$query();
+        if(!is_array($v))return $v; // Do not cache failures.
+        $v=['total'=>(int)($v['total']??0),'negeri'=>(int)($v['negeri']??0),'swasta'=>(int)($v['swasta']??0)];
+        if($epoch===(string)get_option(self::EPOCH,'0'))set_transient(self::SUMMARY_KEY,['hash'=>$hash,'until'=>time()+self::SUMMARY_TTL,'values'=>$v],self::SUMMARY_TTL);
+        return $v;
+    }
+    public static function invalidate(){self::$local=[];$ok=update_option(self::EPOCH,wp_generate_uuid4(),false);if(!$ok){for($i=0;$i<self::SLOTS;$i++)delete_transient('sdp88_facet_'.$i);delete_transient(self::SUMMARY_KEY);}return $ok;}
     public static function post_updated($id,$after,$before){if(($after->post_type??'')===SDP_Directory::TYPE||($before->post_type??'')===SDP_Directory::TYPE){if(($after->post_password??'')!==($before->post_password??'')||($after->post_type??'')!==($before->post_type??''))self::invalidate();}}
     public static function transition($new,$old,$post){if($new!==$old&&($post->post_type??'')===SDP_Directory::TYPE)self::invalidate();}
     public static function deleted($id,$post){if(($post->post_type??'')===SDP_Directory::TYPE)self::invalidate();}

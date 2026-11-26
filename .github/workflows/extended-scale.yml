@@ -1,0 +1,70 @@
+name: Extended 50000 School Benchmark
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: extended-scale-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  benchmark:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.label.name == 'benchmark-50k' && github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: sdp_test
+          MARIADB_USER: sdp_test
+          MARIADB_PASSWORD: disposable-ci-only
+          MARIADB_RANDOM_ROOT_PASSWORD: '1'
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=12
+    env:
+      SDP_DB_PASSWORD: disposable-ci-only
+      SDP_PREVIEW_URL: http://127.0.0.1:8080
+      SDP_EXTENDED_BENCHMARK: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, pdo_mysql, curl, mbstring, xml, zip, gd, intl
+          coverage: none
+      - name: Initialize disposable paths
+        env:
+          DB_PORT: ${{ job.services.mariadb.ports[3306] }}
+        run: |
+          {
+            echo "SDP_DB_PORT=$DB_PORT"
+            echo "SDP_WP_ROOT=$RUNNER_TEMP/sdp-wordpress"
+            echo "SDP_WP_CLI=$RUNNER_TEMP/wp-cli.phar"
+            echo "SDP_PREVIEW_MANIFEST=$RUNNER_TEMP/sdp-preview.json"
+          } >> "$GITHUB_ENV"
+          mkdir -p artifacts
+      - name: Install WP-CLI
+        run: curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$SDP_WP_CLI"
+      - name: Setup and verify disposable WordPress
+        run: bash scripts/setup-preview.sh 2>&1 | tee artifacts/integration.log
+      - name: Import verification
+        run: bash scripts/test-import-integration.sh 2>&1 | tee artifacts/import-integration.log
+      - name: Extended benchmark through 50000 fictional schools
+        timeout-minutes: 80
+        run: python3 -u scripts/test-benchmark-integration.py --max-rows 50000 2>&1 | tee artifacts/benchmark.log
+      - name: Save reports and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extended-50000-mariadb-php83
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 7
