@@ -151,6 +151,7 @@ final class SDP_NPSN_Catalog {
 	/** Render the dataset form, lookup, and optional preview. */
 	public static function page() {
 		self::require_admin();
+		global $wpdb;
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Lookup is read-only and restricted to administrators.
 		$npsn    = strtoupper( sanitize_text_field( wp_unslash( $_GET['npsn'] ?? '' ) ) );
 		$catalog = get_option( self::OPTION, array() );
@@ -172,26 +173,39 @@ final class SDP_NPSN_Catalog {
 		echo '<input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '">';
 		echo '<label>NPSN <input name="npsn" maxlength="8" pattern="[A-Za-z0-9]{8}" value="' . esc_attr( $npsn ) . '" required></label> ';
 		echo '<button class="button">Cari NPSN</button></form>';
-		if ( '' !== $npsn ) {
-			$manual = add_query_arg(
+		if ( '' !== $npsn && '' === SDP_National::npsn( $npsn ) ) {
+			echo '<p>Masukkan NPSN dengan 8 huruf atau angka.</p>';
+		} elseif ( '' !== $npsn ) {
+			$existing     = SDP_SEO::by_npsn( $npsn );
+			$lookup_error = ! empty( $wpdb->last_error );
+			$manual       = add_query_arg(
 				array(
 					'page' => 'sdp-edit',
 					'npsn' => $npsn,
 				),
 				admin_url( 'admin.php' )
 			);
-			echo '<p><a href="' . esc_url( $manual ) . '">Buka profil tersimpan atau isi manual</a>.</p>';
+			if ( $lookup_error ) {
+				echo '<p>Profil tersimpan tidak dapat diperiksa. Coba lagi.</p>';
+			} elseif ( $existing ) {
+				echo '<p>NPSN ini sudah memiliki profil. <a href="' . esc_url( $manual ) . '">Buka profil tersimpan</a>.</p>';
+			} else {
+				echo '<p><a href="' . esc_url( $manual ) . '">Isi profil secara manual</a>.</p>';
+			}
 			if ( is_array( $record ) ) {
-				echo '<h3>Data kandidat</h3><dl>';
+				echo '<h3>Data kandidat</h3><dl style="overflow-wrap:anywhere">';
 				$labels = SDP_Directory::labels();
 				foreach ( $record as $key => $value ) {
 					echo '<dt>' . esc_html( $labels[ $key ] ) . '</dt><dd>' . esc_html( $value ) . '</dd>';
 				}
-				echo '</dl><p>Profil baru akan disimpan sebagai draf. Jika NPSN sudah memiliki profil, gunakan tautan profil di atas untuk meninjau pembaruan.</p>';
-				echo '<form method="post" action="' . esc_url( $action ) . '"><input type="hidden" name="action" value="sdp_npsn_create"><input type="hidden" name="npsn" value="' . esc_attr( $npsn ) . '">';
-				wp_nonce_field( self::confirmation( $record ) );
-				submit_button( 'Simpan draf dari katalog' );
-				echo '</form>';
+				echo '</dl>';
+				if ( ! $lookup_error && ! $existing ) {
+					echo '<p>Profil baru akan disimpan sebagai draf.</p>';
+					echo '<form method="post" action="' . esc_url( $action ) . '"><input type="hidden" name="action" value="sdp_npsn_create"><input type="hidden" name="npsn" value="' . esc_attr( $npsn ) . '">';
+					wp_nonce_field( self::confirmation( $record ) );
+					submit_button( 'Simpan draf dari katalog' );
+					echo '</form>';
+				}
 			} else {
 				echo '<p>NPSN tidak ditemukan di katalog lokal.</p>';
 			}

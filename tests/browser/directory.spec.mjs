@@ -229,10 +229,11 @@ test('cari NPSN dari katalog lokal dan simpan hanya setelah ditinjau', async ({ 
     await expect(page.getByText('2025-09-01', { exact: true })).toBeVisible();
     const previewUrl = page.url();
 
-    const manual = await page.context().newPage();
-    await manual.goto(`/wp-admin/admin.php?page=sdp-edit&npsn=${npsn}`);
-    await expect(manual.locator('#sdp-nama')).toHaveValue('');
-    await manual.close();
+    const stale = await page.context().newPage();
+    await stale.goto(previewUrl);
+    await stale.getByRole('link', { name: 'Isi profil secara manual' }).click();
+    await expect(stale.locator('#sdp-nama')).toHaveValue('');
+    await stale.goto(previewUrl);
 
     await page.getByRole('button', { name: 'Simpan draf dari katalog' }).click();
     await expect(page.locator('#sdp-npsn')).toHaveValue(npsn);
@@ -240,8 +241,18 @@ test('cari NPSN dari katalog lokal dan simpan hanya setelah ditinjau', async ({ 
     expect((await page.request.get(`/wp-json/sdp/v1/schools/${npsn}`)).status()).toBe(404);
 
     await page.goto(previewUrl);
-    await page.getByRole('button', { name: 'Simpan draf dari katalog' }).click();
-    await expect(page.getByText('NPSN sudah memiliki profil.', { exact: false })).toBeVisible();
+    await expect(page.getByText('NPSN ini sudah memiliki profil.', { exact: false })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Simpan draf dari katalog' })).toHaveCount(0);
+    await page.getByRole('link', { name: 'Buka profil tersimpan' }).click();
+    await expect(page.locator('#sdp-nama')).toHaveValue('Sekolah FIKTIF Katalog');
+
+    await stale.getByRole('button', { name: 'Simpan draf dari katalog' }).click();
+    await expect(stale.getByText('NPSN sudah memiliki profil.', { exact: false })).toBeVisible();
+    await stale.close();
+
+    await page.goto(`${catalogPage}&npsn=FIK00000`);
+    await expect(page.getByText('NPSN tidak ditemukan di katalog lokal.')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Isi profil secara manual' })).toBeVisible();
 });
 
 test('katalog menerima 689 sekolah dengan tautan sumber dan tanggal yang belum diketahui', async ({ page }) => {
