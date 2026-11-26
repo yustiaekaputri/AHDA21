@@ -313,22 +313,29 @@ test('daftar TXT dari katalog membuat draf baru dan melewati NPSN berulang', asy
 
     await page.goto('/wp-admin/admin.php?page=sdp-import');
     await page.getByRole('link', { name: 'Impor daftar NPSN dari katalog' }).click();
-    const upload = async (text) => {
+    const upload = async (text, button = 'Buat draf dari daftar NPSN') => {
         await page.getByLabel('Daftar NPSN (TXT, CSV, atau XLSX)').setInputFiles({
             name: 'daftar.txt', mimeType: 'text/plain', buffer: Buffer.from(text),
         });
-        await page.getByRole('button', { name: 'Buat draf dari daftar NPSN' }).click();
+        await page.getByRole('button', { name: button }).click();
     };
     await upload(`${first}\nkeliru\n`);
     await expect(page.getByText(/NPSN tidak valid pada baris 2/)).toBeVisible();
     await upload(`${first}\n`.repeat(51));
     await expect(page.getByText(/Daftar NPSN melebihi 50 baris data/)).toBeVisible();
     const list = `\ufeffnpsn\r\n${first.toLowerCase()}\r\n\r\n${first}\r\n${missing}\r\n`;
-    await upload(list);
+    await upload(list, 'Pratinjau daftar NPSN');
+    await expect(page.getByText(/1 calon draf baru, 0 profil sudah ada, 1 baris berulang, 1 NPSN di luar katalog/)).toBeVisible();
+    const editor = await page.context().newPage();
+    await editor.goto(`/wp-admin/admin.php?page=sdp-edit&npsn=${first}`);
+    await expect(editor.locator('#sdp-nama')).toHaveValue('');
+    await editor.close();
+    await page.getByRole('button', { name: 'Konfirmasi dan buat draf' }).click();
     await expect(page.getByText(/1 draf baru, 0 profil sudah ada, 1 baris berulang, 1 NPSN di luar katalog, 0 gagal/)).toBeVisible();
     await expect(page.getByText(`${missing} tidak ditemukan di katalog.`)).toBeVisible();
-    await upload(list);
-    await expect(page.getByText(/0 draf baru, 1 profil sudah ada, 1 baris berulang/)).toBeVisible();
+    await upload(list, 'Pratinjau daftar NPSN');
+    await expect(page.getByText(/0 calon draf baru, 1 profil sudah ada, 1 baris berulang/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Konfirmasi dan buat draf' })).toHaveCount(0);
 
     await page.goto(`/wp-admin/admin.php?page=sdp-edit&npsn=${first}`);
     await expect(page.locator('#sdp-npsn')).toHaveValue(first);
@@ -338,19 +345,22 @@ test('daftar TXT dari katalog membuat draf baru dan melewati NPSN berulang', asy
 
 test('daftar CSV dan XLSX satu kolom memakai katalog dan mempertahankan nol awal', async ({ page }) => {
     await login(page, 'sdp-admin', process.env.SDP_ADMIN_PASSWORD);
-    await page.goto('/wp-admin/admin.php?page=sdp-npsn-catalog');
-    await page.getByLabel('CSV katalog').setInputFiles({
-        name: 'katalog-fiktif.csv', mimeType: 'text/csv',
-        buffer: Buffer.from('npsn,nama\n00073124,Sekolah FIKTIF CSV\n00073125,Sekolah FIKTIF XLSX\n'),
-    });
-    await page.getByLabel('Nama sumber').fill('Sumber FIKTIF');
-    await page.getByLabel('Saya berhak menggunakan dataset ini.').check();
-    await page.getByRole('button', { name: 'Simpan katalog' }).click();
-    await expect(page.getByText('Rekaman katalog: 2')).toBeVisible();
+    const loadCatalog = async (tab, source) => {
+        await tab.goto('/wp-admin/admin.php?page=sdp-npsn-catalog');
+        await tab.getByLabel('CSV katalog').setInputFiles({
+            name: 'katalog-fiktif.csv', mimeType: 'text/csv',
+            buffer: Buffer.from('npsn,nama\n00073124,Sekolah FIKTIF CSV\n00073125,Sekolah FIKTIF XLSX\n'),
+        });
+        await tab.getByLabel('Nama sumber').fill(source);
+        await tab.getByLabel('Saya berhak menggunakan dataset ini.').check();
+        await tab.getByRole('button', { name: 'Simpan katalog' }).click();
+        await expect(tab.getByText('Rekaman katalog: 2')).toBeVisible();
+    };
+    await loadCatalog(page, 'Sumber FIKTIF');
 
-    const upload = async (file) => {
+    const upload = async (file, button = 'Buat draf dari daftar NPSN') => {
         await page.getByLabel('Daftar NPSN (TXT, CSV, atau XLSX)').setInputFiles(file);
-        await page.getByRole('button', { name: 'Buat draf dari daftar NPSN' }).click();
+        await page.getByRole('button', { name: button }).click();
     };
     await upload('tests/integration/import-fixture.xlsx');
     await expect(page.getByText('Impor daftar dibatalkan.')).toBeVisible();
@@ -364,6 +374,13 @@ test('daftar CSV dan XLSX satu kolom memakai katalog dan mempertahankan nol awal
         buffer: Buffer.from('\ufeff"npsn"\r\n"00073124"\r\n'),
     });
     await expect(page.getByText(/1 draf baru, 0 profil sudah ada/)).toBeVisible();
+    await upload('tests/integration/npsn-list-fixture.xlsx', 'Pratinjau daftar NPSN');
+    await expect(page.getByText(/1 calon draf baru, 0 profil sudah ada/)).toBeVisible();
+    const otherTab = await page.context().newPage();
+    await loadCatalog(otherTab, 'Sumber FIKTIF revisi');
+    await otherTab.close();
+    await page.getByRole('button', { name: 'Konfirmasi dan buat draf' }).click();
+    await expect(page.getByText(/Data katalog atau batas impor berubah/)).toBeVisible();
     await upload('tests/integration/npsn-list-fixture.xlsx');
     await expect(page.getByText(/1 draf baru, 0 profil sudah ada/)).toBeVisible();
     for (const [npsn, format] of [['00073124', 'CSV'], ['00073125', 'XLSX']]) {

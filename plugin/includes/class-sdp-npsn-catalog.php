@@ -23,6 +23,7 @@ final class SDP_NPSN_Catalog {
 		add_action( 'admin_post_sdp_npsn_upload', array( __CLASS__, 'upload' ) );
 		add_action( 'admin_post_sdp_npsn_create', array( __CLASS__, 'create' ) );
 		add_action( 'admin_post_sdp_npsn_batch', array( __CLASS__, 'create_batch' ) );
+		add_action( 'admin_post_sdp_npsn_confirm_batch', array( __CLASS__, 'confirm_batch' ) );
 	}
 
 	/** Add the catalog under the directory menu. */
@@ -221,6 +222,94 @@ final class SDP_NPSN_Catalog {
 		if ( ! $catalog ) {
 			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( 'Unggah katalog sekolah terlebih dahulu.' ) );
 		}
+		if ( isset( $_POST['preview_batch'] ) ) {
+			self::preview_batch( $ids, $catalog );
+		}
+		self::save_batch( $ids, $catalog );
+	}
+
+	/**
+	 * Build a read-only summary after validating the upload.
+	 *
+	 * @param string[] $ids Validated identifiers.
+	 * @param array    $catalog Current catalog.
+	 */
+	private static function preview_batch( $ids, $catalog ) {
+		global $wpdb;
+		$unique  = array_unique( $ids );
+		$matches = array_values( array_intersect( $unique, array_keys( $catalog ) ) );
+		$exists  = array();
+		if ( $matches ) {
+			$table        = SDP_Directory::table();
+			$placeholders = implode( ',', array_fill( 0, count( $matches ), '%s' ) );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Fresh indexed lookup with one bound value per NPSN.
+			$exists = $wpdb->get_col( $wpdb->prepare( "SELECT npsn FROM $table WHERE npsn IN ($placeholders)", $matches ) );
+			if ( ! empty( $wpdb->last_error ) ) {
+				SDP_Directory::redirect( self::PAGE, 'Pratinjau daftar dibatalkan.', array( 'Profil tersimpan tidak dapat diperiksa. Coba lagi.' ) );
+			}
+		}
+		$token   = wp_generate_uuid4();
+		$preview = array(
+			'ids'         => $ids,
+			'fingerprint' => self::batch_fingerprint( $ids, $catalog ),
+			'new'         => count( $matches ) - count( $exists ),
+			'existing'    => count( $exists ),
+			'missing'     => array_values( array_diff( $unique, $matches ) ),
+			'duplicates'  => count( $ids ) - count( $unique ),
+		);
+		if ( ! set_transient( self::preview_key( $token ), $preview, 5 * MINUTE_IN_SECONDS ) ) {
+			SDP_Directory::redirect( self::PAGE, 'Pratinjau daftar dibatalkan.', array( 'Pratinjau tidak dapat disimpan. Coba lagi.' ) );
+		}
+		wp_safe_redirect( add_query_arg( 'npsn_preview', $token, admin_url( 'admin.php?page=' . self::PAGE ) ) . '#sdp-npsn-batch' );
+		exit;
+	}
+
+	/**
+	 * Bind a preview to its administrator and token.
+	 *
+	 * @param string $token Token from the preview form.
+	 * @return string Transient key.
+	 */
+	private static function preview_key( $token ) {
+		return 'sdp_npsn_preview_' . get_current_user_id() . '_' . $token;
+	}
+
+	/**
+	 * Bind confirmation to the relevant catalog records as they were previewed.
+	 *
+	 * @param string[] $ids Validated identifiers.
+	 * @param array    $catalog Current catalog.
+	 * @return string Content hash.
+	 */
+	private static function batch_fingerprint( $ids, $catalog ) {
+		return hash( 'sha256', (string) wp_json_encode( array_intersect_key( $catalog, array_fill_keys( $ids, true ) ) ) );
+	}
+
+	/** Apply a reviewed list while checking for intervening catalog changes. */
+	public static function confirm_batch() {
+		self::require_admin();
+		check_admin_referer( 'sdp_npsn_confirm_batch' );
+		$token   = sanitize_text_field( wp_unslash( $_POST['npsn_preview'] ?? '' ) );
+		$preview = wp_is_uuid( $token, 4 ) ? get_transient( self::preview_key( $token ) ) : false;
+		if ( ! $preview ) {
+			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( 'Pratinjau sudah kedaluwarsa. Unggah daftar kembali.' ) );
+		}
+		delete_transient( self::preview_key( $token ) );
+		$ids     = $preview['ids'];
+		$catalog = get_option( self::OPTION, array() );
+		if ( count( $ids ) > SDP_Resource::cap( SDP_Directory::MAX_ROWS, 50 ) || self::batch_fingerprint( $ids, $catalog ) !== $preview['fingerprint'] ) {
+			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( 'Data katalog atau batas impor berubah. Buat pratinjau baru.' ) );
+		}
+		self::save_batch( $ids, $catalog );
+	}
+
+	/**
+	 * Create only new drafts from the selected catalog entries.
+	 *
+	 * @param string[] $ids Validated identifiers.
+	 * @param array    $catalog Current catalog.
+	 */
+	private static function save_batch( $ids, $catalog ) {
 		$unique = array_unique( $ids );
 		$run    = static function () use ( $catalog, $unique ) {
 			$created = 0;
@@ -254,6 +343,38 @@ final class SDP_NPSN_Catalog {
 		list( $created, $exists, $missing, $failed, $details ) = $result;
 		$duplicates = count( $ids ) - count( $unique );
 		SDP_Directory::redirect( self::PAGE, "Selesai: $created draf baru, $exists profil sudah ada, $duplicates baris berulang, $missing NPSN di luar katalog, $failed gagal. Maksimal 30 detail ditampilkan.", $details );
+	}
+
+	/** Render a stored preview and the explicit confirmation form. */
+	private static function show_batch_preview() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only retrieval scoped to the requesting administrator.
+		$token = sanitize_text_field( wp_unslash( $_GET['npsn_preview'] ?? '' ) );
+		if ( '' === $token ) {
+			return;
+		}
+		$preview = wp_is_uuid( $token, 4 ) ? get_transient( self::preview_key( $token ) ) : false;
+		if ( ! $preview ) {
+			echo '<p>Pratinjau sudah kedaluwarsa. Unggah daftar kembali.</p>';
+			return;
+		}
+
+		echo '<h3>Ringkasan pratinjau</h3><p>Pratinjau berlaku 5 menit. Belum ada profil yang disimpan.</p>';
+		printf(
+			'<p>%d calon draf baru, %d profil sudah ada, %d baris berulang, %d NPSN di luar katalog.</p>',
+			(int) $preview['new'],
+			(int) $preview['existing'],
+			(int) $preview['duplicates'],
+			count( $preview['missing'] )
+		);
+		if ( $preview['missing'] ) {
+			echo '<p>NPSN di luar katalog (maksimal 30): ' . esc_html( implode( ', ', array_slice( $preview['missing'], 0, 30 ) ) ) . '</p>';
+		}
+		if ( $preview['new'] > 0 ) {
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp_npsn_confirm_batch"><input type="hidden" name="npsn_preview" value="' . esc_attr( $token ) . '">';
+			wp_nonce_field( 'sdp_npsn_confirm_batch' );
+			submit_button( 'Konfirmasi dan buat draf', 'primary', 'confirm_batch' );
+			echo '</form>';
+		}
 	}
 
 	/** Render the dataset form, lookup, and optional preview. */
@@ -320,13 +441,15 @@ final class SDP_NPSN_Catalog {
 			}
 		}
 		echo '<h2 id="sdp-npsn-batch">Impor daftar NPSN dari katalog</h2>';
+		self::show_batch_preview();
 		if ( $catalog ) {
 			$limit = SDP_Resource::cap( SDP_Directory::MAX_ROWS, 50 );
 			echo '<p>Gunakan satu NPSN per baris dalam TXT atau satu kolom dalam CSV/XLSX. TXT dan CSV mendukung judul <code>npsn</code> opsional dan maksimal 8 KiB. Untuk XLSX, gunakan sheet pertama dengan judul <code>npsn</code> dan simpan NPSN sebagai teks. Batas ' . (int) $limit . ' baris data. Profil baru menjadi draf dan profil lama dilewati.</p>';
 			echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( $action ) . '"><input type="hidden" name="action" value="sdp_npsn_batch">';
 			wp_nonce_field( 'sdp_npsn_batch' );
 			echo '<p><label>Daftar NPSN (TXT, CSV, atau XLSX) <input type="file" name="npsn_list" accept=".txt,.csv,.xlsx,text/plain,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></label></p>';
-			submit_button( 'Buat draf dari daftar NPSN' );
+			submit_button( 'Pratinjau daftar NPSN', 'primary', 'preview_batch' );
+			submit_button( 'Buat draf dari daftar NPSN', 'secondary', 'save_batch' );
 			echo '</form>';
 		} else {
 			echo '<p>Unggah katalog sekolah sebelum menggunakan daftar NPSN.</p>';
