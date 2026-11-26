@@ -11,8 +11,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /** Stores one bounded dataset and creates drafts from reviewed records. */
 final class SDP_NPSN_Catalog {
-	const PAGE   = 'sdp-npsn-catalog';
-	const OPTION = 'sdp_npsn_catalog';
+	const PAGE     = 'sdp-npsn-catalog';
+	const OPTION   = 'sdp_npsn_catalog';
+	const MAX_ROWS = 1000;
 
 	/** Register the menu and authenticated form handlers. */
 	public static function boot() {
@@ -63,11 +64,12 @@ final class SDP_NPSN_Catalog {
 		$name = $file['name'] ?? null;
 		$size = $file['size'] ?? null;
 
-		if ( '' === $label || strlen( $label ) > 191 || '' === $period || strlen( $period ) > 80
-			|| ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/D', $date, $parts )
-			|| ! checkdate( (int) $parts[2], (int) $parts[3], (int) $parts[1] )
-			|| empty( $_POST['authorized'] ) ) {
-			self::fail( 'Isi sumber, periode dan tanggal data, lalu konfirmasi izin penggunaan.' );
+		if ( '' === $label || strlen( $label ) > 191 || strlen( $period ) > 80 || empty( $_POST['authorized'] ) ) {
+			self::fail( 'Isi nama sumber dan konfirmasi izin penggunaan.' );
+		}
+		if ( '' !== $date && ( ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/D', $date, $parts )
+			|| ! checkdate( (int) $parts[2], (int) $parts[3], (int) $parts[1] ) ) ) {
+			self::fail( 'Tanggal data tidak valid.' );
 		}
 		if ( ! is_string( $path ) || ! is_string( $name ) || ! is_int( $size )
 			|| UPLOAD_ERR_OK !== ( $file['error'] ?? UPLOAD_ERR_NO_FILE )
@@ -76,7 +78,7 @@ final class SDP_NPSN_Catalog {
 			self::fail( 'Pilih CSV yang valid dengan ukuran maksimal 512 KiB.' );
 		}
 
-		$rows = SDP_Directory::parse_csv( $path );
+		$rows = SDP_Directory::parse_csv( $path, false, self::MAX_ROWS );
 		if ( is_wp_error( $rows ) ) {
 			self::fail( $rows->get_error_message() );
 		}
@@ -85,10 +87,10 @@ final class SDP_NPSN_Catalog {
 		}
 
 		$records = array();
+		$source  = '' === $period ? $label : $label . ' — ' . $period;
 		foreach ( $rows as $line => $row ) {
-			// Metadata comes from the authorized dataset form, not from individual rows.
-			unset( $row['sumber_url'] );
-			$row['sumber']       = $label . ' — ' . $period;
+			// The source name and data period describe the dataset. Links may identify individual school records.
+			$row['sumber']       = $source;
 			$row['tanggal_data'] = $date;
 			$record              = SDP_Directory::normalize( $row );
 			if ( is_wp_error( $record ) ) {
@@ -155,14 +157,15 @@ final class SDP_NPSN_Catalog {
 		$record  = $catalog[ $npsn ] ?? null;
 		$action  = admin_url( 'admin-post.php' );
 		echo '<div class="wrap"><h1>Cari NPSN dari katalog</h1>';
-		echo '<h2>Katalog lokal</h2><p>Unggah CSV berizin dengan header <code>npsn,nama</code>. Unggahan valid mengganti katalog saat ini. Profil WordPress tetap tersimpan.</p>';
+		echo '<h2>Katalog lokal</h2><p>Unggah CSV berizin dengan kolom wajib <code>npsn,nama</code>, maksimal ' . (int) self::MAX_ROWS . ' rekaman dan 512 KiB. Unggahan valid mengganti katalog saat ini. Profil WordPress tetap tersimpan.</p>';
 		echo '<p>Rekaman katalog: ' . count( $catalog ) . '</p>';
 		echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( $action ) . '"><input type="hidden" name="action" value="sdp_npsn_upload">';
 		wp_nonce_field( 'sdp_npsn_upload' );
 		echo '<p><label>CSV katalog <input type="file" name="catalog" accept=".csv,text/csv" required></label></p>';
 		echo '<p><label>Nama sumber <input name="source_label" maxlength="191" required></label></p>';
-		echo '<p><label>Periode data <input name="source_period" maxlength="80" required></label></p>';
-		echo '<p><label>Tanggal data <input name="source_date" type="date" required></label></p>';
+		echo '<p><label>Periode data <input name="source_period" maxlength="80"></label></p>';
+		echo '<p><label>Tanggal data <input name="source_date" type="date"></label></p>';
+		echo '<p>Kosongkan periode dan tanggal data jika sumber tidak mencantumkannya.</p>';
 		echo '<p><label><input name="authorized" type="checkbox" value="1" required> Saya berhak menggunakan dataset ini.</label></p>';
 		submit_button( 'Simpan katalog' );
 		echo '</form><h2>Pratinjau profil</h2><form method="get" action="' . esc_url( admin_url( 'admin.php' ) ) . '">';

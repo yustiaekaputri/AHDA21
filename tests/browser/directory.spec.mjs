@@ -243,3 +243,33 @@ test('cari NPSN dari katalog lokal dan simpan hanya setelah ditinjau', async ({ 
     await page.getByRole('button', { name: 'Simpan draf dari katalog' }).click();
     await expect(page.getByText('NPSN sudah memiliki profil.', { exact: false })).toBeVisible();
 });
+
+test('katalog menerima 689 sekolah dengan tautan sumber dan tanggal yang belum diketahui', async ({ page }) => {
+    await login(page, 'sdp-admin', process.env.SDP_ADMIN_PASSWORD);
+    const catalogPage = '/wp-admin/admin.php?page=sdp-npsn-catalog';
+    const upload = async (count) => {
+        await page.goto(catalogPage);
+        const records = Array.from({ length: count }, (_, index) => {
+            const npsn = `FIK${String(index).padStart(5, '0')}`;
+            return `${npsn},Sekolah FIKTIF Katalog ${npsn},https://example.org/${npsn}`;
+        });
+        await page.getByLabel('CSV katalog').setInputFiles({
+            name: 'katalog-fiktif.csv',
+            mimeType: 'text/csv',
+            buffer: Buffer.from(['npsn,nama,sumber_url', ...records].join('\n')),
+        });
+        await page.getByLabel('Nama sumber').fill('Sumber FIKTIF');
+        await page.getByLabel('Saya berhak menggunakan dataset ini.').check();
+        await page.getByRole('button', { name: 'Simpan katalog' }).click();
+    };
+    await upload(689);
+    await expect(page.getByText('Rekaman katalog: 689')).toBeVisible();
+    await upload(1001);
+    await expect(page.getByText(/melebihi 1000 baris data/)).toBeVisible();
+    await page.goto(catalogPage);
+    await expect(page.getByText('Rekaman katalog: 689')).toBeVisible();
+    await page.getByLabel('NPSN', { exact: true }).fill('FIK00688');
+    await page.getByRole('button', { name: 'Cari NPSN' }).click();
+    await expect(page.getByText('https://example.org/FIK00688', { exact: true })).toBeVisible();
+    await expect(page.locator('dt').filter({ hasText: /^Tanggal data$/ })).toHaveCount(0);
+});

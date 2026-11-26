@@ -24,7 +24,7 @@ Di **Direktori Sekolah → Impor Excel**, pilih berkas `.xlsx` dan nomor sheet. 
 
 ### Membuat profil dengan mengetik NPSN
 
-Di **Direktori Sekolah → Cari NPSN dari katalog**, administrator dapat mengunggah CSV berizin dengan kolom `npsn,nama` dan mencatat sumber, periode serta tanggal data. Setiap unggahan valid mengganti katalog lokal sebelumnya. Katalog mendukung hingga 50 baris dalam mode hemat atau 200 dalam mode standar, dengan batas ukuran 512 KiB.
+Di **Direktori Sekolah → Cari NPSN dari katalog**, administrator dapat mengunggah CSV berizin dengan kolom wajib `npsn,nama`. Isi nama sumber serta periode dan tanggal data jika dicantumkan oleh sumber. Kolom opsional `sumber_url` menyimpan tautan per sekolah. Setiap unggahan valid mengganti katalog lokal sebelumnya. Katalog menerima hingga 1.000 rekaman dan 512 KiB, tanpa membuat profil sekaligus.
 
 Ketik NPSN, klik **Cari NPSN**, lalu tinjau data dan sumbernya. **Simpan draf dari katalog** membuat profil baru untuk diperiksa sebelum publikasi. Gunakan tautan profil untuk mengedit profil yang sudah ada atau mengisi data secara manual jika NPSN belum ada dalam katalog. Pencarian memakai CSV yang sudah diunggah dan berjalan tanpa koneksi ke sumber resmi.
 

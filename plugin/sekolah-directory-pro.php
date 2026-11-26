@@ -585,13 +585,21 @@ final class SDP_Directory {
 		submit_button( 'Impor dan buat artikel' );
 		echo '</form><h2>Kolom yang didukung</h2><p><code style="overflow-wrap:anywhere">' . esc_html( implode( ', ', array_keys( self::labels() ) ) ) . '</code></p></div>';
 	}
-	public static function parse_csv( $path, $allow_tabs = false ) {
+	/**
+	 * Parse a CSV or tab-separated file without saving any profiles.
+	 *
+	 * @param string   $path       Path to the uploaded file.
+	 * @param bool     $allow_tabs Whether the input accepts tab separators.
+	 * @param int|null $max_rows   Optional row limit for this caller.
+	 * @return array|WP_Error Parsed rows or an error.
+	 */
+	public static function parse_csv( $path, $allow_tabs = false, ?int $max_rows = null ) {
 		$fp = fopen( $path, 'rb' );
 		if ( ! $fp ) {
 			return new WP_Error( 'file', 'CSV tidak dapat dibuka.' );
 		}
 		try {
-			return self::parse_import_stream( $fp, $allow_tabs );
+			return self::parse_import_stream( $fp, $allow_tabs, $max_rows );
 		} finally {
 			fclose( $fp );
 		}
@@ -602,9 +610,12 @@ final class SDP_Directory {
 	 *
 	 * @param resource $fp Open input stream positioned at the beginning.
 	 * @param bool     $allow_tabs Whether the input accepts tab separators.
+	 * @param int|null $max_rows   Row limit for callers that do not create profiles in bulk.
 	 * @return array|WP_Error Parsed rows keyed by record number or an error.
 	 */
-	public static function parse_import_stream( $fp, $allow_tabs = false ) {
+	public static function parse_import_stream( $fp, $allow_tabs = false, ?int $max_rows = null ) {
+		$max_rows ??= SDP_Resource::cap( self::MAX_ROWS, 50 );
+
 		$first = fgets( $fp );
 		if ( false === $first ) {
 			return new WP_Error( 'empty', 'Berkas impor kosong.' );
@@ -633,8 +644,8 @@ final class SDP_Directory {
 			if ( count( $values ) === 1 && trim( (string) $values[0] ) === '' ) {
 				continue;
 			}
-			if ( count( $rows ) >= SDP_Resource::cap( self::MAX_ROWS, 50 ) ) {
-				return new WP_Error( 'limit', 'Berkas impor melebihi ' . SDP_Resource::cap( self::MAX_ROWS, 50 ) . ' baris data. Pecah berkas; belum ada baris diimpor.' );
+			if ( count( $rows ) >= $max_rows ) {
+				return new WP_Error( 'limit', 'Berkas impor melebihi ' . $max_rows . ' baris data. Belum ada perubahan disimpan.' );
 			}
 			if ( count( $values ) !== count( $header ) ) {
 				return new WP_Error( 'columns', "Rekaman $line memiliki jumlah kolom berbeda. Belum ada baris diimpor." );
