@@ -36,6 +36,7 @@ services:
     environment:
       SDP_DB_PASSWORD: ${SDP_DB_PASSWORD:?Run scripts/setup.sh}
       SDP_WP_SECRET: ${SDP_WP_SECRET:?Run scripts/setup.sh}
+      SDP_SITE_URL: ${SDP_SITE_URL:-}
     volumes:
       - uploads:/var/www/html/wp-content/uploads
 volumes:

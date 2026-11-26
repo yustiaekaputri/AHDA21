@@ -22,4 +22,8 @@ Dengan Docker Compose, OpenSSL, dan Node.js LTS, jalankan `npm ci` lalu `make st
 
 Jalankan `npx playwright install chromium` lalu `make test` untuk menjalankan pengujian dengan situs uji sekali pakai. Hasil berada di `artifacts/`. Untuk menghentikan pratinjau, jalankan `make stop`.
 
+### GitHub Codespaces
+
+Buka branch `dev/wordpress-integration` di GitHub, lalu pilih **Code → Codespaces → Create codespace**. Tunggu skrip startup selesai. Pada panel **Ports**, pastikan port 3000 berstatus **Private**, lalu buka alamat yang ditampilkan dan tambahkan `/wp-admin/admin.php?page=sdp-directory`. Login menggunakan `sdp-admin` dan nilai `SDP_ADMIN_PASSWORD` dari file `.env` di Codespace. Hentikan Codespace setelah selesai agar pemakaian kuota berhenti.
+
 Lihat [pengujian](TESTING.md), [arsitektur](ARCHITECTURE.md), [status proyek](PROJECT_STATUS.md), [performa](PERFORMANCE.md), dan [deployment](DEPLOYMENT.md).

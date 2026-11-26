@@ -17,6 +17,22 @@ foreach (['AUTH', 'SECURE_AUTH', 'LOGGED_IN', 'NONCE'] as $name) {
 }
 unset($name, $secret);
 
+// The optional URL is set by the local operator or the Codespaces launcher.
+$previewUrl = getenv('SDP_SITE_URL');
+$previewHost = is_string($previewUrl) ? parse_url($previewUrl, PHP_URL_HOST) : null;
+if (is_string($previewHost) && str_starts_with($previewUrl, 'https://')) {
+    $previewUrl = rtrim($previewUrl, '/');
+    define('WP_HOME', $previewUrl);
+    define('WP_SITEURL', $previewUrl);
+    if (PHP_SAPI !== 'cli') {
+        $_SERVER['HTTPS'] = 'on';
+        $previewPort = parse_url($previewUrl, PHP_URL_PORT);
+        $_SERVER['HTTP_HOST'] = $previewPort ? $previewHost . ':' . $previewPort : $previewHost;
+        unset($previewPort);
+    }
+}
+unset($previewUrl, $previewHost);
+
 $table_prefix = 'wp_';
 define('WP_ENVIRONMENT_TYPE', 'local');
 define('SDP_LOW_RESOURCE', true);
