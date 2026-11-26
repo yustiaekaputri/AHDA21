@@ -17,20 +17,21 @@ jobs:
           MYSQL_USER: sdp_index_test
           MYSQL_PASSWORD: sdp_index_ci_only
         options: >-
-          --health-cmd "mysqladmin ping --silent"
+          --health-cmd "mysqladmin ping --protocol=TCP --host=127.0.0.1 --silent"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
     steps:
       - uses: actions/checkout@v5
       - name: Uji kompatibilitas indeks direktori pada MySQL 8
+        shell: bash
         env:
           MYSQL_CONTAINER: ${{ job.services.mysql.id }}
         run: |
           mkdir -p artifacts/reports
           docker exec "$MYSQL_CONTAINER" mysql --version | tee artifacts/reports/mysql-index-version.txt
           docker exec -i "$MYSQL_CONTAINER" sh -ec '
-            MYSQL_PWD="$MYSQL_PASSWORD" mysql --user="$MYSQL_USER" "$MYSQL_DATABASE" --batch --skip-column-names
+            MYSQL_PWD="$MYSQL_PASSWORD" mysql --protocol=TCP --host=127.0.0.1 --user="$MYSQL_USER" "$MYSQL_DATABASE" --batch --skip-column-names
           ' < tests/sql/directory-index.sql | tee artifacts/reports/mysql-index-result.tsv
           diff -u tests/sql/directory-index.expected.tsv artifacts/reports/mysql-index-result.tsv
       - uses: actions/upload-artifact@v6
