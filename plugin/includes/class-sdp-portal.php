@@ -132,8 +132,16 @@ final class SDP_Portal {
 	public static function results( $state ) {
 		global $wpdb;
 		[$from, $args] = self::from( $state );
-		$summary       = $wpdb->get_row( self::select_sql( "SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta" . $from, $args ), ARRAY_A );
-		if ( ! is_array( $summary ) || ! empty( $wpdb->last_error ) ) {
+		$summary_sql   = self::select_sql( "SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta" . $from, $args );
+		$read_summary  = static function () use ( $wpdb, $summary_sql ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Uses prepared directory predicates and the bounded aggregate cache where applicable.
+			$result = $wpdb->get_row( $summary_sql, ARRAY_A );
+			return is_array( $result ) && empty( $wpdb->last_error ) ? $result : null;
+		};
+		// Cache only the public unfiltered aggregate. The facility clause uses no placeholder.
+		$unfiltered = 1 === count( $args ) && ! isset( SDP_Analytics::FACILITIES[ $state['fasilitas'] ?? '' ] );
+		$summary    = $unfiltered ? SDP_Performance::facet( $summary_sql, $read_summary ) : $read_summary();
+		if ( ! isset( $summary['total'] ) ) {
 			return self::failed_results();
 		}
 		$total = (int) ( $summary['total'] ?? 0 );

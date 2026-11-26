@@ -99,4 +99,51 @@ final class WordPressTest extends TestCase
         self::assertContains(['key' => '_sdp_seo_ready', 'value' => '1'], $args['meta_query']);
         self::assertSame('0', (string) get_option('blog_public'));
     }
+
+    public function testUnfilteredSummaryIsCachedAndInvalidatedWhenVisibilityChanges(): void
+    {
+        $state = SDP_Portal::state([]);
+        $postId = 0;
+        $summaryQueries = 0;
+        $seo = get_option('sdp_seo_config', []);
+        $countQuery = static function ($sql) use (&$summaryQueries) {
+            if (str_starts_with($sql, 'SELECT COUNT(*) total, SUM(s.status=')) {
+                ++$summaryQueries;
+            }
+            return $sql;
+        };
+
+        SDP_Performance::invalidate();
+        update_option('sdp_seo_config', array_merge((array) $seo, ['guard' => 0]));
+        add_filter('query', $countQuery);
+        try {
+            $initial = SDP_Portal::results($state)['total'];
+            self::assertSame($initial, SDP_Portal::results($state)['total']);
+            self::assertSame(1, $summaryQueries);
+
+            $result = SDP_Directory::save(['npsn' => 'TESTZ998', 'nama' => 'Profil FIKTIF cache'], false, 'fill', null, null, null, true);
+            self::assertNotInstanceOf(WP_Error::class, $result);
+            $postId = (int) $result['id'];
+            self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_status' => 'publish']));
+            self::assertSame($initial + 1, SDP_Portal::results($state)['total']);
+            self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_password' => 'fixture']));
+            self::assertSame($initial, SDP_Portal::results($state)['total']);
+            self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_password' => '']));
+            self::assertSame($initial + 1, SDP_Portal::results($state)['total']);
+            self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_status' => 'private']));
+            self::assertSame($initial, SDP_Portal::results($state)['total']);
+
+            $filtered = SDP_Portal::state(['sdp_q' => 'TESTZ998']);
+            $before = $summaryQueries;
+            self::assertSame(0, SDP_Portal::results($filtered)['total']);
+            self::assertSame(0, SDP_Portal::results($filtered)['total']);
+            self::assertSame($before + 2, $summaryQueries);
+        } finally {
+            remove_filter('query', $countQuery);
+            if ($postId) {
+                wp_delete_post($postId, true);
+            }
+            update_option('sdp_seo_config', $seo);
+        }
+    }
 }

@@ -69,3 +69,9 @@ Pada benchmark MariaDB yang sama, 30 profil FIKTIF tambahan dibuat lewat plugin.
 ### Kompatibilitas MySQL 8
 
 Job `mysql-index` menguji pembuatan dan penghapusan indeks artikel pada InnoDB dengan `utf8mb4`. Fixture SQL mengecek ringkasan sebelum dan setelah memakai hint, urutan pilihan provinsi, serta pengecualian profil privat, draf, profil bersandi, artikel dengan tipe lain, dan artikel yang sudah dihapus. Fixture lulus pada MariaDB 10.11 dan pada MySQL 8.0 di GitHub Actions. Pemeriksaan ini belum mengukur latensi pada MySQL atau menguji seluruh plugin pada mesin tersebut. [Job MySQL 8](https://github.com/yustiaekaputri/AHDA21/actions/runs/45757538868/job/139699589858)
+
+## Cache ringkasan direktori
+
+Ringkasan tanpa filter memakai cache facet yang sudah dibatasi jumlah slot dan masa berlakunya. Penyimpanan profil, perubahan status atau kata sandi, dan penghapusan membatalkan cache yang sama. Kueri dengan filter menjalankan ringkasan langsung dan tidak menambah variasi kunci cache.
+
+Pada 10.000 profil FIKTIF, panggilan daftar pertama setelah invalidasi memerlukan 707,8 ms. Tiga proses WP-CLI berikutnya memperoleh hasil identik dalam 8,1–8,8 ms, termasuk pengambilan 20 profil. Pengukuran ini tidak mencakup render halaman, opsi filter, atau akses HTTP.
