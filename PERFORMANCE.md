@@ -105,3 +105,15 @@ Server pengembangan PHP 8.2.32 menggunakan empat proses anak dan hanya mendengar
 | 4 | 595 ms | 59 ms | 88 ms |
 
 Batch pertama hanya berisi satu permintaan per klien. Selisih nilai antarlevel bisa dipengaruhi variasi host dan cache database. Puncak alokasi PHP per permintaan mencapai 6 MiB. RSS empat proses anak setelah uji sekitar 41 MiB per proses, termasuk memori bersama. Angka ini belum mencakup RSS MariaDB, PHP-FPM atau Nginx pada preset VPS, aset susulan, ataupun beban yang berlangsung lama.
+
+### Nginx dan PHP-FPM dengan dua worker
+
+Pengujian loopback berikutnya memakai Nginx 1.22.1, PHP-FPM 8.2.32 dan MariaDB 10.11 dengan 10.000 profil FIKTIF yang sama. PHP-FPM mengikuti preset mikro untuk proses `ondemand`, maksimum dua worker, dan `memory_limit=128M` per proses PHP. Nginx tidak memakai cache halaman. Semua 42 permintaan terukur berhasil.
+
+| Skenario | Permintaan | p50 | p95 |
+| --- | ---: | ---: | ---: |
+| Batch awal setelah invalidasi, dua klien | 2 | 723 ms | 723 ms |
+| Cache terisi, dua klien | 20 | 50 ms | 57 ms |
+| Cache terisi, empat klien | 20 | 53 ms | 100 ms |
+
+Puncak alokasi PHP mencapai 6 MiB per permintaan. Sesaat setelah uji, RSS worker PHP-FPM tercatat 41–44 MiB per proses dan MariaDB sekitar 237 MiB. RSS mencakup memori bersama. Database menggunakan buffer InnoDB 128 MiB dan 151 koneksi maksimum yang sudah ada di Cloud. Batas cgroup lingkungan adalah 8 GiB. Hasil ini memvalidasi jalur Nginx/PHP-FPM dengan dua worker, sementara uji seluruh stack dalam batas 1 GiB, CPU VPS, dan beban berdurasi panjang masih terbuka.
