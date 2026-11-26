@@ -15,4 +15,15 @@ Plugin tetap 10.0.0 RC4 dan tema 7.0.0. Pekerjaan ini sudah menghasilkan WordPre
 
 Rilis stabil masih memerlukan triase WPCS, audit keamanan menyeluruh, impor media serta impor skala besar, matriks migrasi dari paket versi lama, uji pengiriman email registrasi, verifikasi staging sitemap/robots, cache proxy dan sanitasi publikasi, serta benchmark dataset lebih besar. Portal menggunakan REST untuk pembaruan daftar. Tidak ditemukan handler plugin `wp_ajax_*` pada pencarian awal. Otomasi jaringan, sumber resmi dan deployment produksi belum diaktifkan.
 
-Tidak ada data sekolah produksi yang dimasukkan. Lakukan pilot sumber resmi dengan bukti izin dan metadata asal, periode, tanggal dan status verifikasi sebelum impor nyata.
+## Bukti penerimaan terkini
+
+| Pemeriksaan | Bukti dan pekerjaan tersisa |
+| --- | --- |
+| Paket LocalWP | Akun staging berhasil masuk ke WordPress hasil pemulihan ZIP. Menu katalog, CSV/TXT dan Excel terbuka. Impor paket dan login lewat aplikasi LocalWP pada komputer pengguna masih perlu dikonfirmasi. |
+| Pembuatan dan pembaruan profil | Katalog NPSN, CSV, XLSX dan TXT sudah diuji. Pilot Tasikmalaya mencakup 100 NPSN resmi. Impor ulang mempertahankan ID profil, dan seluruh profil uji tetap berstatus draf. Dasar izin publikasi dan periode data masih perlu diverifikasi. |
+| Migrasi dan cadangan | Penggantian domain serta pemulihan database dan `wp-content` lulus pada clone Codex Cloud berisi 100 draf. Login HTTPS lulus dengan sertifikat uji. VPS tujuan belum diuji. |
+| Integritas setelah pemulihan | `wp sdp readiness --audit` dijalankan sampai cursor habis. Empat batch memeriksa 100 profil, tanpa temuan relasi indeks ke artikel. Pemeriksaan skema dan runtime tidak melaporkan error. |
+| Konfigurasi staging | Pemeriksaan mencatat empat peringatan pada clone, yaitu pengindeksan dinonaktifkan, `WP_DEBUG` aktif, Safe Mode aktif, dan master wilayah opsional belum disiapkan. Matikan debug di VPS sebelum penerimaan. Tinjau Safe Mode dan pengindeksan sesuai tahap publikasi. |
+| Bukti CI dan dashboard | Matriks PHP 8.2 dan 8.3 lulus untuk perubahan validasi pilot. ChatGPT Sites menyediakan dashboard pendamping privat dengan hasil uji dan tangkapan layar WordPress. [GitHub Actions](https://github.com/yustiaekaputri/AHDA21/actions/runs/45744264690) · [Dashboard](https://ahda21-status.adoredmound8.chatgpt.site) |
+
+Status penerimaan resmi tetap dicatat di [checklist RC6](tests/localwp/acceptance.json). Pilot dan pengujian di atas berlangsung pada clone terisolasi. Verifikasi VPS aktual, izin publikasi dan pemeriksaan lain pada checklist diperlukan sebelum menandai rilis stabil.
