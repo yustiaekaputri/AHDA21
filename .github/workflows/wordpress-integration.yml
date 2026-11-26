@@ -90,6 +90,9 @@ jobs:
       - name: Bounded HTTP benchmark
         if: matrix.php == '8.3' && steps.scale.outcome == 'success'
         run: python3 scripts/test-http-integration.py 2>&1 | tee artifacts/http-benchmark.log
+      - name: Read-only SQL query-shape experiments
+        if: ${{ !cancelled() && matrix.php == '8.3' && steps.scale.outcome == 'success' }}
+        run: python3 scripts/test-query-shapes.py 2>&1 | tee artifacts/query-shapes.log
       - name: SQL query plans and optional index comparison
         if: ${{ !cancelled() && matrix.php == '8.3' && steps.scale.outcome == 'success' }}
         run: python3 scripts/test-index-comparison.py 2>&1 | tee artifacts/index-comparison.log
