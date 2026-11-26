@@ -40,6 +40,8 @@ Untuk menyiapkan Claude, set `ANTHROPIC_API_KEY` pada environment proses PHP ata
 
 Sebelum membuat narasi, gunakan **Periksa model Claude** pada menu yang sama. Pemeriksaan metadata ini hanya mengirim kunci API dan ID model ke Anthropic. Keberhasilan pemeriksaan mengonfirmasi akses metadata model, sementara kuota dan kemampuan membuat narasi baru diuji saat mengirim permintaan narasi.
 
+Jika `WP_HTTP_BLOCK_EXTERNAL` aktif, tambahkan `api.anthropic.com` pada nilai `WP_ACCESSIBLE_HOSTS` di `wp-config.php` lokal. Jika konstanta belum ada, gunakan `define('WP_ACCESSIBLE_HOSTS', 'api.anthropic.com');` sebelum WordPress dimuat. Jika sudah ada, tambahkan domain itu ke daftar yang dipisahkan koma. Pertahankan pengaturan pembatasan jaringan dan simpan kunci di luar Git.
+
 ## Menjalankan pratinjau
 
 Dengan Docker Compose, OpenSSL, dan Node.js LTS, jalankan `npm ci` lalu `make start`. WordPress pengembangan tersedia di port lokal 3000. Nama login admin lokal adalah `sdp-admin` dan kata sandinya dibuat otomatis di `.env`. Variabel `SDP_HTTP_PORT` dan `SDP_SITE_URL` mengatur alamat lokal. Data demo dibuat melalui API plugin di database pengembangan. Pada komputer yang menjalankan Docker, buka dashboard di `http://127.0.0.1:3000/wp-admin/admin.php?page=sdp-directory`. Jika Docker berjalan di Codex Cloud, gunakan browser Desktop di lingkungan Cloud yang sama atau tautan HTTP Preview dari Codex. Browser di komputer Anda memerlukan penerusan port agar dapat mencapai WordPress Cloud.
