@@ -4,6 +4,38 @@ use PHPUnit\Framework\TestCase;
 
 final class WordPressTest extends TestCase
 {
+    public function testClaudeModelCheckSendsNoPromptAndHandlesAccessDenial(): void
+    {
+        $previousKey = getenv('ANTHROPIC_API_KEY');
+        $requests = 0;
+        $intercept = static function ($response, $args, $url) use (&$requests) {
+            ++$requests;
+            self::assertSame('https://api.anthropic.com/v1/models/claude-model-example', $url);
+            self::assertSame('GET', $args['method']);
+            self::assertEmpty($args['body']);
+            self::assertSame('ci-placeholder', $args['headers']['x-api-key']);
+            self::assertSame(0, $args['redirection']);
+            return $requests === 1
+                ? ['response' => ['code' => 200], 'body' => '{"type":"model","id":"claude-model-example"}']
+                : ['response' => ['code' => 403], 'body' => '{"error":"provider-only-detail"}'];
+        };
+        add_filter('pre_http_request', $intercept, 10, 3);
+        try {
+            putenv('ANTHROPIC_API_KEY=ci-placeholder');
+            self::assertInstanceOf(WP_Error::class, SDP_AI::check_claude_model('another/model'));
+            self::assertSame(0, $requests);
+            self::assertTrue(SDP_AI::check_claude_model('claude-model-example'));
+            $denied = SDP_AI::check_claude_model('claude-model-example');
+            self::assertInstanceOf(WP_Error::class, $denied);
+            self::assertStringContainsString('HTTP 403', $denied->get_error_message());
+            self::assertStringNotContainsString('provider-only-detail', $denied->get_error_message());
+            self::assertSame(2, $requests);
+        } finally {
+            remove_filter('pre_http_request', $intercept, 10);
+            putenv($previousKey === false ? 'ANTHROPIC_API_KEY' : 'ANTHROPIC_API_KEY=' . $previousKey);
+        }
+    }
+
     public function testClaudeNarrativeUsesOnlySelectedFacts(): void
     {
         $previousKey = getenv('ANTHROPIC_API_KEY');

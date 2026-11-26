@@ -354,6 +354,19 @@ final class SDP_SEO {
 			if ( is_wp_error( $id ) ) {
 				self::report( $id->get_error_message(), true );
 			}self::report( 'Draf halaman wilayah dibuat. Periksa dan terbitkan melalui Pages.' );}
+		if ( 'claude_check' === $op ) {
+			$model = sanitize_text_field( wp_unslash( $_POST['claude_model'] ?? '' ) );
+			$key   = 'sdp_claude_check_' . get_current_user_id();
+			if ( get_transient( $key ) ) {
+				self::report( 'Tunggu satu menit sebelum memeriksa model Claude kembali.', true );
+			}
+			set_transient( $key, 1, 60 );
+			$result = SDP_AI::check_claude_model( $model );
+			if ( is_wp_error( $result ) ) {
+				self::report( $result->get_error_message(), true );
+			}
+			self::report( 'Model Claude tersedia untuk kunci ini. Belum ada narasi yang dibuat.' );
+		}
 		if ( 'ai' === $op ) {
 			if ( empty( $_POST['consent'] ) ) {
 				self::report( 'Konfirmasi izin pemrosesan data terlebih dahulu.', true );
@@ -422,6 +435,10 @@ final class SDP_SEO {
 			echo '<p><label>' . esc_html( ucfirst( $k ) ) . ' <input name="' . esc_attr( $k ) . '" ' . ( 'provinsi' === $k ? 'required' : '' ) . '></label></p>';
 		}submit_button( 'Buat draf halaman wilayah', 'secondary' );
 		echo '</form><h2>Asisten narasi AI (opsional)</h2><p>Hanya mengirim fakta institusi yang dipilih ke penyedia. Hasil berupa pratinjau privat, tidak disimpan dalam artikel dan wajib diperiksa. API berbayar dapat menimbulkan biaya. Kunci disediakan melalui wp-config.php (SDP_OPENAI_API_KEY / SDP_GEMINI_API_KEY / SDP_CLAUDE_API_KEY). Claude juga membaca ANTHROPIC_API_KEY dari environment server. Ollama memakai 127.0.0.1:11434.</p>';
+		self::start( 'claude_check' );
+		echo '<p><label>ID model untuk pemeriksaan Claude <input name="claude_model" maxlength="128" required></label></p>';
+		submit_button( 'Periksa model Claude', 'secondary' );
+		echo '</form>';
 		self::start( 'ai' );
 		echo '<p><label>NPSN <input name="npsn" maxlength="8" required></label></p><p><label>Penyedia <select name="provider"><option value="ollama">Ollama lokal</option><option value="gemini">Gemini</option><option value="openai">OpenAI</option><option value="claude">Claude (Anthropic)</option></select></label></p><p><label>ID model <input name="model" required placeholder="ID model yang tersedia"></label></p><p><label><input type="checkbox" name="consent" required> Saya berhak memproses data ini dan memahami pengiriman data serta potensi biaya.</label></p>';
 		submit_button( 'Buat usulan narasi', 'secondary' );

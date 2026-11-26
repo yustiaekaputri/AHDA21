@@ -38,6 +38,8 @@ Untuk mencoba pencarian NPSN setelah peninjauan, unggah hanya `identity.csv` yan
 
 Untuk menyiapkan Claude, set `ANTHROPIC_API_KEY` pada environment proses PHP atau tetapkan `SDP_CLAUDE_API_KEY` di konfigurasi WordPress lokal. Di **Direktori Sekolah → SEO & AI → Asisten narasi AI**, masukkan NPSN dari profil yang sudah tersimpan, pilih **Claude (Anthropic)** dan isi ID model dari akun Anthropic Anda. Konfirmasi izin pemrosesan sebelum membuat usulan. Pratinjau privat tersedia selama sepuluh menit untuk ditinjau. Permintaan dilakukan atas tindakan administrator dan dapat menimbulkan biaya.
 
+Sebelum membuat narasi, gunakan **Periksa model Claude** pada menu yang sama. Pemeriksaan metadata ini hanya mengirim kunci API dan ID model ke Anthropic. Keberhasilan pemeriksaan mengonfirmasi akses metadata model, sementara kuota dan kemampuan membuat narasi baru diuji saat mengirim permintaan narasi.
+
 ## Menjalankan pratinjau
 
 Dengan Docker Compose, OpenSSL, dan Node.js LTS, jalankan `npm ci` lalu `make start`. WordPress pengembangan tersedia di port lokal 3000. Nama login admin lokal adalah `sdp-admin` dan kata sandinya dibuat otomatis di `.env`. Variabel `SDP_HTTP_PORT` dan `SDP_SITE_URL` mengatur alamat lokal. Data demo dibuat melalui API plugin di database pengembangan. Pada komputer yang menjalankan Docker, buka dashboard di `http://127.0.0.1:3000/wp-admin/admin.php?page=sdp-directory`. Jika Docker berjalan di Codex Cloud, gunakan browser Desktop di lingkungan Cloud yang sama atau tautan HTTP Preview dari Codex. Browser di komputer Anda memerlukan penerusan port agar dapat mencapai WordPress Cloud.

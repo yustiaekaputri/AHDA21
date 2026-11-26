@@ -3,6 +3,59 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 final class SDP_AI {
+	/**
+	 * Read authentication headers from server configuration.
+	 *
+	 * @return array|WP_Error Request headers or a configuration error.
+	 */
+	private static function claude_headers() {
+		$key = defined( 'SDP_CLAUDE_API_KEY' ) ? SDP_CLAUDE_API_KEY : getenv( 'ANTHROPIC_API_KEY' );
+		if ( ! is_string( $key ) || ! preg_match( '/^[!-~]+$/D', $key ) ) {
+			return new WP_Error( 'key', 'Konfigurasikan SDP_CLAUDE_API_KEY atau ANTHROPIC_API_KEY di server.' );
+		}
+		return array(
+			'x-api-key'         => $key,
+			'anthropic-version' => '2023-06-01',
+		);
+	}
+
+	/**
+	 * Verify model access without sending a prompt or school data.
+	 *
+	 * @param string $model Model identifier or alias.
+	 * @return true|WP_Error Successful check or a provider error.
+	 */
+	public static function check_claude_model( $model ) {
+		if ( ! preg_match( '/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/D', $model ) ) {
+			return new WP_Error( 'model', 'ID model Claude tidak valid.' );
+		}
+		$headers = self::claude_headers();
+		if ( is_wp_error( $headers ) ) {
+			return $headers;
+		}
+		$response = wp_safe_remote_get(
+			'https://api.anthropic.com/v1/models/' . rawurlencode( $model ),
+			array(
+				'headers'             => $headers,
+				'timeout'             => 10,
+				'redirection'         => 0,
+				'limit_response_size' => 16384,
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			return new WP_Error( 'network', 'Koneksi ke Anthropic gagal. Periksa akses jaringan server.' );
+		}
+		$code = wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $code ) {
+			return new WP_Error( 'http', 'Anthropic mengembalikan HTTP ' . (int) $code . '. Periksa kunci, ID model, dan akses akun.' );
+		}
+		$data = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( 'model' !== ( $data['type'] ?? '' ) || ! is_string( $data['id'] ?? null ) || '' === $data['id'] ) {
+			return new WP_Error( 'response', 'Respons metadata model tidak valid.' );
+		}
+		return true;
+	}
+
 	public static function facts( $d ) {
 		$out = array();
 		foreach ( array( 'nama', 'npsn', 'jenjang', 'status', 'provinsi', 'kabupaten', 'kecamatan', 'akreditasi', 'tahun_akreditasi', 'tahun_data', 'jumlah_siswa', 'jumlah_guru', 'jumlah_rombel', 'luas_tanah', 'ruang_kelas', 'perpustakaan', 'laboratorium', 'kurikulum' ) as $k ) {
@@ -54,14 +107,13 @@ final class SDP_AI {
 				'generationConfig'   => array( 'maxOutputTokens' => 900 ),
 			);
 		} elseif ( 'claude' === $provider ) {
-			$key = defined( 'SDP_CLAUDE_API_KEY' ) ? SDP_CLAUDE_API_KEY : getenv( 'ANTHROPIC_API_KEY' );
-			if ( ! is_string( $key ) || ! preg_match( '/^[!-~]+$/D', $key ) ) {
-				return new WP_Error( 'key', 'Konfigurasikan SDP_CLAUDE_API_KEY atau ANTHROPIC_API_KEY di server.' );
+			$claude = self::claude_headers();
+			if ( is_wp_error( $claude ) ) {
+				return $claude;
 			}
-			$headers['x-api-key']         = $key;
-			$headers['anthropic-version'] = '2023-06-01';
-			$url                          = 'https://api.anthropic.com/v1/messages';
-			$body                         = array(
+			$headers += $claude;
+			$url      = 'https://api.anthropic.com/v1/messages';
+			$body     = array(
 				'model'      => $model,
 				'system'     => $system,
 				'messages'   => array( $messages[1] ),
