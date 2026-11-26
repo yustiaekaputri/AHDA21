@@ -76,8 +76,10 @@ final class SDP_Portal {
     }
     public static function results($state){
         global $wpdb;[$from,$args]=self::from($state);
-        $summary=$wpdb->get_row(self::select_sql("SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta".$from,$args),ARRAY_A);
-        if(!is_array($summary)||!empty($wpdb->last_error))return self::failed_results();
+        $sql=self::select_sql("SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta".$from,$args);
+        $read=static function()use($wpdb,$sql){$v=$wpdb->get_row($sql,ARRAY_A);return is_array($v)&&empty($wpdb->last_error)?$v:null;};
+        $summary=SDP_Performance::summary_eligible($state)?SDP_Performance::summary($sql,$read):$read();
+        if(!is_array($summary))return self::failed_results();
         $total=(int)($summary['total']??0);$pages=max(1,(int)ceil($total/self::LIMIT));$page=min($state['p'],$pages);
         $rows=$wpdb->get_results(self::select_sql('SELECT s.npsn,s.post_id,s.nama,s.jenjang,s.status,s.akreditasi,s.provinsi,s.kabupaten,s.kecamatan,s.payload'.$from.' ORDER BY s.nama,s.npsn LIMIT %d OFFSET %d',array_merge($args,[self::LIMIT,($page-1)*self::LIMIT])),ARRAY_A);
         if(!is_array($rows)||!empty($wpdb->last_error))return self::failed_results();

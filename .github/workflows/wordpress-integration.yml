@@ -90,6 +90,9 @@ jobs:
       - name: Bounded HTTP benchmark
         if: matrix.php == '8.3' && steps.scale.outcome == 'success'
         run: python3 scripts/test-http-integration.py 2>&1 | tee artifacts/http-benchmark.log
+      - name: Experimental single-slot summary cache
+        if: ${{ !cancelled() && matrix.php == '8.3' && steps.scale.outcome == 'success' }}
+        run: php -d memory_limit=128M "$SDP_WP_CLI" --path="$SDP_WP_ROOT" --allow-root --user=sdp_preview_admin eval-file tests/integration/test-summary-cache.php 2>&1 | tee artifacts/summary-cache.log
       - name: Read-only SQL query-shape experiments
         if: ${{ !cancelled() && matrix.php == '8.3' && steps.scale.outcome == 'success' }}
         run: python3 scripts/test-query-shapes.py 2>&1 | tee artifacts/query-shapes.log
