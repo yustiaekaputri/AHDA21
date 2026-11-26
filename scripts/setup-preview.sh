@@ -38,9 +38,16 @@ done
 "${wp[@]}" option update blog_public 0
 "${wp[@]}" option update permalink_structure ''
 if [[ "${SDP_LOGIN_PROBE:-0}" == 1 ]]; then bash "$repo/scripts/probe-login.sh" core; fi
-mkdir -p "$root/wp-content/plugins/sekolah-directory-pro" "$root/wp-content/themes/sekolah-directory-theme"
-cp -R "$repo/plugin/." "$root/wp-content/plugins/sekolah-directory-pro/"
-cp -R "$repo/theme/." "$root/wp-content/themes/sekolah-directory-theme/"
+# Optional archive-based installation is restricted to disposable GitHub CI.
+if [[ -n "${SDP_PLUGIN_ARCHIVE:-}${SDP_THEME_ARCHIVE:-}" ]]; then
+  [[ "${GITHUB_ACTIONS:-}" == true && "$root" == "$RUNNER_TEMP/sdp-wordpress" && -f "$SDP_PLUGIN_ARCHIVE" && -f "$SDP_THEME_ARCHIVE" && "$SDP_PLUGIN_ARCHIVE" == *.zip && "$SDP_THEME_ARCHIVE" == *.zip ]] || { echo 'Archive mode requires disposable CI and both ZIPs'; exit 1; }
+  "${wp[@]}" plugin install "$SDP_PLUGIN_ARCHIVE"
+  "${wp[@]}" theme install "$SDP_THEME_ARCHIVE"
+else
+  mkdir -p "$root/wp-content/plugins/sekolah-directory-pro" "$root/wp-content/themes/sekolah-directory-theme"
+  cp -R "$repo/plugin/." "$root/wp-content/plugins/sekolah-directory-pro/"
+  cp -R "$repo/theme/." "$root/wp-content/themes/sekolah-directory-theme/"
+fi
 "${wp[@]}" plugin activate sekolah-directory-pro
 "${wp[@]}" theme activate sekolah-directory-theme
 if [[ "${SDP_LOGIN_PROBE:-0}" == 1 ]]; then bash "$repo/scripts/probe-login.sh" active; fi

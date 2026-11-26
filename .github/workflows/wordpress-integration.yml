@@ -152,3 +152,63 @@ jobs:
           path: ${{ runner.temp }}/candidate/
           if-no-files-found: error
           retention-days: 7
+
+  candidate-installation:
+    name: Verify candidate ZIP installation
+    needs: candidate-packages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [fresh, upgrade]
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: sdp_test
+          MARIADB_USER: sdp_test
+          MARIADB_PASSWORD: disposable-ci-only
+          MARIADB_RANDOM_ROOT_PASSWORD: '1'
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=12
+    env:
+      SDP_DB_PASSWORD: disposable-ci-only
+      SDP_PREVIEW_URL: http://127.0.0.1:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: sekolah-directory-development-candidate
+          path: ${{ runner.temp }}/candidate
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, pdo_mysql, curl, mbstring, xml, zip, gd, intl
+          coverage: none
+      - name: Initialize disposable paths
+        env:
+          DB_PORT: ${{ job.services.mariadb.ports[3306] }}
+        run: |
+          {
+            echo "SDP_DB_PORT=$DB_PORT"
+            echo "SDP_WP_ROOT=$RUNNER_TEMP/sdp-wordpress"
+            echo "SDP_WP_CLI=$RUNNER_TEMP/wp-cli.phar"
+            echo "SDP_PREVIEW_MANIFEST=$RUNNER_TEMP/sdp-preview.json"
+          } >> "$GITHUB_ENV"
+          mkdir -p artifacts
+      - name: Install WP-CLI
+        run: curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$SDP_WP_CLI"
+      - name: Actual archive install or replacement
+        run: bash scripts/test-candidate-install.sh "${{ matrix.mode }}" 2>&1 | tee artifacts/package-install.log
+      - name: Save package installation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: candidate-install-${{ matrix.mode }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 7
