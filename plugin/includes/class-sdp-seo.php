@@ -293,9 +293,27 @@ final class SDP_SEO {
 		}return $content . $extra . '</section>';}
 	public static function menu() {
 		add_submenu_page( 'sdp-directory', 'SEO & AI', 'SEO & AI', 'manage_options', 'sdp-seo', array( __CLASS__, 'page' ) );}
-	private static function report( $msg, $error = false ) {
+
+	/**
+	 * Open the narrative form for a specific school.
+	 *
+	 * @param string $npsn Validated school identifier.
+	 * @return string Admin URL with the narrative section selected.
+	 */
+	public static function narrative_url( $npsn ) {
+		return add_query_arg( 'npsn', $npsn, admin_url( 'admin.php?page=sdp-seo' ) ) . '#sdp-narasi-ai';
+	}
+
+	/**
+	 * Redirect after an admin action, keeping the active school when provided.
+	 *
+	 * @param string $msg Message shown after the redirect.
+	 * @param bool   $error Whether the action failed.
+	 * @param string $npsn Validated school identifier or an empty string.
+	 */
+	private static function report( $msg, $error = false, $npsn = '' ) {
 		set_transient( 'sdp_seo_notice_' . get_current_user_id(), array( $msg, $error ), 120 );
-		wp_safe_redirect( admin_url( 'admin.php?page=sdp-seo' ) );
+		wp_safe_redirect( '' === $npsn ? admin_url( 'admin.php?page=sdp-seo' ) : self::narrative_url( $npsn ) );
 		exit;}
 	public static function action() {
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -355,10 +373,11 @@ final class SDP_SEO {
 				self::report( $id->get_error_message(), true );
 			}self::report( 'Draf halaman wilayah dibuat. Periksa dan terbitkan melalui Pages.' );}
 		if ( 'claude_check' === $op ) {
+			$npsn  = SDP_National::npsn( sanitize_text_field( wp_unslash( $_POST['npsn'] ?? '' ) ) );
 			$model = sanitize_text_field( wp_unslash( $_POST['claude_model'] ?? '' ) );
 			$key   = 'sdp_claude_check_' . get_current_user_id();
 			if ( get_transient( $key ) ) {
-				self::report( 'Tunggu satu menit sebelum memeriksa model Claude kembali.', true );
+				self::report( 'Tunggu satu menit sebelum memeriksa model Claude kembali.', true, $npsn );
 			}
 			set_transient( $key, 1, 60 );
 			if ( isset( $_POST['list_claude_models'] ) ) {
@@ -366,39 +385,40 @@ final class SDP_SEO {
 				delete_transient( $list_key );
 				$models = SDP_AI::list_claude_models();
 				if ( is_wp_error( $models ) ) {
-					self::report( $models->get_error_message(), true );
+					self::report( $models->get_error_message(), true, $npsn );
 				}
 				if ( ! $models ) {
-					self::report( 'Anthropic tidak mengembalikan ID model yang tersedia.', true );
+					self::report( 'Anthropic tidak mengembalikan ID model yang tersedia.', true, $npsn );
 				}
 				set_transient( $list_key, $models, 600 );
-				self::report( 'Daftar model Claude tersedia di kolom ID model selama 10 menit.' );
+				self::report( 'Daftar model Claude tersedia di kolom ID model selama 10 menit.', false, $npsn );
 			}
 			$result = SDP_AI::check_claude_model( $model );
 			if ( is_wp_error( $result ) ) {
-				self::report( $result->get_error_message(), true );
+				self::report( $result->get_error_message(), true, $npsn );
 			}
-			self::report( 'Model Claude tersedia untuk kunci ini. Belum ada narasi yang dibuat.' );
+			self::report( 'Model Claude tersedia untuk kunci ini. Belum ada narasi yang dibuat.', false, $npsn );
 		}
 		if ( 'ai' === $op ) {
+			$npsn = SDP_National::npsn( sanitize_text_field( wp_unslash( $_POST['npsn'] ?? '' ) ) );
 			if ( empty( $_POST['consent'] ) ) {
-				self::report( 'Konfirmasi izin pemrosesan data terlebih dahulu.', true );
-			}$npsn = strtoupper( sanitize_text_field( wp_unslash( $_POST['npsn'] ?? '' ) ) );
-			if ( ! preg_match( '/^[A-Z0-9]{8}$/D', $npsn ) ) {
+				self::report( 'Konfirmasi izin pemrosesan data terlebih dahulu.', true, $npsn );
+			}
+			if ( '' === $npsn ) {
 				self::report( 'NPSN tidak valid.', true );
 			}$r = self::by_npsn( $npsn );
 			$d  = $r ? json_decode( $r['payload'], true ) : array();
 			if ( ! $d ) {
-				self::report( 'Profil tidak ditemukan.', true );
+				self::report( 'Profil tidak ditemukan.', true, $npsn );
 			}$provider = sanitize_key( $_POST['provider'] ?? '' );
 			$model     = sanitize_text_field( wp_unslash( $_POST['model'] ?? '' ) );
 			$key       = 'sdp_ai_rate_' . get_current_user_id();
 			if ( get_transient( $key ) ) {
-				self::report( 'Permintaan AI dibatasi satu kali per menit.', true );
+				self::report( 'Permintaan AI dibatasi satu kali per menit.', true, $npsn );
 			}set_transient( $key, 1, 60 );
 			$res = SDP_AI::generate( $provider, $model, $d );
 			if ( is_wp_error( $res ) ) {
-				self::report( $res->get_error_message(), true );
+				self::report( $res->get_error_message(), true, $npsn );
 			}set_transient(
 				'sdp_ai_preview_' . get_current_user_id(),
 				array(
@@ -408,22 +428,37 @@ final class SDP_SEO {
 				),
 				600
 			);
-			self::report( 'Usulan AI tersedia selama 10 menit. Belum diterbitkan.' );
+			self::report( 'Usulan AI tersedia selama 10 menit. Belum diterbitkan.', false, $npsn );
 		}self::report( 'Tindakan tidak dikenal.', true );
 	}
 	private static function start( $op ) {
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp_seo"><input type="hidden" name="op" value="' . esc_attr( $op ) . '">';
 		wp_nonce_field( 'sdp_seo' );}
+
+	/**
+	 * Show feedback alongside the active admin form.
+	 *
+	 * @param array $notice Message and error flag.
+	 */
+	private static function show_notice( $notice ) {
+		echo '<div class="notice inline ' . ( $notice[1] ? 'notice-error' : 'notice-info' ) . '"><p>' . esc_html( $notice[0] ) . '</p></div>';
+	}
+
 	public static function page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
-		}$c = self::config();
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only prefills a validated identifier on a read-only screen.
+		$npsn = SDP_National::npsn( sanitize_text_field( wp_unslash( $_GET['npsn'] ?? '' ) ) );
+		$c    = self::config();
 		echo '<div class="wrap"><h1>SEO & AI — Sekolah Directory Pro</h1>';
 		$k = 'sdp_seo_notice_' . get_current_user_id();
 		$n = get_transient( $k );
 		if ( $n ) {
 			delete_transient( $k );
-			echo '<div class="notice ' . ( $n[1] ? 'notice-error' : 'notice-info' ) . '"><p>' . esc_html( $n[0] ) . '</p></div>';
+			if ( '' === $npsn ) {
+				self::show_notice( $n );
+			}
 		}if ( self::external_seo() ) {
 			echo '<div class="notice notice-warning"><p>Plugin SEO lain terdeteksi. Meta description dan schema SDP dimatikan untuk mencegah duplikasi. Aturan robots/sitemap plugin SEO lain harus dikonfigurasi dan diuji tersendiri; gunakan SEO bawaan WordPress untuk cakupan penuh SDP.</p></div>';
 		}
@@ -447,8 +482,13 @@ final class SDP_SEO {
 		foreach ( self::SCOPE as $k ) {
 			echo '<p><label>' . esc_html( ucfirst( $k ) ) . ' <input name="' . esc_attr( $k ) . '" ' . ( 'provinsi' === $k ? 'required' : '' ) . '></label></p>';
 		}submit_button( 'Buat draf halaman wilayah', 'secondary' );
-		echo '</form><h2>Asisten narasi AI (opsional)</h2><p>Hanya mengirim fakta institusi yang dipilih ke penyedia. Hasil berupa pratinjau privat, tidak disimpan dalam artikel dan wajib diperiksa. API berbayar dapat menimbulkan biaya. Kunci disediakan melalui wp-config.php (SDP_OPENAI_API_KEY / SDP_GEMINI_API_KEY / SDP_CLAUDE_API_KEY). Claude juga membaca ANTHROPIC_API_KEY dari environment server. Ollama memakai 127.0.0.1:11434.</p>';
+		echo '</form><h2 id="sdp-narasi-ai">Asisten narasi AI (opsional)</h2>';
+		if ( $n && '' !== $npsn ) {
+			self::show_notice( $n );
+		}
+		echo '<p>Hanya mengirim fakta institusi yang dipilih ke penyedia. Hasil berupa pratinjau privat, tidak disimpan dalam artikel dan wajib diperiksa. API berbayar dapat menimbulkan biaya. Kunci disediakan melalui wp-config.php (SDP_OPENAI_API_KEY / SDP_GEMINI_API_KEY / SDP_CLAUDE_API_KEY). Claude juga membaca ANTHROPIC_API_KEY dari environment server. Ollama memakai 127.0.0.1:11434.</p>';
 		self::start( 'claude_check' );
+		echo '<input type="hidden" name="npsn" value="' . esc_attr( $npsn ) . '">';
 		echo '<p><label>ID model untuk pemeriksaan Claude <input name="claude_model" list="sdp-claude-models" maxlength="128" required></label></p>';
 		submit_button( 'Periksa model Claude', 'secondary' );
 		echo '<p><button type="submit" class="button" name="list_claude_models" value="1" formnovalidate>Ambil daftar model Claude</button></p>';
@@ -460,11 +500,11 @@ final class SDP_SEO {
 		}
 		echo '</datalist>';
 		self::start( 'ai' );
-		echo '<p><label>NPSN <input name="npsn" maxlength="8" required></label></p><p><label>Penyedia <select name="provider"><option value="ollama">Ollama lokal</option><option value="gemini">Gemini</option><option value="openai">OpenAI</option><option value="claude">Claude (Anthropic)</option></select></label></p><p><label>ID model <input name="model" list="sdp-claude-models" required placeholder="ID model yang tersedia"></label></p><p><label><input type="checkbox" name="consent" required> Saya berhak memproses data ini dan memahami pengiriman data serta potensi biaya.</label></p>';
+		echo '<p><label>NPSN <input name="npsn" maxlength="8" value="' . esc_attr( $npsn ) . '" required></label></p><p><label>Penyedia <select name="provider"><option value="ollama">Ollama lokal</option><option value="gemini">Gemini</option><option value="openai">OpenAI</option><option value="claude">Claude (Anthropic)</option></select></label></p><p><label>ID model <input name="model" list="sdp-claude-models" required placeholder="ID model yang tersedia"></label></p><p><label><input type="checkbox" name="consent" required> Saya berhak memproses data ini dan memahami pengiriman data serta potensi biaya.</label></p>';
 		submit_button( 'Buat usulan narasi', 'secondary' );
 		echo '</form>';
 		$a = get_transient( 'sdp_ai_preview_' . get_current_user_id() );
-		if ( $a ) {
+		if ( $a && ( '' === $npsn || $npsn === $a['npsn'] ) ) {
 			echo '<h3>Pratinjau AI — ' . esc_html( $a['npsn'] ) . ' / ' . esc_html( $a['provider'] ) . '</h3><p>Periksa setiap klaim. Tidak ada tombol publikasi otomatis.</p><textarea readonly class="large-text" rows="10">' . esc_textarea( $a['text'] ) . '</textarea>';
 		}echo '</div>';
 	}

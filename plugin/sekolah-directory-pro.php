@@ -719,6 +719,9 @@ final class SDP_Directory {
 		}
 		echo '<div class="wrap"><h1>Tambah / perbarui sekolah</h1>';
 		self::notice();
+		if ( ! empty( $d['npsn'] ) ) {
+			echo '<p><a class="button" href="' . esc_url( SDP_SEO::narrative_url( $d['npsn'] ) ) . '">Buka asisten narasi AI</a></p>';
+		}
 		echo '<form method="get" action="' . esc_url( admin_url( 'admin.php' ) ) . '"><input type="hidden" name="page" value="sdp-edit"><label>Cari NPSN <input name="npsn" value="' . esc_attr( $npsn ) . '"></label> <button class="button">Muat profil</button></form><p>Isi NPSN yang sama untuk memperbarui profil. Nilai kosong tidak menghapus nilai sebelumnya. Perubahan artikel manual akan ditimpa saat regenerasi.</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp_save_school">';
 		wp_nonce_field( 'sdp_save_school' );
 		foreach ( self::fields() as $section => $fields ) {

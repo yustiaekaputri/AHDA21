@@ -233,6 +233,7 @@ test('cari NPSN dari katalog lokal dan simpan hanya setelah ditinjau', async ({ 
     await stale.goto(previewUrl);
     await stale.getByRole('link', { name: 'Isi profil secara manual' }).click();
     await expect(stale.locator('#sdp-nama')).toHaveValue('');
+    await expect(stale.getByRole('link', { name: 'Buka asisten narasi AI' })).toHaveCount(0);
     await stale.goto(previewUrl);
 
     await page.getByRole('button', { name: 'Simpan draf dari katalog' }).click();
@@ -245,6 +246,15 @@ test('cari NPSN dari katalog lokal dan simpan hanya setelah ditinjau', async ({ 
     await expect(page.getByRole('button', { name: 'Simpan draf dari katalog' })).toHaveCount(0);
     await page.getByRole('link', { name: 'Buka profil tersimpan' }).click();
     await expect(page.locator('#sdp-nama')).toHaveValue('Sekolah FIKTIF Katalog');
+    await page.getByRole('link', { name: 'Buka asisten narasi AI' }).click();
+    await expect(page).toHaveURL(`${new URL(page.url()).origin}/wp-admin/admin.php?page=sdp-seo&npsn=${npsn}#sdp-narasi-ai`);
+    await expect(page.getByLabel('NPSN', { exact: true })).toHaveValue(npsn);
+    await expect(page.getByRole('checkbox', { name: /Saya berhak memproses data ini/ })).not.toBeChecked();
+    await page.getByLabel('ID model untuk pemeriksaan Claude').fill('model tidak valid');
+    await page.getByRole('button', { name: 'Periksa model Claude' }).click();
+    await expect(page.getByText('ID model Claude tidak valid.')).toBeVisible();
+    await expect(page.getByLabel('NPSN', { exact: true })).toHaveValue(npsn);
+    await page.screenshot({ path: `${screenshotDir}/desktop-narasi-ai-dari-profil.png` });
 
     await stale.getByRole('button', { name: 'Simpan draf dari katalog' }).click();
     await expect(stale.getByText('NPSN sudah memiliki profil.', { exact: false })).toBeVisible();
