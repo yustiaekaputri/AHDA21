@@ -232,20 +232,20 @@ final class SDP_Missing {
 			echo '<p>' . esc_html( $p->get_error_message() ) . '</p></div>';
 			return;
 		}$n = count( $p['rows'] );
-		echo '<h2>Ringkasan batch</h2><p>Dipindai: ' . (int) $p['scanned'] . ' · Valid: ' . $n . ' · Payload bermasalah: ' . (int) $p['invalid'] . ' · Fiktif: ' . (int) $p['demo'] . ' · Tidak diperbarui lokal ≥180 hari: ' . (int) $p['stale'] . ' · Waktu perubahan tidak diketahui: ' . (int) $p['unknown'] . '</p><p>Skor mentah 68 atribut bukan kualitas sekolah. Beberapa atribut (misalnya jurusan SMK) mungkin tidak relevan. Nol sah dihitung terisi; placeholder dihitung kurang tetapi perlu ditinjau manual. Umur perubahan lokal bukan umur fakta dari sumber.</p>';
+		echo '<h2>Ringkasan batch</h2><p>Dipindai: ' . (int) $p['scanned'] . ' · Valid: ' . (int) $n . ' · Payload bermasalah: ' . (int) $p['invalid'] . ' · Fiktif: ' . (int) $p['demo'] . ' · Tidak diperbarui lokal ≥180 hari: ' . (int) $p['stale'] . ' · Waktu perubahan tidak diketahui: ' . (int) $p['unknown'] . '</p><p>Skor mentah 68 atribut bukan kualitas sekolah. Beberapa atribut (misalnya jurusan SMK) mungkin tidak relevan. Nol sah dihitung terisi; placeholder dihitung kurang tetapi perlu ditinjau manual. Umur perubahan lokal bukan umur fakta dari sumber.</p>';
 		if ( $n ) {
 			echo '<h3>Kelengkapan per kategori</h3><table class="widefat striped"><thead><tr><th>Kategori</th><th>Terisi / total slot</th><th>Persen</th></tr></thead><tbody>';
 			foreach ( SDP_Directory::fields() as $k => $fields ) {
 				$den = $n * count( $fields );
 				$num = $p['groups'][ $k ];
-				echo '<tr><td>' . esc_html( $k ) . '</td><td>' . $num . ' / ' . $den . '</td><td>' . round( 100 * $num / $den, 1 ) . '%</td></tr>';
+				echo '<tr><td>' . esc_html( $k ) . '</td><td>' . (int) $num . ' / ' . (int) $den . '</td><td>' . esc_html( round( 100 * $num / $den, 1 ) ) . '%</td></tr>';
 			}echo '</tbody></table><details><summary>Rincian seluruh 68 atribut</summary><table class="widefat striped"><thead><tr><th>Atribut</th><th>Kurang</th><th>Terisi</th></tr></thead><tbody>';
 			foreach ( SDP_Directory::labels() as $k => $label ) {
-				echo '<tr><td>' . esc_html( $label ) . '</td><td>' . $p['counts'][ $k ] . '</td><td>' . ( $n - $p['counts'][ $k ] ) . '</td></tr>';
+				echo '<tr><td>' . esc_html( $label ) . '</td><td>' . (int) $p['counts'][ $k ] . '</td><td>' . (int) ( $n - $p['counts'][ $k ] ) . '</td></tr>';
 			}echo '</tbody></table></details><h3>Prioritas dalam batch (skor terendah dahulu)</h3><table class="widefat striped"><thead><tr><th>Sekolah</th><th>Terisi</th><th>Kurang</th><th>Sumber yang disarankan</th><th>Umur lokal</th></tr></thead><tbody>';
 			foreach ( $p['rows'] as $r ) {
 				$url = add_query_arg( 'npsn', $r['npsn'], admin_url( 'admin.php?page=sdp-edit' ) );
-				echo '<tr><td><a href="' . esc_url( $url ) . '">' . esc_html( $r['nama'] ) . '</a><br>' . esc_html( $r['npsn'] . ' · ' . $r['jenjang'] ) . '</td><td>' . $r['filled'] . '/68 (' . $r['score'] . '%)<br>Relevan: ' . (int) $r['relevant']['score'] . '% <a href="' . esc_url( add_query_arg( 'npsn', $r['npsn'], admin_url( 'admin.php?page=sdp-intelligence' ) ) ) . '">Validasi</a></td><td><details><summary>' . count( $r['missing'] ) . ' atribut</summary>' . esc_html( implode( ', ', array_intersect_key( SDP_Directory::labels(), array_flip( $r['missing'] ) ) ) ) . '</details></td><td>' . esc_html( implode( '; ', $r['recommend'] ) );
+				echo '<tr><td><a href="' . esc_url( $url ) . '">' . esc_html( $r['nama'] ) . '</a><br>' . esc_html( $r['npsn'] . ' · ' . $r['jenjang'] ) . '</td><td>' . (int) $r['filled'] . '/68 (' . esc_html( $r['score'] ) . '%)<br>Relevan: ' . (int) $r['relevant']['score'] . '% <a href="' . esc_url( add_query_arg( 'npsn', $r['npsn'], admin_url( 'admin.php?page=sdp-intelligence' ) ) ) . '">Validasi</a></td><td><details><summary>' . count( $r['missing'] ) . ' atribut</summary>' . esc_html( implode( ', ', array_intersect_key( SDP_Directory::labels(), array_flip( $r['missing'] ) ) ) ) . '</details></td><td>' . esc_html( implode( '; ', $r['recommend'] ) );
 				if ( $r['website'] ) {
 					echo '<br><a href="' . esc_url( add_query_arg( 'npsn', $r['npsn'], admin_url( 'admin.php?page=sdp-website' ) ) ) . '">Tinjau website</a>';
 				} else {

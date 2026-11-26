@@ -200,7 +200,7 @@ final class SDP_Production {
 			echo '<tr><th>' . esc_html( $k ) . '</th><td>' . esc_html( $v['status'] ) . '</td><td>' . esc_html( $v['note'] ) . '</td></tr>';
 		}echo '</tbody></table><h2>Audit kualitas data bertahap</h2><form method="post">';
 		wp_nonce_field( 'sdp90_readiness' );
-		echo '<label>Setelah NPSN (kosong = awal) <input name="after" maxlength="8" value="' . esc_attr( is_array( $result ) ? ( $result['next'] ?? '' ) : '' ) . '"></label> <button class="button" name="op" value="audit">Audit maks. ' . self::limits() . ' profil</button></form>';
+		echo '<label>Setelah NPSN (kosong = awal) <input name="after" maxlength="8" value="' . esc_attr( is_array( $result ) ? ( $result['next'] ?? '' ) : '' ) . '"></label> <button class="button" name="op" value="audit">Audit maks. ' . (int) self::limits() . ' profil</button></form>';
 		if ( is_wp_error( $result ) ) {
 			echo '<p>' . esc_html( $result->get_error_message() ) . '</p>';
 		} elseif ( is_array( $result ) ) {

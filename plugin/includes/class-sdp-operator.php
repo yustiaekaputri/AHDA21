@@ -415,14 +415,14 @@ final class SDP_Operator {
 			$d     = self::school( $r['npsn'] );
 			$claim = self::claim( $r['npsn'], (int) $r['user_id'] );
 			$can   = self::reviewable( $r, $claim, $d ) && is_array( $c );
-			echo '<hr><h3>#' . $id . ' · ' . esc_html( $r['npsn'] ) . ' · ' . esc_html( $r['field'] ) . '</h3><p>Pengusul #' . (int) $r['user_id'] . ' · ' . esc_html( $r['created_at'] ) . ' UTC</p>';
+			echo '<hr><h3>#' . (int) $id . ' · ' . esc_html( $r['npsn'] ) . ' · ' . esc_html( $r['field'] ) . '</h3><p>Pengusul #' . (int) $r['user_id'] . ' · ' . esc_html( $r['created_at'] ) . ' UTC</p>';
 			if ( is_array( $c ) ) {
 				echo '<p>Nilai saat ini: ' . esc_html( is_array( $d ) ? ( $d[ $r['field'] ] ?? '—' ) : '—' ) . '</p><p>Usulan: ' . nl2br( esc_html( $c['value'] ?? '' ) ) . '</p><p>Periode: ' . esc_html( $c['period'] ?? '' ) . '</p><p>Bukti: <a rel="noopener noreferrer" target="_blank" href="' . esc_url( $c['url'] ?? '' ) . '">' . esc_html( $c['url'] ?? '' ) . '</a></p><p>Catatan: ' . nl2br( esc_html( $c['note'] ?? '' ) ) . '</p>';
 				if ( 'media_request' === $r['field'] ) {
 					echo '<p>Media: <a rel="noopener noreferrer" target="_blank" href="' . esc_url( $c['value'] ?? '' ) . '">Buka URL gambar</a> (tidak diunduh plugin).</p>';
 				}
 			}self::form( 'sdp71_review', 'sdp71_review_' . $id );
-			echo '<input type="hidden" name="id" value="' . $id . '"><p><label><input type="checkbox" name="confirm" value="1" required> Saya telah memeriksa bukti dan keputusan ini.</label></p>';
+			echo '<input type="hidden" name="id" value="' . esc_attr( $id ) . '"><p><label><input type="checkbox" name="confirm" value="1" required> Saya telah memeriksa bukti dan keputusan ini.</label></p>';
 			if ( $can ) {
 				echo '<input type="hidden" name="snapshot" value="' . esc_attr( SDP_Intelligence::snapshot( $d ) ) . '">';
 				echo 'media_request' === $r['field'] ? '<button class="button" name="decision" value="handled">Tandai media ditinjau (tanpa impor)</button>' : '<button class="button button-primary" name="decision" value="approve">Setujui dan kunci atribut</button>';

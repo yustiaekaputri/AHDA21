@@ -349,7 +349,7 @@ final class SDP_Sources {
 			'kecamatan'        => 'Filter kecamatan',
 			'jenjang'          => 'Filter jenjang',
 		) as $k => $label ) {
-			echo '<tr><th><label for="ss-' . $k . '">' . esc_html( $label ) . '</label></th><td><input class="large-text" id="ss-' . $k . '" name="cfg[' . $k . ']" value="' . esc_attr( $c[ $k ] ) . '"></td></tr>';
+			echo '<tr><th><label for="ss-' . esc_attr( $k ) . '">' . esc_html( $label ) . '</label></th><td><input class="large-text" id="ss-' . esc_attr( $k ) . '" name="cfg[' . esc_attr( $k ) . ']" value="' . esc_attr( $c[ $k ] ) . '"></td></tr>';
 		}
 		echo '<tr><th>Format</th><td><select name="cfg[format]"><option value="csv" ' . selected( $c['format'], 'csv', false ) . '>CSV</option><option value="json" ' . selected( $c['format'], 'json', false ) . '>JSON</option></select></td></tr><tr><th>Mode gabung</th><td><select name="cfg[policy]"><option value="fill" ' . selected( $c['policy'], 'fill', false ) . '>Isi kolom kosong</option><option value="overwrite" ' . selected( $c['policy'], 'overwrite', false ) . '>Perbarui kolom (periksa periode data)</option></select></td></tr></table><p><label><input type="checkbox" name="cfg[schedule]" value="1" ' . checked( $c['schedule'], 1, false ) . '> Jadwalkan setiap 24 jam</label></p><p><label><input type="checkbox" name="cfg[publish]" value="1" ' . checked( $c['publish'], 1, false ) . '> Terbitkan profil langsung</label></p><p>File CSV/JSON: <input type="file" name="dataset" accept=".csv,.json"></p>';
 		self::consent();

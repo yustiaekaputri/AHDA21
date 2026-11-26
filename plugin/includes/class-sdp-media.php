@@ -539,7 +539,7 @@ final class SDP_Media {
 		if ( is_wp_error( $items ) ) {
 			echo '<p>' . esc_html( $items->get_error_message() ) . '</p></div>';
 			return;
-		}echo '<h2>' . esc_html( $d['nama'] ) . '</h2><p>Website tercatat: ' . esc_html( $d['website'] ?? 'Belum ada' ) . '</p><p>' . count( $items ) . ' / ' . self::LIMIT . ' media. PHP GD: ' . ( function_exists( 'imagecreatefromstring' ) ? 'tersedia' : 'tidak tersedia' ) . '.</p>';
+		}echo '<h2>' . esc_html( $d['nama'] ) . '</h2><p>Website tercatat: ' . esc_html( $d['website'] ?? 'Belum ada' ) . '</p><p>' . count( $items ) . ' / ' . (int) self::LIMIT . ' media. PHP GD: ' . ( function_exists( 'imagecreatefromstring' ) ? 'tersedia' : 'tidak tersedia' ) . '.</p>';
 		echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp64_media"><input type="hidden" name="npsn" value="' . esc_attr( $n ) . '">';
 		wp_nonce_field( 'sdp64_media' );
 		echo '<table class="form-table"><tr><th><label for="sdp64-mode">Metode</label></th><td><select id="sdp64-mode" name="mode"><option value="file">Unggah file</option><option value="url">URL gambar langsung</option></select></td></tr><tr><th><label for="sdp64-file">File</label></th><td><input id="sdp64-file" name="image" type="file" accept="image/jpeg,image/png,image/webp"></td></tr><tr><th><label for="sdp64-url">URL gambar</label></th><td><input class="regular-text" id="sdp64-url" name="url" type="url" placeholder="https://..."> <p class="description">HTTPS, domain persis website tercatat, tanpa query, redirect, port atau kredensial.</p></td></tr><tr><th><label for="sdp64-role">Jenis</label></th><td><select id="sdp64-role" name="role">';

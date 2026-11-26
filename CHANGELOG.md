@@ -52,3 +52,4 @@ Baca PANDUAN-V81.txt; batas versi sebelumnya dalam bagian historis tidak berlaku
 - Perbaiki pengalihan berulang pada `/wp-admin/` di Apache lokal dan pastikan profil Compose dapat dijalankan pada filesystem dengan izin host ketat.
 - Terapkan format WPCS pada plugin dan tema. CI mengarsipkan laporan lengkap dan menolak temuan di luar baseline RC4.
 - Terapkan urutan operand WPCS pada 431 perbandingan dengan literal di plugin dan tema.
+- Tambahkan escaping sesuai konteks HTML dan atribut pada angka, ID dan nilai formulir di plugin.

@@ -369,7 +369,7 @@ final class SDP_Scheduler {
 				'budget' => array( 'Anggaran langkah berpotensi jaringan per hari UTC', 1, self::cap(), self::cap() ),
 				'load'   => array( 'Ambang load average ×10 (8 = 0,8)', 1, SDP_Resource::cap( 160, 10 ), SDP_Resource::cap( 20, 8 ) ),
 			) as $k => $v ) {
-				echo '<p><label>' . esc_html( $v[0] ) . ' <input type="number" name="cfg[' . esc_attr( $k ) . ']" min="' . $v[1] . '" max="' . $v[2] . '" value="' . $v[3] . '" required></label></p>';
+				echo '<p><label>' . esc_html( $v[0] ) . ' <input type="number" name="cfg[' . esc_attr( $k ) . ']" min="' . esc_attr( $v[1] ) . '" max="' . esc_attr( $v[2] ) . '" value="' . esc_attr( $v[3] ) . '" required></label></p>';
 			}
 			echo '<p><label><input type="checkbox" name="cfg[unknown]" value="1"> Izinkan jika metrik OS tidak tersedia (mis. Windows LocalWP; pemeriksaan PHP tetap berlaku).</label></p><p><label><input type="checkbox" name="cfg[network]" value="1"> Izinkan langkah jaringan hanya untuk NPSN dan identitas yang tampil di atas.</label></p><p><label><input type="checkbox" name="consent" value="1"> Saya memeriksa izin akses otomatis, robots.txt portal referensi, dan izin publikasi untuk sumber sekolah ini.</label></p><p>Jaringan terjadwal pada preset ini: ' . ( SDP_Resource::scheduled_network() ? 'diizinkan dengan persetujuan' : 'nonaktif; perlu SDP_LOW_RESOURCE_NETWORK_CRON=true' ) . '.</p><button class="button button-primary" name="op" value="start">Mulai sesi</button>';}
 			echo '</form><p>Load average dan MemAvailable hanyalah indikator; bukan pengukuran CPU per pengunjung, RAM cgroup, atau bandwidth. Jeda 60 detik minimum. Data hasil crawler tetap harus ditinjau.</p></div>';

@@ -428,11 +428,11 @@ final class SDP_Education {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}$j = get_option( self::JOB, array() );
-		echo '<div class="wrap"><h1>Statistik Pendidikan — v8.0</h1><p>Bangun snapshot dari profil publik. Satu pekerjaan aktif, ' . SDP_Resource::cap( self::BATCH, 25 ) . ' rekaman per putaran. Maksimal 10 snapshot tersimpan. Pilih periode eksplisit; data tanpa periode per atribut tidak masuk jumlah siswa/guru. Jangan jalankan impor atau perubahan profil saat pemindaian jika membutuhkan konsistensi.</p>';
+		echo '<div class="wrap"><h1>Statistik Pendidikan — v8.0</h1><p>Bangun snapshot dari profil publik. Satu pekerjaan aktif, ' . (int) SDP_Resource::cap( self::BATCH, 25 ) . ' rekaman per putaran. Maksimal 10 snapshot tersimpan. Pilih periode eksplisit; data tanpa periode per atribut tidak masuk jumlah siswa/guru. Jangan jalankan impor atau perubahan profil saat pemindaian jika membutuhkan konsistensi.</p>';
 		if ( ( $j['status'] ?? '' ) === 'running' ) {
 			echo '<p>Proses: ' . esc_html( self::scope( $j['filter'] ) ) . ' | Slot ' . (int) $j['slot'] . ' | Dipindai ' . (int) $j['scanned'] . ' | Profil lolos ' . (int) $j['total']['schools'] . '</p>';
 			self::form();
-			echo '<button class="button button-primary" name="op" value="step">Proses ' . SDP_Resource::cap( self::BATCH, 25 ) . ' berikutnya</button> <button class="button" name="op" value="cancel">Batalkan pekerjaan</button></form>';
+			echo '<button class="button button-primary" name="op" value="step">Proses ' . (int) SDP_Resource::cap( self::BATCH, 25 ) . ' berikutnya</button> <button class="button" name="op" value="cancel">Batalkan pekerjaan</button></form>';
 		} else {
 			self::form();
 				echo '<h2>Mulai snapshot</h2><label>Slot <input type="number" min="1" max="10" name="slot" value="1" required></label>';
@@ -449,10 +449,10 @@ final class SDP_Education {
 			$s = get_option( self::key( $i ), array() );
 			if ( ( $s['status'] ?? '' ) !== 'complete' ) {
 				continue;
-			}echo '<h3>Slot ' . $i . ' — ' . esc_html( self::scope( $s['filter'] ) ) . '</h3><p>Periode ' . esc_html( $s['filter']['period'] ) . ' | ' . (int) $s['total']['schools'] . ' sekolah | ' . esc_html( $s['end'] ) . ' UTC | <code>[statistik_pendidikan slot="' . $i . '"]</code></p>';
+			}echo '<h3>Slot ' . (int) $i . ' — ' . esc_html( self::scope( $s['filter'] ) ) . '</h3><p>Periode ' . esc_html( $s['filter']['period'] ) . ' | ' . (int) $s['total']['schools'] . ' sekolah | ' . esc_html( $s['end'] ) . ' UTC | <code>[statistik_pendidikan slot="' . (int) $i . '"]</code></p>';
 			self::form();
-			echo '<input type="hidden" name="slot" value="' . $i . '"><button class="button" name="op" value="export">Unduh CSV</button> <button class="button" name="op" value="delete">Hapus snapshot</button></form>';}
-		echo '<p>Buat halaman WordPress dan masukkan shortcode slot. Jalankan <code>wp sdp education --rounds=10</code> dari Site Shell untuk memproses hingga ' . ( SDP_Resource::cap( 10, 5 ) * SDP_Resource::cap( self::BATCH, 25 ) ) . ' rekaman per panggilan. Statistik lama tetap tampil sampai snapshot baru selesai. Bandingkan slot yang cakupannya sama dengan <code>[perbandingan_periode_pendidikan slots="1,2"]</code>.</p></div>';
+			echo '<input type="hidden" name="slot" value="' . esc_attr( $i ) . '"><button class="button" name="op" value="export">Unduh CSV</button> <button class="button" name="op" value="delete">Hapus snapshot</button></form>';}
+		echo '<p>Buat halaman WordPress dan masukkan shortcode slot. Jalankan <code>wp sdp education --rounds=10</code> dari Site Shell untuk memproses hingga ' . (int) ( SDP_Resource::cap( 10, 5 ) * SDP_Resource::cap( self::BATCH, 25 ) ) . ' rekaman per panggilan. Statistik lama tetap tampil sampai snapshot baru selesai. Bandingkan slot yang cakupannya sama dengan <code>[perbandingan_periode_pendidikan slots="1,2"]</code>.</p></div>';
 	}
 	public static function cli( $args, $assoc ) {
 		$v = $assoc['rounds'] ?? 10;

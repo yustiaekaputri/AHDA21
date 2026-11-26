@@ -575,7 +575,7 @@ final class SDP_Collector {
 			'kecamatan'        => 'Filter kecamatan',
 			'jenjang'          => 'Filter jenjang',
 		) as $k => $label ) {
-			echo '<tr><th><label for="sdp-c-' . $k . '">' . esc_html( $label ) . '</label></th><td><input class="large-text" id="sdp-c-' . $k . '" name="cfg[' . $k . ']" value="' . esc_attr( $c[ $k ] ) . '"></td></tr>';
+			echo '<tr><th><label for="sdp-c-' . esc_attr( $k ) . '">' . esc_html( $label ) . '</label></th><td><input class="large-text" id="sdp-c-' . esc_attr( $k ) . '" name="cfg[' . esc_attr( $k ) . ']" value="' . esc_attr( $c[ $k ] ) . '"></td></tr>';
 		}
 		echo '<tr><th>Format</th><td><select name="cfg[format]"><option value="csv" ' . selected( $c['format'], 'csv', false ) . '>CSV</option><option value="json" ' . selected( $c['format'], 'json', false ) . '>JSON</option></select></td></tr><tr><th>Aturan gabung</th><td><select name="cfg[policy]"><option value="fill" ' . selected( $c['policy'], 'fill', false ) . '>Isi kolom kosong (aman)</option><option value="overwrite" ' . selected( $c['policy'], 'overwrite', false ) . '>Perbarui kolom yang dikirim</option></select></td></tr></table><p>Filter mencocokkan nama tanpa membedakan huruf besar/kecil, dengan normalisasi awalan wilayah tertentu; nilai bawaan hanya untuk dataset dengan cakupan yang telah dipastikan. Mapping misalnya <code>{"nama":"Nama Satuan Pendidikan","jenjang":"Bentuk"}</code>.</p>';
 		echo '<p><label><input type="checkbox" name="cfg[publish]" value="1" ' . checked( $c['publish'], 1, false ) . '> Terbitkan profil baru langsung (default draf)</label></p><p><label><input type="checkbox" name="cfg[schedule]" value="1" ' . checked( $c['schedule'], 1, false ) . '> Sinkronisasi URL setiap 24 jam, setelah antrean kosong</label></p><p><label><input type="checkbox" name="authorized" value="1"> Saya berhak menggunakan dan memublikasikan dataset ini</label></p><p>File lokal: <input type="file" name="dataset" accept=".csv,.json"></p><p><button class="button" name="op" value="save">Simpan konfigurasi</button> <button class="button" name="op" value="preview">Pratinjau</button> <button class="button button-primary" name="op" value="remote">Ambil URL dan antrekan</button> <button class="button" name="op" value="upload">Unggah dan antrekan</button></p></form><p>Pratinjau dan antrekan menggunakan konfigurasi formulir saat ini. Simpan konfigurasi terlebih dahulu agar tetap tersedia setelah halaman dimuat ulang. Batas 5 MB / 10.000 rekaman per dataset.</p>';
@@ -594,7 +594,7 @@ final class SDP_Collector {
 			'cancel'  => 'Batalkan antrean',
 			'clear'   => 'Bersihkan log selesai/gagal',
 		) as $k => $v ) {
-			echo '<button class="button" name="op" value="' . $k . '">' . esc_html( $v ) . '</button> ';
+			echo '<button class="button" name="op" value="' . esc_attr( $k ) . '">' . esc_html( $v ) . '</button> ';
 		}echo '</form><h2>Log 50 rekaman terakhir</h2><table class="widefat striped"><thead><tr><th>NPSN</th><th>Sumber</th><th>Status</th><th>Pesan</th><th>Waktu UTC</th></tr></thead><tbody>';
 		foreach ( $wpdb->get_results( "SELECT npsn,source_label,status,message,updated_at FROM $t ORDER BY id DESC LIMIT 50", ARRAY_A ) ?: array() as $r ) {
 			echo '<tr>';

@@ -317,13 +317,13 @@ final class SDP_Portal {
 		$data  = self::results( $state );
 		$opts  = self::options( $state, $scope );
 		$live  = self::context( $id ) ? rest_url( 'sdp/v1/portal' ) : '';
-		ob_start();?><section class="sdp-directory sdp4" data-sdp-endpoint="<?php echo esc_url( $live ); ?>" data-sdp-context="<?php echo $id; ?>" data-sdp-low="<?php echo SDP_Resource::enabled() ? '1' : '0'; ?>">
+		ob_start();?><section class="sdp-directory sdp4" data-sdp-endpoint="<?php echo esc_url( $live ); ?>" data-sdp-context="<?php echo esc_attr( $id ); ?>" data-sdp-low="<?php echo SDP_Resource::enabled() ? '1' : '0'; ?>">
 		<div class="sdp4-hero"><p class="sdp4-kicker">DIREKTORI PENDIDIKAN INDONESIA</p><h2>Temukan sekolah dan madrasah</h2><p>Telusuri identitas, akreditasi, statistik, fasilitas, dan lokasi sekolah.</p>
 		<form method="get" action="<?php echo esc_url( $base ); ?>" class="sdp-filters sdp4-form">
 		<?php
 		if ( ! get_option( 'permalink_structure' ) && $id ) :
 			?>
-			<input type="hidden" name="<?php echo is_page() ? 'page_id' : 'p'; ?>" value="<?php echo $id; ?>"><?php endif; ?>
+			<input type="hidden" name="<?php echo is_page() ? 'page_id' : 'p'; ?>" value="<?php echo esc_attr( $id ); ?>"><?php endif; ?>
 		<label class="sdp-search">Nama sekolah / NPSN<input name="sdp_q" value="<?php echo esc_attr( $state['q'] ); ?>" placeholder="Contoh: SMP Negeri, 12345678" maxlength="190" autocomplete="off"></label><div class="sdp4-suggestions" hidden aria-label="Saran sekolah"></div>
 		<?php
 		foreach ( self::FILTERS as $k => $label ) :
