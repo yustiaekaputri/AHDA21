@@ -115,3 +115,40 @@ jobs:
           path: artifacts/
           if-no-files-found: warn
           retention-days: 7
+
+  candidate-packages:
+    name: Build verified development candidate ZIPs
+    needs: integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact tested checkout twice
+        run: |
+          sha="$(git rev-parse HEAD)"
+          python3 tools/build_candidate.py --repo . --commit "$sha" --output "$RUNNER_TEMP/candidate"
+          python3 tools/build_candidate.py --repo . --commit "$sha" --output "$RUNNER_TEMP/candidate-repeat"
+          diff -r "$RUNNER_TEMP/candidate" "$RUNNER_TEMP/candidate-repeat"
+      - name: Verify SHA256 and archive structure independently
+        run: |
+          python3 - "$RUNNER_TEMP/candidate" <<'PY'
+          import hashlib, json, sys, zipfile
+          from pathlib import Path
+          root=Path(sys.argv[1])
+          manifest=json.loads((root/"manifest.json").read_text())
+          assert manifest["status"]=="development_candidate_not_release"
+          assert len(manifest["packages"])==2
+          for p in manifest["packages"]:
+              f=root/p["file"]
+              assert hashlib.sha256(f.read_bytes()).hexdigest()==p["sha256"]
+              with zipfile.ZipFile(f) as z:
+                  assert z.testzip() is None and len(z.namelist())==p["files"]
+              print("PASS:",f.name,p["sha256"])
+          PY
+      - name: Upload candidate ZIPs, not a public release
+        uses: actions/upload-artifact@v4
+        with:
+          name: sekolah-directory-development-candidate
+          path: ${{ runner.temp }}/candidate/
+          if-no-files-found: error
+          retention-days: 7
