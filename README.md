@@ -30,7 +30,7 @@ Ketik NPSN, klik **Cari NPSN**, lalu tinjau data dan sumbernya. **Simpan draf da
 
 Untuk beberapa sekolah sekaligus, buka **Impor daftar NPSN dari katalog**. Pilih TXT atau CSV UTF-8 dengan satu NPSN per baris dan judul `npsn` opsional. Untuk XLSX, gunakan sheet pertama dengan judul `npsn` dan simpan NPSN sebagai teks agar nol di awal dipertahankan. Batas tiap unggahan adalah 50 baris data dalam mode hemat atau 200 dalam mode standar. TXT/CSV maksimal 8 KiB. XLSX mengikuti batas workbook mode aktif. Baris berulang, profil yang sudah tersimpan, serta NPSN di luar katalog dilaporkan dan dilewati. Jika ada baris dengan format salah, unggahan dibatalkan sebelum ada draf yang dibuat.
 
-Klik **Pratinjau daftar NPSN** untuk melihat ringkasan sebelum menyimpan. Setelah diperiksa, klik **Konfirmasi dan buat draf** dalam lima menit. Jika data katalog yang dipilih berubah, buat pratinjau baru. Tombol **Buat draf dari daftar NPSN** juga tersedia untuk langsung menyimpan berkas yang sudah diperiksa.
+Klik **Pratinjau daftar NPSN** sebelum menyimpan. Buka **Lihat rincian per NPSN** untuk memeriksa nama, status, dan tautan ke profil yang sudah tersimpan. Setelah diperiksa, klik **Konfirmasi dan buat draf** dalam lima menit. Jika data katalog yang dipilih berubah, buat pratinjau baru. Tombol **Buat draf dari daftar NPSN** juga tersedia untuk langsung menyimpan berkas yang sudah diperiksa.
 
 ### Memeriksa sampel resmi sebelum unggah
 

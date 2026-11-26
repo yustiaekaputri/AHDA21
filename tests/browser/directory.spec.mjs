@@ -326,6 +326,12 @@ test('daftar TXT dari katalog membuat draf baru dan melewati NPSN berulang', asy
     const list = `\ufeffnpsn\r\n${first.toLowerCase()}\r\n\r\n${first}\r\n${missing}\r\n`;
     await upload(list, 'Pratinjau daftar NPSN');
     await expect(page.getByText(/1 calon draf baru, 0 profil sudah ada, 1 baris berulang, 1 NPSN di luar katalog/)).toBeVisible();
+    await page.getByText('Lihat rincian per NPSN', { exact: true }).click();
+    const known = page.getByRole('row').filter({ hasText: first });
+    await expect(known).toHaveCount(1);
+    await expect(known).toContainText('Sekolah FIKTIF Daftar TXT');
+    await expect(known).toContainText('Calon draf');
+    await expect(page.getByRole('row').filter({ hasText: missing })).toContainText('Tidak ada di katalog');
     const editor = await page.context().newPage();
     await editor.goto(`/wp-admin/admin.php?page=sdp-edit&npsn=${first}`);
     await expect(editor.locator('#sdp-nama')).toHaveValue('');
@@ -336,6 +342,8 @@ test('daftar TXT dari katalog membuat draf baru dan melewati NPSN berulang', asy
     await upload(list, 'Pratinjau daftar NPSN');
     await expect(page.getByText(/0 calon draf baru, 1 profil sudah ada, 1 baris berulang/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Konfirmasi dan buat draf' })).toHaveCount(0);
+    await page.getByText('Lihat rincian per NPSN', { exact: true }).click();
+    await expect(known.getByRole('link', { name: `Buka profil tersimpan ${first}` })).toHaveAttribute('href', new RegExp(`npsn=${first}$`));
 
     await page.goto(`/wp-admin/admin.php?page=sdp-edit&npsn=${first}`);
     await expect(page.locator('#sdp-npsn')).toHaveValue(first);
