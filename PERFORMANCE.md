@@ -93,3 +93,15 @@ Jejak SQL terpisah setelah invalidasi berikutnya mencatat kueri pilihan jenjang 
 Untuk provinsi, jenjang, dan status tanpa cakupan tambahan, kueri mengambil kandidat unik dari indeks sekolah lalu mencari satu nilai dari profil yang terbit dan tidak bersandi untuk setiap kandidat. Pengambilan nilai dari profil yang terlihat juga berlaku ketika dua ejaan dianggap sama oleh kolasi database. Pilihan dengan cakupan dan opsi akreditasi memakai kueri sebelumnya.
 
 Pada 10.000 profil FIKTIF ditambah tiga profil uji yang disembunyikan, urutan dan nilai ketiga daftar identik. Median empat eksekusi setelah pemanasan turun dari 1.540,3 ke 0,7 ms untuk jenjang, dari 883,4 ke 0,7 ms untuk status, dan dari 757,7 ke 7,6 ms untuk provinsi. Angka ini mengukur kueri SQL terpisah di MariaDB. Tambahan pemeriksaan MySQL 8 mencocokkan hasil bentuk kueri baru pada fixture SQL.
+
+### Permintaan HTTP serentak pada 10.000 profil
+
+Server pengembangan PHP 8.2.32 menggunakan empat proses anak dan hanya mendengarkan loopback Cloud. WordPress 6.9 dan MariaDB 10.11.19 melayani 129 permintaan direktori tanpa kesalahan. Setiap tingkat konkurensi memakai tiga pengulangan. Setiap pengulangan memulai satu batch setelah invalidasi cache, lalu mengirim 12 permintaan tambahan. Nilai berikut adalah median statistik tiap pengulangan.
+
+| Klien serentak | p50 batch pertama | p50 berikutnya | p95 berikutnya |
+| ---: | ---: | ---: | ---: |
+| 1 | 820 ms | 34 ms | 53 ms |
+| 2 | 627 ms | 45 ms | 73 ms |
+| 4 | 595 ms | 59 ms | 88 ms |
+
+Batch pertama hanya berisi satu permintaan per klien. Selisih nilai antarlevel bisa dipengaruhi variasi host dan cache database. Puncak alokasi PHP per permintaan mencapai 6 MiB. RSS empat proses anak setelah uji sekitar 41 MiB per proses, termasuk memori bersama. Angka ini belum mencakup RSS MariaDB, PHP-FPM atau Nginx pada preset VPS, aset susulan, ataupun beban yang berlangsung lama.
