@@ -95,6 +95,9 @@ jobs:
       - name: Experimental single-slot summary cache
         if: ${{ !cancelled() && matrix.php == '8.3' && steps.scale.outcome == 'success' }}
         run: php -d memory_limit=128M "$SDP_WP_CLI" --path="$SDP_WP_ROOT" --allow-root --user=sdp_preview_admin eval-file tests/integration/test-summary-cache.php 2>&1 | tee artifacts/summary-cache.log
+      - name: Real HTTP summary cache off/on comparison
+        if: ${{ !cancelled() && matrix.php == '8.3' && steps.scale.outcome == 'success' }}
+        run: python3 -u scripts/test-summary-http.py 2>&1 | tee artifacts/summary-http.log
       - name: Read-only SQL query-shape experiments
         if: ${{ !cancelled() && matrix.php == '8.3' && steps.scale.outcome == 'success' }}
         run: python3 scripts/test-query-shapes.py 2>&1 | tee artifacts/query-shapes.log
