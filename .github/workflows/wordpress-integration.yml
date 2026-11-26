@@ -204,6 +204,12 @@ jobs:
         run: curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$SDP_WP_CLI"
       - name: Actual archive install or replacement
         run: bash scripts/test-candidate-install.sh "${{ matrix.mode }}" 2>&1 | tee artifacts/package-install.log
+      - name: Install matching MariaDB command-line clients
+        if: matrix.mode == 'upgrade'
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends mariadb-client
+      - name: Actual disposable database backup and restore
+        if: matrix.mode == 'upgrade'
+        run: bash scripts/test-backup-restore.sh 2>&1 | tee artifacts/backup-restore.log
       - name: Save package installation evidence
         if: always()
         uses: actions/upload-artifact@v4
