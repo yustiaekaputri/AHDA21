@@ -341,7 +341,7 @@ final class SDP_Directory {
 		}
 		return self::literal_text( $html . '<p class="sdp-note">Informasi dapat berubah. Data kosong bukan berarti fasilitas atau layanan tersebut tidak ada. Periksa sumber resmi sebelum mengambil keputusan.</p></div>' );
 	}
-	public static function save( $raw, $publish = false, $policy = 'overwrite', $provenance = null, $expected = null, $review = null ) {
+	public static function save( $raw, $publish = false, $policy = 'overwrite', $provenance = null, $expected = null, $review = null, $create_only = false ) {
 		global $wpdb;
 		$clean = self::normalize( $raw );
 		if ( is_wp_error( $clean ) ) {
@@ -357,6 +357,9 @@ final class SDP_Directory {
 			$existing = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE npsn=%s", $npsn ), ARRAY_A );
 			if ( ! empty( $wpdb->last_error ) ) {
 				return new WP_Error( 'database', 'Gagal membaca indeks sekolah. Data tidak diubah.' );
+			}
+			if ( $create_only && $existing ) {
+				return new WP_Error( 'exists', 'NPSN sudah memiliki profil. Buka profil tersimpan untuk meninjau perubahan.' );
 			}
 			$old = $existing ? json_decode( $existing['payload'], true ) : array();
 			if ( ! is_array( $old ) ) {
@@ -828,6 +831,8 @@ if ( is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
 if ( is_admin() ) {
 	require_once __DIR__ . '/includes/class-sdp-source-catalog.php';
 	SDP_Source_Catalog::boot();
+	require_once __DIR__ . '/includes/class-sdp-npsn-catalog.php';
+	SDP_NPSN_Catalog::boot();
 }
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {

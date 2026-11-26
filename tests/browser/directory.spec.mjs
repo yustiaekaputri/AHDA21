@@ -204,3 +204,42 @@ test('impor XLSX langsung dan perbarui profil dengan TXT bertab', async ({ page 
     await expect(page.locator('#sdp-nama')).toHaveValue('Sekolah FIKTIF dari TXT');
     expect((await page.request.get('/wp-json/sdp/v1/schools/09876543')).status()).toBe(404);
 });
+
+test('cari NPSN dari katalog lokal dan simpan hanya setelah ditinjau', async ({ page }) => {
+    const npsn = '0' + String(randomBytes(4).readUInt32BE() % 10000000).padStart(7, '0');
+    const catalogPage = '/wp-admin/admin.php?page=sdp-npsn-catalog';
+    await login(page, 'sdp-admin', process.env.SDP_ADMIN_PASSWORD);
+    await page.goto(catalogPage);
+    await page.getByLabel('CSV katalog').setInputFiles({
+        name: 'katalog-fiktif.csv',
+        mimeType: 'text/csv',
+        buffer: Buffer.from(`npsn,nama,jenjang\n${npsn},Sekolah FIKTIF Katalog,SD\n`),
+    });
+    await page.getByLabel('Nama sumber').fill('Sumber FIKTIF');
+    await page.getByLabel('Periode data').fill('2025/2026');
+    await page.getByLabel('Tanggal data').fill('2025-09-01');
+    await page.getByLabel('Saya berhak menggunakan dataset ini.').check();
+    await page.getByRole('button', { name: 'Simpan katalog' }).click();
+    await expect(page.getByText('Rekaman katalog: 1')).toBeVisible();
+
+    await page.getByLabel('NPSN', { exact: true }).fill(npsn);
+    await page.getByRole('button', { name: 'Cari NPSN' }).click();
+    await expect(page.getByText('Sekolah FIKTIF Katalog', { exact: true })).toBeVisible();
+    await expect(page.getByText('Sumber FIKTIF — 2025/2026', { exact: true })).toBeVisible();
+    await expect(page.getByText('2025-09-01', { exact: true })).toBeVisible();
+    const previewUrl = page.url();
+
+    const manual = await page.context().newPage();
+    await manual.goto(`/wp-admin/admin.php?page=sdp-edit&npsn=${npsn}`);
+    await expect(manual.locator('#sdp-nama')).toHaveValue('');
+    await manual.close();
+
+    await page.getByRole('button', { name: 'Simpan draf dari katalog' }).click();
+    await expect(page.locator('#sdp-npsn')).toHaveValue(npsn);
+    await expect(page.locator('#sdp-nama')).toHaveValue('Sekolah FIKTIF Katalog');
+    expect((await page.request.get(`/wp-json/sdp/v1/schools/${npsn}`)).status()).toBe(404);
+
+    await page.goto(previewUrl);
+    await page.getByRole('button', { name: 'Simpan draf dari katalog' }).click();
+    await expect(page.getByText('NPSN sudah memiliki profil.', { exact: false })).toBeVisible();
+});

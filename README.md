@@ -22,6 +22,12 @@ Di menu **Direktori Sekolah → Impor CSV / TXT**, unggah berkas UTF-8 dengan ko
 
 Di **Direktori Sekolah → Impor Excel**, pilih berkas `.xlsx` dan nomor sheet. **Impor sebagai draf** menyimpan profil langsung melalui aturan impor yang sama. **Konversi dan unduh CSV** tetap tersedia untuk memeriksa isi sebelum mengimpor. Simpan NPSN sebagai teks di Excel agar nol di awal tetap utuh.
 
+### Membuat profil dengan mengetik NPSN
+
+Di **Direktori Sekolah → Cari NPSN dari katalog**, administrator dapat mengunggah CSV berizin dengan kolom `npsn,nama` dan mencatat sumber, periode serta tanggal data. Setiap unggahan valid mengganti katalog lokal sebelumnya. Katalog mendukung hingga 50 baris dalam mode hemat atau 200 dalam mode standar, dengan batas ukuran 512 KiB.
+
+Ketik NPSN, klik **Cari NPSN**, lalu tinjau data dan sumbernya. **Simpan draf dari katalog** membuat profil baru untuk diperiksa sebelum publikasi. Gunakan tautan profil untuk mengedit profil yang sudah ada atau mengisi data secara manual jika NPSN belum ada dalam katalog. Pencarian memakai CSV yang sudah diunggah dan berjalan tanpa koneksi ke sumber resmi.
+
 ## Menjalankan pratinjau
 
 Dengan Docker Compose, OpenSSL, dan Node.js LTS, jalankan `npm ci` lalu `make start`. WordPress pengembangan tersedia di port lokal 3000. Nama login admin lokal adalah `sdp-admin` dan kata sandinya dibuat otomatis di `.env`. Variabel `SDP_HTTP_PORT` dan `SDP_SITE_URL` mengatur alamat lokal. Data demo dibuat melalui API plugin di database pengembangan. Pada komputer yang menjalankan Docker, buka dashboard di `http://127.0.0.1:3000/wp-admin/admin.php?page=sdp-directory`. Jika Docker berjalan di Codex Cloud, gunakan browser Desktop di lingkungan Cloud yang sama atau tautan HTTP Preview dari Codex. Browser di komputer Anda memerlukan penerusan port agar dapat mencapai WordPress Cloud.

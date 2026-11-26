@@ -54,3 +54,4 @@ Baca PANDUAN-V81.txt; batas versi sebelumnya dalam bagian historis tidak berlaku
 - Terapkan urutan operand WPCS pada 431 perbandingan dengan literal di plugin dan tema.
 - Tambahkan escaping sesuai konteks HTML dan atribut pada angka, ID dan nilai formulir di plugin.
 - Tambahkan impor TXT berkolom dan impor XLSX langsung sebagai draf melalui validasi dan pembaruan NPSN yang sama dengan impor CSV.
+- Tambahkan pencarian NPSN dari katalog CSV berizin, pratinjau dengan metadata sumber, dan penyimpanan profil baru sebagai draf setelah konfirmasi administrator.
