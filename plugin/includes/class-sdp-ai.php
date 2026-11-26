@@ -3,6 +3,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 final class SDP_AI {
+	private const CLAUDE_API = 'https://api.anthropic.com';
+
 	/**
 	 * Read authentication headers from server configuration.
 	 *
@@ -10,13 +12,32 @@ final class SDP_AI {
 	 */
 	private static function claude_headers() {
 		$key = defined( 'SDP_CLAUDE_API_KEY' ) ? SDP_CLAUDE_API_KEY : getenv( 'ANTHROPIC_API_KEY' );
-		if ( ! is_string( $key ) || ! preg_match( '/^[!-~]+$/D', $key ) ) {
+		if ( false === $key || '' === $key || 'GANTI_DENGAN_KUNCI_ANDA' === $key ) {
 			return new WP_Error( 'key', 'Konfigurasikan SDP_CLAUDE_API_KEY atau ANTHROPIC_API_KEY di server.' );
+		}
+		if ( ! is_string( $key ) || ! preg_match( '/^[!-~]+$/D', $key ) ) {
+			return new WP_Error( 'key_format', 'Periksa format kunci Claude. Hapus spasi atau baris baru dari nilainya.' );
 		}
 		return array(
 			'x-api-key'         => $key,
 			'anthropic-version' => '2023-06-01',
 		);
+	}
+
+	/**
+	 * Check local configuration without calling Anthropic or exposing credentials.
+	 *
+	 * @return true|WP_Error Result of local configuration checks.
+	 */
+	public static function claude_status() {
+		$headers = self::claude_headers();
+		if ( is_wp_error( $headers ) ) {
+			return $headers;
+		}
+		if ( ( new WP_Http() )->block_request( self::CLAUDE_API ) ) {
+			return new WP_Error( 'http_blocked', 'WordPress memblokir api.anthropic.com. Tambahkan host tersebut ke WP_ACCESSIBLE_HOSTS.' );
+		}
+		return true;
 	}
 
 	/**
@@ -74,7 +95,7 @@ final class SDP_AI {
 			return $headers;
 		}
 		$response = wp_safe_remote_get(
-			'https://api.anthropic.com/v1/models' . $suffix,
+			self::CLAUDE_API . '/v1/models' . $suffix,
 			array(
 				'headers'             => $headers,
 				'timeout'             => 10,
@@ -152,7 +173,7 @@ final class SDP_AI {
 				return $claude;
 			}
 			$headers += $claude;
-			$url      = 'https://api.anthropic.com/v1/messages';
+			$url      = self::CLAUDE_API . '/v1/messages';
 			$body     = array(
 				'model'      => $model,
 				'system'     => $system,

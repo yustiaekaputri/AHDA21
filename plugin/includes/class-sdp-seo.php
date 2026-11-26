@@ -487,6 +487,12 @@ final class SDP_SEO {
 			self::show_notice( $n );
 		}
 		echo '<p>Hanya mengirim fakta institusi yang dipilih ke penyedia. Hasil berupa pratinjau privat, tidak disimpan dalam artikel dan wajib diperiksa. API berbayar dapat menimbulkan biaya. Kunci disediakan melalui wp-config.php (SDP_OPENAI_API_KEY / SDP_GEMINI_API_KEY / SDP_CLAUDE_API_KEY). Claude juga membaca ANTHROPIC_API_KEY dari environment server. Ollama memakai 127.0.0.1:11434.</p>';
+		$claude_status = SDP_AI::claude_status();
+		if ( is_wp_error( $claude_status ) ) {
+			self::show_notice( array( $claude_status->get_error_message(), true ) );
+		} else {
+			self::show_notice( array( 'Konfigurasi lokal Claude terbaca. Klik Ambil daftar model Claude untuk memeriksa akses akun.', false ) );
+		}
 		self::start( 'claude_check' );
 		echo '<input type="hidden" name="npsn" value="' . esc_attr( $npsn ) . '">';
 		echo '<p><label>ID model untuk pemeriksaan Claude <input name="claude_model" list="sdp-claude-models" maxlength="128" required></label></p>';

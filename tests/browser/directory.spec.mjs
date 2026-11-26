@@ -249,6 +249,7 @@ test('cari NPSN dari katalog lokal dan simpan hanya setelah ditinjau', async ({ 
     await page.getByRole('link', { name: 'Buka asisten narasi AI' }).click();
     await expect(page).toHaveURL(`${new URL(page.url()).origin}/wp-admin/admin.php?page=sdp-seo&npsn=${npsn}#sdp-narasi-ai`);
     await expect(page.getByLabel('NPSN', { exact: true })).toHaveValue(npsn);
+    await expect(page.getByText('Konfigurasikan SDP_CLAUDE_API_KEY atau ANTHROPIC_API_KEY di server.')).toBeVisible();
     await expect(page.getByRole('checkbox', { name: /Saya berhak memproses data ini/ })).not.toBeChecked();
     await page.getByLabel('ID model untuk pemeriksaan Claude').fill('model tidak valid');
     await page.getByRole('button', { name: 'Periksa model Claude' }).click();

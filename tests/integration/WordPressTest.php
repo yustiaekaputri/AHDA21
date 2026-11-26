@@ -29,7 +29,20 @@ final class WordPressTest extends TestCase
         };
         add_filter('pre_http_request', $intercept, 10, 3);
         try {
+            foreach (['' => 'key', 'GANTI_DENGAN_KUNCI_ANDA' => 'key', 'ci invalid' => 'key_format'] as $value => $code) {
+                putenv('ANTHROPIC_API_KEY=' . $value);
+                $status = SDP_AI::claude_status();
+                self::assertInstanceOf(WP_Error::class, $status);
+                self::assertSame($code, $status->get_error_code());
+            }
             putenv('ANTHROPIC_API_KEY=ci-placeholder');
+            $status = SDP_AI::claude_status();
+            if ((new WP_Http())->block_request('https://api.anthropic.com')) {
+                self::assertInstanceOf(WP_Error::class, $status);
+                self::assertSame('http_blocked', $status->get_error_code());
+            } else {
+                self::assertTrue($status);
+            }
             self::assertInstanceOf(WP_Error::class, SDP_AI::check_claude_model('another/model'));
             self::assertSame(0, $requests);
             self::assertTrue(SDP_AI::check_claude_model('claude-model-example'));

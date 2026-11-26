@@ -42,6 +42,8 @@ Sebelum membuat narasi, gunakan **Periksa model Claude** pada menu yang sama. Pe
 
 Jika belum mengetahui ID model, klik **Ambil daftar model Claude**. Hingga 20 ID model dari akun Anda akan tersedia sebagai saran pada kolom ID model selama sepuluh menit. Anda juga dapat mengetik ID model sendiri.
 
+Panel menampilkan hasil pemeriksaan lokal atas kunci dan aturan jaringan WordPress. Nilai kunci tidak ditampilkan. Gunakan **Ambil daftar model Claude** untuk memeriksa apakah akun dapat mengakses Anthropic.
+
 Jika `WP_HTTP_BLOCK_EXTERNAL` aktif, tambahkan `api.anthropic.com` pada nilai `WP_ACCESSIBLE_HOSTS` di `wp-config.php` lokal. Jika konstanta belum ada, gunakan `define('WP_ACCESSIBLE_HOSTS', 'api.anthropic.com');` sebelum WordPress dimuat. Jika sudah ada, tambahkan domain itu ke daftar yang dipisahkan koma. Pertahankan pengaturan pembatasan jaringan dan simpan kunci di luar Git.
 
 ## Menjalankan pratinjau
