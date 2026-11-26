@@ -29,12 +29,52 @@ final class SDP_AI {
 		if ( ! preg_match( '/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/D', $model ) ) {
 			return new WP_Error( 'model', 'ID model Claude tidak valid.' );
 		}
+		$data = self::claude_metadata( '/' . rawurlencode( $model ) );
+		if ( is_wp_error( $data ) ) {
+			return $data;
+		}
+		if ( 'model' !== ( $data['type'] ?? '' ) || ! is_string( $data['id'] ?? null ) || '' === $data['id'] ) {
+			return new WP_Error( 'response', 'Respons metadata model tidak valid.' );
+		}
+		return true;
+	}
+
+	/**
+	 * Read up to twenty available model IDs without sending any profile fields.
+	 *
+	 * @return array|WP_Error Model identifiers or a provider error.
+	 */
+	public static function list_claude_models() {
+		$data = self::claude_metadata( '?limit=20' );
+		if ( is_wp_error( $data ) ) {
+			return $data;
+		}
+		if ( ! is_array( $data['data'] ?? null ) ) {
+			return new WP_Error( 'response', 'Daftar model Claude tidak valid.' );
+		}
+		$models = array();
+		foreach ( array_slice( $data['data'], 0, 20 ) as $model ) {
+			$id = $model['id'] ?? null;
+			if ( 'model' === ( $model['type'] ?? '' ) && is_string( $id ) && preg_match( '/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/D', $id ) ) {
+				$models[] = $id;
+			}
+		}
+		return array_unique( $models );
+	}
+
+	/**
+	 * Read Claude model metadata from the fixed Anthropic API origin.
+	 *
+	 * @param string $suffix Encoded model path or fixed list query.
+	 * @return array|WP_Error Decoded metadata or a provider error.
+	 */
+	private static function claude_metadata( $suffix ) {
 		$headers = self::claude_headers();
 		if ( is_wp_error( $headers ) ) {
 			return $headers;
 		}
 		$response = wp_safe_remote_get(
-			'https://api.anthropic.com/v1/models/' . rawurlencode( $model ),
+			'https://api.anthropic.com/v1/models' . $suffix,
 			array(
 				'headers'             => $headers,
 				'timeout'             => 10,
@@ -50,10 +90,10 @@ final class SDP_AI {
 			return new WP_Error( 'http', 'Anthropic mengembalikan HTTP ' . (int) $code . '. Periksa kunci, ID model, dan akses akun.' );
 		}
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
-		if ( 'model' !== ( $data['type'] ?? '' ) || ! is_string( $data['id'] ?? null ) || '' === $data['id'] ) {
+		if ( ! is_array( $data ) ) {
 			return new WP_Error( 'response', 'Respons metadata model tidak valid.' );
 		}
-		return true;
+		return $data;
 	}
 
 	public static function facts( $d ) {

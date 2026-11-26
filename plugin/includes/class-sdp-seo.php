@@ -361,6 +361,19 @@ final class SDP_SEO {
 				self::report( 'Tunggu satu menit sebelum memeriksa model Claude kembali.', true );
 			}
 			set_transient( $key, 1, 60 );
+			if ( isset( $_POST['list_claude_models'] ) ) {
+				$list_key = 'sdp_claude_models_' . get_current_user_id();
+				delete_transient( $list_key );
+				$models = SDP_AI::list_claude_models();
+				if ( is_wp_error( $models ) ) {
+					self::report( $models->get_error_message(), true );
+				}
+				if ( ! $models ) {
+					self::report( 'Anthropic tidak mengembalikan ID model yang tersedia.', true );
+				}
+				set_transient( $list_key, $models, 600 );
+				self::report( 'Daftar model Claude tersedia di kolom ID model selama 10 menit.' );
+			}
 			$result = SDP_AI::check_claude_model( $model );
 			if ( is_wp_error( $result ) ) {
 				self::report( $result->get_error_message(), true );
@@ -436,11 +449,18 @@ final class SDP_SEO {
 		}submit_button( 'Buat draf halaman wilayah', 'secondary' );
 		echo '</form><h2>Asisten narasi AI (opsional)</h2><p>Hanya mengirim fakta institusi yang dipilih ke penyedia. Hasil berupa pratinjau privat, tidak disimpan dalam artikel dan wajib diperiksa. API berbayar dapat menimbulkan biaya. Kunci disediakan melalui wp-config.php (SDP_OPENAI_API_KEY / SDP_GEMINI_API_KEY / SDP_CLAUDE_API_KEY). Claude juga membaca ANTHROPIC_API_KEY dari environment server. Ollama memakai 127.0.0.1:11434.</p>';
 		self::start( 'claude_check' );
-		echo '<p><label>ID model untuk pemeriksaan Claude <input name="claude_model" maxlength="128" required></label></p>';
+		echo '<p><label>ID model untuk pemeriksaan Claude <input name="claude_model" list="sdp-claude-models" maxlength="128" required></label></p>';
 		submit_button( 'Periksa model Claude', 'secondary' );
+		echo '<p><button type="submit" class="button" name="list_claude_models" value="1" formnovalidate>Ambil daftar model Claude</button></p>';
 		echo '</form>';
+		$models = get_transient( 'sdp_claude_models_' . get_current_user_id() );
+		echo '<datalist id="sdp-claude-models">';
+		foreach ( is_array( $models ) ? $models : array() as $model_id ) {
+			echo '<option value="' . esc_attr( $model_id ) . '"></option>';
+		}
+		echo '</datalist>';
 		self::start( 'ai' );
-		echo '<p><label>NPSN <input name="npsn" maxlength="8" required></label></p><p><label>Penyedia <select name="provider"><option value="ollama">Ollama lokal</option><option value="gemini">Gemini</option><option value="openai">OpenAI</option><option value="claude">Claude (Anthropic)</option></select></label></p><p><label>ID model <input name="model" required placeholder="ID model yang tersedia"></label></p><p><label><input type="checkbox" name="consent" required> Saya berhak memproses data ini dan memahami pengiriman data serta potensi biaya.</label></p>';
+		echo '<p><label>NPSN <input name="npsn" maxlength="8" required></label></p><p><label>Penyedia <select name="provider"><option value="ollama">Ollama lokal</option><option value="gemini">Gemini</option><option value="openai">OpenAI</option><option value="claude">Claude (Anthropic)</option></select></label></p><p><label>ID model <input name="model" list="sdp-claude-models" required placeholder="ID model yang tersedia"></label></p><p><label><input type="checkbox" name="consent" required> Saya berhak memproses data ini dan memahami pengiriman data serta potensi biaya.</label></p>';
 		submit_button( 'Buat usulan narasi', 'secondary' );
 		echo '</form>';
 		$a = get_transient( 'sdp_ai_preview_' . get_current_user_id() );

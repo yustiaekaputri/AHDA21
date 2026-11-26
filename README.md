@@ -40,6 +40,8 @@ Untuk menyiapkan Claude, set `ANTHROPIC_API_KEY` pada environment proses PHP ata
 
 Sebelum membuat narasi, gunakan **Periksa model Claude** pada menu yang sama. Pemeriksaan metadata ini hanya mengirim kunci API dan ID model ke Anthropic. Keberhasilan pemeriksaan mengonfirmasi akses metadata model, sementara kuota dan kemampuan membuat narasi baru diuji saat mengirim permintaan narasi.
 
+Jika belum mengetahui ID model, klik **Ambil daftar model Claude**. Hingga 20 ID model dari akun Anda akan tersedia sebagai saran pada kolom ID model selama sepuluh menit. Anda juga dapat mengetik ID model sendiri.
+
 Jika `WP_HTTP_BLOCK_EXTERNAL` aktif, tambahkan `api.anthropic.com` pada nilai `WP_ACCESSIBLE_HOSTS` di `wp-config.php` lokal. Jika konstanta belum ada, gunakan `define('WP_ACCESSIBLE_HOSTS', 'api.anthropic.com');` sebelum WordPress dimuat. Jika sudah ada, tambahkan domain itu ke daftar yang dipisahkan koma. Pertahankan pengaturan pembatasan jaringan dan simpan kunci di luar Git.
 
 ## Menjalankan pratinjau

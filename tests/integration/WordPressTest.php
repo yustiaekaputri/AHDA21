@@ -10,11 +10,19 @@ final class WordPressTest extends TestCase
         $requests = 0;
         $intercept = static function ($response, $args, $url) use (&$requests) {
             ++$requests;
-            self::assertSame('https://api.anthropic.com/v1/models/claude-model-example', $url);
             self::assertSame('GET', $args['method']);
             self::assertEmpty($args['body']);
             self::assertSame('ci-placeholder', $args['headers']['x-api-key']);
             self::assertSame(0, $args['redirection']);
+            if ($requests === 3) {
+                self::assertSame('https://api.anthropic.com/v1/models?limit=20', $url);
+                return ['response' => ['code' => 200], 'body' => wp_json_encode(['data' => [
+                    ['type' => 'model', 'id' => 'claude-model-example'],
+                    ['type' => 'model', 'id' => 'claude-model-example'],
+                    ['type' => 'model', 'id' => 'another/model'],
+                ]])];
+            }
+            self::assertSame('https://api.anthropic.com/v1/models/claude-model-example', $url);
             return $requests === 1
                 ? ['response' => ['code' => 200], 'body' => '{"type":"model","id":"claude-model-example"}']
                 : ['response' => ['code' => 403], 'body' => '{"error":"provider-only-detail"}'];
@@ -30,6 +38,8 @@ final class WordPressTest extends TestCase
             self::assertStringContainsString('HTTP 403', $denied->get_error_message());
             self::assertStringNotContainsString('provider-only-detail', $denied->get_error_message());
             self::assertSame(2, $requests);
+            self::assertSame(['claude-model-example'], SDP_AI::list_claude_models());
+            self::assertSame(3, $requests);
         } finally {
             remove_filter('pre_http_request', $intercept, 10);
             putenv($previousKey === false ? 'ANTHROPIC_API_KEY' : 'ANTHROPIC_API_KEY=' . $previousKey);
