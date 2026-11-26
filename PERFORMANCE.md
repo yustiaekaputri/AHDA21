@@ -32,3 +32,16 @@ Atur `SDP_BENCHMARK_COUNTS` untuk memilih jumlah profil yang sesuai kapasitas ho
 Pengukuran ulang pada 10.000 profil menghasilkan p50 706,1 ms dan p95 3.236,4 ms ketika host Cloud juga menjalankan build. Sampel SQL terpisah menemukan varian pengambilan ID lalu payload menghasilkan urutan identik, dengan waktu query hangat yang serupa. Prioritaskan pengukuran agregasi dan facet pada host sepi sebelum mengganti query.
 
 MariaDB pada runtime langsung memakai pengaturan default yang teramati, termasuk buffer InnoDB 128 MiB dan 151 koneksi maksimum. RSS proses MariaDB sekitar 219 MiB pada satu sampel setelah pengujian. Pengukuran ini tidak memvalidasi preset Compose 64 MiB atau kapasitas VPS. Beranda diperiksa tanpa aset plugin direktori, sedangkan halaman direktori memuat aset plugin yang dibutuhkan. Sumber media menerima WebP dan sudah memberi atribut lazy loading pada galeri. Penghematan byte gambar masih perlu diukur.
+
+## Pengukuran per kueri pada 10.000 profil
+
+Pengukuran ulang di Codex Cloud menggunakan dataset FIKTIF yang sudah tersedia, PHP 8.2.32, dan MariaDB 10.11.19. Angka berikut adalah median delapan eksekusi setelah satu pemanasan per kueri, diukur melalui WP-CLI tanpa cache facet aplikasi. Nilai ini mengukur kueri tunggal.
+
+| Kueri | Median |
+| --- | ---: |
+| Hitung total dan rekap status tanpa filter | 808,1 ms |
+| Ambil 20 profil halaman pertama tanpa filter | 5,6 ms |
+| Ambil pilihan provinsi dari data yang dapat ditampilkan | 826,5 ms |
+| Ambil 20 hasil dengan filter satu provinsi | 1,0 ms |
+
+Percobaan terpisah memaksa tabel artikel diproses lebih dulu dengan `STRAIGHT_JOIN`. Hash hasilnya identik untuk kedua kueri. Median empat eksekusi setelah pemanasan naik dari 750,8 ke 763,9 ms untuk ringkasan, dan dari 611,2 ke 952,2 ms untuk pilihan provinsi. Urutan join bawaan dipertahankan. Prioritas perbaikan adalah penghitungan total dan opsi filter ketika cache kosong. Pengukuran PHP pada proses ini mencapai puncak alokasi 51,3 MiB termasuk WP-CLI. Benchmark lebih besar ditunda karena ruang disk lingkungan uji terbatas.
