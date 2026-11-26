@@ -245,4 +245,68 @@ final class WordPressTest extends TestCase
             update_option('sdp_seo_config', $seo);
         }
     }
+
+    public function testRemoteSchoolMediaValidatesSourceAndResponse(): void
+    {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        $website = 'https://school.example.org';
+        $url = $website . '/gambar.png';
+        $rateKey = 'sdp61_rate_' . md5('school.example.org');
+        $requests = 0;
+        $status = 200;
+        $mime = 'image/png';
+        $path = '';
+
+        $image = imagecreatetruecolor(24, 16);
+        ob_start();
+        imagepng($image);
+        $png = ob_get_clean();
+        imagedestroy($image);
+        $intercept = static function ($response, $args, $requestedUrl) use ($url, $png, &$requests, &$status, &$mime) {
+            ++$requests;
+            self::assertSame($url, $requestedUrl);
+            self::assertSame(0, $args['redirection']);
+            self::assertTrue($args['sslverify']);
+            self::assertTrue($args['reject_unsafe_urls']);
+            return ['response' => ['code' => $status], 'headers' => ['content-type' => $mime], 'body' => $png];
+        };
+
+        delete_transient($rateKey);
+        add_filter('pre_http_request', $intercept, 10, 3);
+        try {
+            $mismatch = SDP_Media::fetch('https://other.example.org/gambar.png', $website);
+            self::assertInstanceOf(WP_Error::class, $mismatch);
+            self::assertSame('url', $mismatch->get_error_code());
+            self::assertSame(0, $requests);
+
+            $result = SDP_Media::fetch($url, $website);
+            self::assertIsString($result);
+            $path = $result;
+            self::assertSame([24, 16], array_slice(getimagesize($path), 0, 2));
+            $wait = SDP_Media::fetch($url, $website);
+            self::assertInstanceOf(WP_Error::class, $wait);
+            self::assertSame('rate', $wait->get_error_code());
+            self::assertSame(1, $requests);
+
+            delete_transient($rateKey);
+            $status = 302;
+            $redirect = SDP_Media::fetch($url, $website);
+            self::assertInstanceOf(WP_Error::class, $redirect);
+            self::assertSame('http', $redirect->get_error_code());
+
+            delete_transient($rateKey);
+            $status = 200;
+            $mime = 'image/jpeg';
+            $wrongType = SDP_Media::fetch($url, $website);
+            self::assertInstanceOf(WP_Error::class, $wrongType);
+            self::assertSame('format', $wrongType->get_error_code());
+            self::assertSame(3, $requests);
+        } finally {
+            remove_filter('pre_http_request', $intercept, 10);
+            delete_transient($rateKey);
+            if ($path !== '') {
+                unlink($path);
+            }
+        }
+    }
 }
