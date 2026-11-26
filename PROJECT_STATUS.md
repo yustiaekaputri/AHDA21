@@ -27,3 +27,7 @@ Rilis stabil masih memerlukan triase WPCS, audit keamanan menyeluruh, impor medi
 | Bukti CI dan dashboard | Matriks PHP 8.2 dan 8.3 lulus untuk perubahan validasi pilot. ChatGPT Sites menyediakan dashboard pendamping privat dengan hasil uji dan tangkapan layar WordPress. [GitHub Actions](https://github.com/yustiaekaputri/AHDA21/actions/runs/45744264690) · [Dashboard](https://ahda21-status.adoredmound8.chatgpt.site) |
 
 Status penerimaan resmi tetap dicatat di [checklist RC6](tests/localwp/acceptance.json). Pilot dan pengujian di atas berlangsung pada clone terisolasi. Verifikasi VPS aktual, izin publikasi dan pemeriksaan lain pada checklist diperlukan sebelum menandai rilis stabil.
+
+## Penerimaan Claude di LocalWP
+
+Alur impor satu sekolah dari sumber pemerintah, pengambilan daftar model, dan pembuatan pratinjau privat telah diuji melalui browser pada WordPress uji. Respons API disimulasikan. Profil NPSN 20210822 mempertahankan ID, isi artikel, sumber, dan status draf setelah pratinjau. Koneksi HTTPS ke Anthropic telah terverifikasi hingga respons autentikasi, dan pengujian akses model serta narasi dengan kunci akun pengguna masih terbuka. [Referensi NPSN](https://referensi.data.kemendikdasmen.go.id/satpen/detail/20210822) · [Panduan pengaturan](README.md#claude-untuk-usulan-narasi)
