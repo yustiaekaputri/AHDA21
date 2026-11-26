@@ -31,7 +31,9 @@ RUN --mount=type=secret,id=sdp_proxy_ca \
     tar -xzf /tmp/wordpress.tar.gz --strip-components=1 -C /var/www/html; \
     curl -fsSL "https://downloads.wordpress.org/translation/core/${WORDPRESS_VERSION}/id_ID.zip" -o /tmp/sdp-id.zip; \
     unzip -q /tmp/sdp-id.zip -d /var/www/html/wp-content/languages; \
-    curl -fsSL https://github.com/wp-cli/wp-cli/releases/download/v2.12.0/wp-cli-2.12.0.phar -o /usr/local/bin/wp; \
+    if ! curl -fsSL --retry 2 https://raw.githubusercontent.com/wp-cli/builds/05989a431e982caf17cd94508ff9b4c5fb12ae44/phar/wp-cli.phar -o /usr/local/bin/wp; then \
+        curl -fsSL --retry 2 https://github.com/wp-cli/wp-cli/releases/download/v2.12.0/wp-cli-2.12.0.phar -o /usr/local/bin/wp; \
+    fi; \
     echo "ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c  /usr/local/bin/wp" | sha256sum -c; \
     chmod 755 /usr/local/bin/wp; \
     chown www-data:www-data /var/www/html/wp-content/uploads; \
