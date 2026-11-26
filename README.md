@@ -28,6 +28,12 @@ Di **Direktori Sekolah → Cari NPSN dari katalog**, administrator dapat mengung
 
 Ketik NPSN, klik **Cari NPSN**, lalu tinjau data dan sumbernya. **Simpan draf dari katalog** membuat profil baru untuk diperiksa sebelum publikasi. Gunakan tautan profil untuk mengedit profil yang sudah ada atau mengisi data secara manual jika NPSN belum ada dalam katalog. Pencarian memakai CSV yang sudah diunggah dan berjalan tanpa koneksi ke sumber resmi.
 
+### Memeriksa sampel resmi sebelum unggah
+
+Gunakan [panduan persiapan pilot](docs/plugin/PANDUAN-V103.txt) untuk memvalidasi CSV berizin dengan `tools/prepare_pilot.py` dan mencatat sumber, edisi, serta dasar izin. Pada clone LocalWP yang tidak diindeks, jalankan `wp sdp pilot-preview` dengan SHA-256 dari manifest. WordPress akan menandai calon profil baru, konflik, dan kondisi lain tanpa mengubah profil.
+
+Untuk mencoba pencarian NPSN setelah peninjauan, unggah hanya `identity.csv` yang sudah diperiksa. Gunakan `--limit 50` saat menyiapkan pilot dalam mode hemat. Statistik dan akreditasi mengikuti jalur pemeriksaan terpisah di panduan pilot. Simpan file sumber dan manifest secara privat. Validasi format dan pemeriksaan konflik perlu dilengkapi verifikasi izin, periode dan fakta dari sumber resmi.
+
 ## Menjalankan pratinjau
 
 Dengan Docker Compose, OpenSSL, dan Node.js LTS, jalankan `npm ci` lalu `make start`. WordPress pengembangan tersedia di port lokal 3000. Nama login admin lokal adalah `sdp-admin` dan kata sandinya dibuat otomatis di `.env`. Variabel `SDP_HTTP_PORT` dan `SDP_SITE_URL` mengatur alamat lokal. Data demo dibuat melalui API plugin di database pengembangan. Pada komputer yang menjalankan Docker, buka dashboard di `http://127.0.0.1:3000/wp-admin/admin.php?page=sdp-directory`. Jika Docker berjalan di Codex Cloud, gunakan browser Desktop di lingkungan Cloud yang sama atau tautan HTTP Preview dari Codex. Browser di komputer Anda memerlukan penerusan port agar dapat mencapai WordPress Cloud.

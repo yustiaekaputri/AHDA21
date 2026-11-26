@@ -18,6 +18,7 @@ scripts/wp.sh plugin deactivate sekolah-directory-pro
 scripts/wp.sh plugin activate sekolah-directory-pro
 scripts/test-backup.sh | tee artifacts/reports/backup.log
 scripts/test-cli-import.sh | tee artifacts/reports/cli-import.log
+scripts/test-pilot-preview.sh | tee artifacts/reports/pilot-preview.log
 
 phpunit="$PWD/artifacts/tooling/phpunit.phar"
 if [[ ! -f "$phpunit" ]]; then
