@@ -86,6 +86,9 @@ jobs:
       - name: Bounded scale benchmark (100, 1000 and 10000 fictional schools; HTTP)
         if: matrix.php == '8.3'
         run: python3 scripts/test-benchmark-integration.py 2>&1 | tee artifacts/benchmark.log
+      - name: SQL query plans and optional index comparison
+        if: matrix.php == '8.3'
+        run: python3 scripts/test-index-comparison.py 2>&1 | tee artifacts/index-comparison.log
       - name: Remove temporary browser credentials
         if: always()
         run: rm -f "$RUNNER_TEMP/sdp-preview-auth.json"
