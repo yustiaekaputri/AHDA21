@@ -173,8 +173,11 @@ final class SDP_National {
 		);}
 	public static function api_detail( $r ) {
 		global $wpdb;
+		$route        = $r->get_url_params();
 		[$sql, $args] = self::public_sql( array() );
-		$row          = $wpdb->get_row( $wpdb->prepare( 'SELECT s.*' . $sql . ' AND s.npsn=%s LIMIT 1', array_merge( $args, array( self::npsn( $r->get_param( 'npsn' ) ) ) ) ), ARRAY_A );
+		$npsn         = self::npsn( $route['npsn'] ?? '' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Bind the route NPSN to the shared public predicates and check visibility on each request.
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT s.*' . $sql . ' AND s.npsn=%s LIMIT 1', array_merge( $args, array( $npsn ) ) ), ARRAY_A );
 		if ( ! empty( $wpdb->last_error ) ) {
 			return new WP_Error( 'sdp_db', 'Pencarian tidak tersedia.', array( 'status' => 503 ) );
 		}return $row ? rest_ensure_response( self::public_item( $row ) ) : new WP_Error( 'sdp_not_found', 'Profil publik tidak ditemukan.', array( 'status' => 404 ) );}

@@ -193,6 +193,35 @@ final class WordPressTest extends TestCase
         self::assertSame('0', (string) get_option('blog_public'));
     }
 
+    public function testPublicSchoolDetailUsesTheNpsnInTheRoute(): void
+    {
+        $seo = get_option('sdp_seo_config', []);
+        $postId = 0;
+        update_option('sdp_seo_config', array_merge((array) $seo, ['guard' => 0]));
+        try {
+            $saved = SDP_Directory::save(
+                ['npsn' => 'TESTR009', 'nama' => 'Sekolah FIKTIF REST', 'email' => 'fixture@example.invalid'],
+                false, 'fill', null, null, null, true
+            );
+            self::assertNotInstanceOf(WP_Error::class, $saved);
+            $postId = (int) $saved['id'];
+            self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_status' => 'publish']));
+
+            $request = new WP_REST_Request('GET', '/sdp/v1/schools/TESTR009');
+            $request->set_query_params(['npsn' => 'TESTZ999']);
+            $response = rest_do_request($request);
+            self::assertSame(200, $response->get_status());
+            self::assertSame('TESTR009', $response->get_data()['npsn']);
+            self::assertArrayNotHasKey('email', $response->get_data());
+            self::assertArrayNotHasKey('payload', $response->get_data());
+        } finally {
+            if ($postId) {
+                wp_delete_post($postId, true);
+            }
+            update_option('sdp_seo_config', $seo);
+        }
+    }
+
     public function testUnfilteredSummaryIsCachedAndInvalidatedWhenVisibilityChanges(): void
     {
         $state = SDP_Portal::state([]);
