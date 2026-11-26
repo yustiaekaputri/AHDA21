@@ -152,18 +152,22 @@ final class SDP_NPSN_Catalog {
 	}
 
 	/**
-	 * Read a line-separated list in full before allowing any writes.
+	 * Validate a one-column list before allowing any writes.
 	 *
-	 * @param string $contents Uploaded TXT contents.
-	 * @param int    $limit Maximum number of data lines.
+	 * @param string $contents Plain text or one-column CSV contents.
+	 * @param int    $limit    Maximum number of data lines.
+	 * @param bool   $csv      Whether CSV quoting is allowed.
 	 * @return string[]|WP_Error Validated identifiers or an error.
 	 */
-	private static function parse_list( $contents, $limit ) {
+	private static function parse_list( $contents, $limit, $csv ) {
 		$contents = preg_replace( '/^\xEF\xBB\xBF/', '', $contents );
 		$lines    = preg_split( '/\r\n|\r|\n/', $contents );
 		$ids      = array();
 		foreach ( $lines as $index => $line ) {
 			$line = trim( $line, " \t" );
+			if ( $csv && strlen( $line ) >= 2 && str_starts_with( $line, '"' ) && str_ends_with( $line, '"' ) ) {
+				$line = trim( substr( $line, 1, -1 ), " \t" );
+			}
 			if ( '' === $line || ( 0 === $index && 'npsn' === strtolower( $line ) ) ) {
 				continue;
 			}
@@ -188,19 +192,28 @@ final class SDP_NPSN_Catalog {
 		$path = $file['tmp_name'] ?? null;
 		$name = $file['name'] ?? null;
 		$size = $file['size'] ?? null;
+		$type = is_string( $name ) ? strtolower( pathinfo( $name, PATHINFO_EXTENSION ) ) : '';
+		$max  = 'xlsx' === $type ? SDP_Excel::limits()['file'] : self::LIST_MAX_BYTES;
 		if ( ! is_string( $path ) || ! is_string( $name ) || ! is_int( $size )
 			|| UPLOAD_ERR_OK !== ( $file['error'] ?? UPLOAD_ERR_NO_FILE )
-			|| 'txt' !== strtolower( pathinfo( $name, PATHINFO_EXTENSION ) )
-			|| $size < 1 || $size > self::LIST_MAX_BYTES || ! is_uploaded_file( $path ) ) {
-			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( 'Pilih TXT yang valid dengan ukuran maksimal 8 KiB.' ) );
+			|| ! in_array( $type, array( 'txt', 'csv', 'xlsx' ), true )
+			|| $size < 1 || $size > $max || ! is_uploaded_file( $path ) ) {
+			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( 'Pilih TXT, CSV, atau XLSX yang valid sesuai batas ukuran.' ) );
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Read the verified PHP upload with an explicit byte limit.
-		$contents = file_get_contents( $path, false, null, 0, self::LIST_MAX_BYTES + 1 );
+		if ( 'xlsx' === $type ) {
+			$contents = SDP_Excel::convert( $path );
+		} else {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Read the verified PHP upload with an explicit byte limit.
+			$contents = file_get_contents( $path, false, null, 0, self::LIST_MAX_BYTES + 1 );
+		}
+		if ( is_wp_error( $contents ) ) {
+			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( $contents->get_error_message() ) );
+		}
 		if ( false === $contents || strlen( $contents ) > self::LIST_MAX_BYTES ) {
 			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( 'Berkas tidak dapat dibaca atau melebihi 8 KiB.' ) );
 		}
-		$ids = self::parse_list( $contents, SDP_Resource::cap( SDP_Directory::MAX_ROWS, 50 ) );
+		$ids = self::parse_list( $contents, SDP_Resource::cap( SDP_Directory::MAX_ROWS, 50 ), 'txt' !== $type );
 		if ( is_wp_error( $ids ) ) {
 			SDP_Directory::redirect( self::PAGE, 'Impor daftar dibatalkan.', array( $ids->get_error_message() ) );
 		}
@@ -309,10 +322,10 @@ final class SDP_NPSN_Catalog {
 		echo '<h2 id="sdp-npsn-batch">Impor daftar NPSN dari katalog</h2>';
 		if ( $catalog ) {
 			$limit = SDP_Resource::cap( SDP_Directory::MAX_ROWS, 50 );
-			echo '<p>Pilih TXT UTF-8 berisi satu NPSN per baris, hingga ' . (int) $limit . ' baris data dan 8 KiB. Judul kolom <code>npsn</code> boleh disertakan. Data sekolah diambil dari katalog di atas. Profil baru menjadi draf dan profil lama dilewati.</p>';
+			echo '<p>Gunakan satu NPSN per baris dalam TXT atau satu kolom dalam CSV/XLSX. TXT dan CSV mendukung judul <code>npsn</code> opsional dan maksimal 8 KiB. Untuk XLSX, gunakan sheet pertama dengan judul <code>npsn</code> dan simpan NPSN sebagai teks. Batas ' . (int) $limit . ' baris data. Profil baru menjadi draf dan profil lama dilewati.</p>';
 			echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( $action ) . '"><input type="hidden" name="action" value="sdp_npsn_batch">';
 			wp_nonce_field( 'sdp_npsn_batch' );
-			echo '<p><label>Daftar NPSN (TXT) <input type="file" name="npsn_list" accept=".txt,text/plain" required></label></p>';
+			echo '<p><label>Daftar NPSN (TXT, CSV, atau XLSX) <input type="file" name="npsn_list" accept=".txt,.csv,.xlsx,text/plain,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></label></p>';
 			submit_button( 'Buat draf dari daftar NPSN' );
 			echo '</form>';
 		} else {

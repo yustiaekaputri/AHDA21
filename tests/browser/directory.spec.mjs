@@ -314,7 +314,7 @@ test('daftar TXT dari katalog membuat draf baru dan melewati NPSN berulang', asy
     await page.goto('/wp-admin/admin.php?page=sdp-import');
     await page.getByRole('link', { name: 'Impor daftar NPSN dari katalog' }).click();
     const upload = async (text) => {
-        await page.getByLabel('Daftar NPSN (TXT)').setInputFiles({
+        await page.getByLabel('Daftar NPSN (TXT, CSV, atau XLSX)').setInputFiles({
             name: 'daftar.txt', mimeType: 'text/plain', buffer: Buffer.from(text),
         });
         await page.getByRole('button', { name: 'Buat draf dari daftar NPSN' }).click();
@@ -334,4 +334,42 @@ test('daftar TXT dari katalog membuat draf baru dan melewati NPSN berulang', asy
     await expect(page.locator('#sdp-npsn')).toHaveValue(first);
     await expect(page.locator('#sdp-nama')).toHaveValue('Sekolah FIKTIF Daftar TXT');
     expect((await page.request.get(`/wp-json/sdp/v1/schools/${first}`)).status()).toBe(404);
+});
+
+test('daftar CSV dan XLSX satu kolom memakai katalog dan mempertahankan nol awal', async ({ page }) => {
+    await login(page, 'sdp-admin', process.env.SDP_ADMIN_PASSWORD);
+    await page.goto('/wp-admin/admin.php?page=sdp-npsn-catalog');
+    await page.getByLabel('CSV katalog').setInputFiles({
+        name: 'katalog-fiktif.csv', mimeType: 'text/csv',
+        buffer: Buffer.from('npsn,nama\n00073124,Sekolah FIKTIF CSV\n00073125,Sekolah FIKTIF XLSX\n'),
+    });
+    await page.getByLabel('Nama sumber').fill('Sumber FIKTIF');
+    await page.getByLabel('Saya berhak menggunakan dataset ini.').check();
+    await page.getByRole('button', { name: 'Simpan katalog' }).click();
+    await expect(page.getByText('Rekaman katalog: 2')).toBeVisible();
+
+    const upload = async (file) => {
+        await page.getByLabel('Daftar NPSN (TXT, CSV, atau XLSX)').setInputFiles(file);
+        await page.getByRole('button', { name: 'Buat draf dari daftar NPSN' }).click();
+    };
+    await upload('tests/integration/import-fixture.xlsx');
+    await expect(page.getByText('Impor daftar dibatalkan.')).toBeVisible();
+    await upload({
+        name: 'daftar.csv', mimeType: 'text/csv',
+        buffer: Buffer.from('\ufeff"npsn"\r\n"00073124"\r\n00073125,kolom-tambahan\r\n'),
+    });
+    await expect(page.getByText(/NPSN tidak valid pada baris 3/)).toBeVisible();
+    await upload({
+        name: 'daftar.csv', mimeType: 'text/csv',
+        buffer: Buffer.from('\ufeff"npsn"\r\n"00073124"\r\n'),
+    });
+    await expect(page.getByText(/1 draf baru, 0 profil sudah ada/)).toBeVisible();
+    await upload('tests/integration/npsn-list-fixture.xlsx');
+    await expect(page.getByText(/1 draf baru, 0 profil sudah ada/)).toBeVisible();
+    for (const [npsn, format] of [['00073124', 'CSV'], ['00073125', 'XLSX']]) {
+        await page.goto(`/wp-admin/admin.php?page=sdp-edit&npsn=${npsn}`);
+        await expect(page.locator('#sdp-npsn')).toHaveValue(npsn);
+        await expect(page.locator('#sdp-nama')).toHaveValue(`Sekolah FIKTIF ${format}`);
+        expect((await page.request.get(`/wp-json/sdp/v1/schools/${npsn}`)).status()).toBe(404);
+    }
 });

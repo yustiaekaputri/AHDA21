@@ -28,7 +28,7 @@ Di **Direktori Sekolah → Cari NPSN dari katalog**, administrator dapat mengung
 
 Ketik NPSN, klik **Cari NPSN**, lalu tinjau data dan sumbernya. **Simpan draf dari katalog** membuat profil baru untuk diperiksa sebelum publikasi. Jika NPSN sudah memiliki profil, klik **Buka profil tersimpan**. Jika NPSN belum ada di katalog, gunakan **Isi profil secara manual**. Pencarian memakai CSV yang sudah diunggah dan berjalan tanpa koneksi ke sumber resmi.
 
-Untuk beberapa sekolah sekaligus, buka **Impor daftar NPSN dari katalog**. Pilih TXT UTF-8 dengan satu NPSN per baris. Baris pertama boleh berisi judul `npsn`. Batasnya 50 baris data dalam mode hemat atau 200 dalam mode standar, dan ukuran maksimal 8 KiB. Baris berulang, profil yang sudah tersimpan, serta NPSN di luar katalog dilaporkan dan dilewati. Jika ada baris dengan format salah, unggahan dibatalkan sebelum ada draf yang dibuat.
+Untuk beberapa sekolah sekaligus, buka **Impor daftar NPSN dari katalog**. Pilih TXT atau CSV UTF-8 dengan satu NPSN per baris dan judul `npsn` opsional. Untuk XLSX, gunakan sheet pertama dengan judul `npsn` dan simpan NPSN sebagai teks agar nol di awal dipertahankan. Batas tiap unggahan adalah 50 baris data dalam mode hemat atau 200 dalam mode standar. TXT/CSV maksimal 8 KiB. XLSX mengikuti batas workbook mode aktif. Baris berulang, profil yang sudah tersimpan, serta NPSN di luar katalog dilaporkan dan dilewati. Jika ada baris dengan format salah, unggahan dibatalkan sebelum ada draf yang dibuat.
 
 ### Memeriksa sampel resmi sebelum unggah
 
