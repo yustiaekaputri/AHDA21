@@ -341,7 +341,7 @@ test('daftar TXT dari katalog membuat draf baru dan melewati NPSN berulang', asy
     await expect(page.getByText(`${missing} tidak ditemukan di katalog.`)).toBeVisible();
     await page.getByRole('link', { name: 'Buka daftar draf sekolah' }).click();
     await expect(page).toHaveURL(/edit\.php\?post_type=sdp_school&post_status=draft$/);
-    await expect(page.getByRole('link', { name: 'Sekolah FIKTIF Daftar TXT', exact: true }).first()).toBeVisible();
+    await expect(page.locator('a.row-title').filter({ hasText: first })).toHaveText(`Profil Sekolah FIKTIF Daftar TXT – NPSN ${first}`);
     await page.goto(catalogPage);
     await upload(list, 'Pratinjau daftar NPSN');
     await expect(page.getByText(/0 calon draf baru, 1 profil sudah ada, 1 baris berulang/)).toBeVisible();
