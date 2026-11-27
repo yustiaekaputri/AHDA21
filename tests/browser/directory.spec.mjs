@@ -339,9 +339,14 @@ test('daftar TXT dari katalog membuat draf baru dan melewati NPSN berulang', asy
     await page.getByRole('button', { name: 'Konfirmasi dan buat draf' }).click();
     await expect(page.getByText(/1 draf baru, 0 profil sudah ada, 1 baris berulang, 1 NPSN di luar katalog, 0 gagal/)).toBeVisible();
     await expect(page.getByText(`${missing} tidak ditemukan di katalog.`)).toBeVisible();
+    await page.getByRole('link', { name: 'Buka daftar draf sekolah' }).click();
+    await expect(page).toHaveURL(/edit\.php\?post_type=sdp_school&post_status=draft$/);
+    await expect(page.getByRole('link', { name: 'Sekolah FIKTIF Daftar TXT', exact: true }).first()).toBeVisible();
+    await page.goto(catalogPage);
     await upload(list, 'Pratinjau daftar NPSN');
     await expect(page.getByText(/0 calon draf baru, 1 profil sudah ada, 1 baris berulang/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Konfirmasi dan buat draf' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Buka daftar draf sekolah' })).toHaveCount(0);
     await page.getByText('Lihat rincian per NPSN', { exact: true }).click();
     await expect(known.getByRole('link', { name: `Buka profil tersimpan ${first}` })).toHaveAttribute('href', new RegExp(`npsn=${first}$`));
 

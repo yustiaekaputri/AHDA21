@@ -343,7 +343,7 @@ final class SDP_NPSN_Catalog {
 		}
 		list( $created, $exists, $missing, $failed, $details ) = $result;
 		$duplicates = count( $ids ) - count( $unique );
-		SDP_Directory::redirect( self::PAGE, "Selesai: $created draf baru, $exists profil sudah ada, $duplicates baris berulang, $missing NPSN di luar katalog, $failed gagal. Maksimal 30 detail ditampilkan.", $details );
+		SDP_Directory::redirect( self::PAGE, "Selesai: $created draf baru, $exists profil sudah ada, $duplicates baris berulang, $missing NPSN di luar katalog, $failed gagal. Maksimal 30 detail ditampilkan.", $details, $created > 0 );
 	}
 
 	/**

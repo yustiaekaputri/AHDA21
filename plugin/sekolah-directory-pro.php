@@ -500,13 +500,15 @@ final class SDP_Directory {
 	 * @param string   $page Target admin page slug.
 	 * @param string   $message Result summary.
 	 * @param string[] $errors Details for the administrator.
+	 * @param bool     $show_drafts Whether the result created drafts for review.
 	 */
-	public static function redirect( $page, $message, $errors = array() ) {
+	public static function redirect( $page, $message, $errors = array(), $show_drafts = false ) {
 		set_transient(
 			'sdp_notice_' . get_current_user_id(),
 			array(
-				'message' => $message,
-				'errors'  => array_slice( $errors, 0, 30 ),
+				'message'     => $message,
+				'errors'      => array_slice( $errors, 0, 30 ),
+				'show_drafts' => $show_drafts,
 			),
 			120
 		);
@@ -523,6 +525,10 @@ final class SDP_Directory {
 		echo '<div class="notice ' . ( ! empty( $notice['errors'] ) ? 'notice-warning' : 'notice-success' ) . ' is-dismissible"><p>' . esc_html( $notice['message'] ) . '</p>';
 		foreach ( $notice['errors'] as $error ) {
 			echo '<p>' . esc_html( $error ) . '</p>';
+		}
+		if ( ! empty( $notice['show_drafts'] ) ) {
+			$url = admin_url( 'edit.php?post_type=' . self::TYPE . '&post_status=draft' );
+			echo '<p><a href="' . esc_url( $url ) . '">Buka daftar draf sekolah</a></p>';
 		}
 		echo '</div>';
 	}

@@ -32,6 +32,8 @@ Untuk beberapa sekolah sekaligus, buka **Impor daftar NPSN dari katalog**. Pilih
 
 Klik **Pratinjau daftar NPSN** sebelum menyimpan. Buka **Lihat rincian per NPSN** untuk memeriksa nama, status, dan tautan ke profil yang sudah tersimpan. Setelah diperiksa, klik **Konfirmasi dan buat draf** dalam lima menit. Jika data katalog yang dipilih berubah, buat pratinjau baru. Tombol **Buat draf dari daftar NPSN** juga tersedia untuk langsung menyimpan berkas yang sudah diperiksa.
 
+Jika impor menghasilkan draf baru, klik **Buka daftar draf sekolah** pada ringkasan hasil. WordPress menampilkan daftar profil berstatus draf agar administrator dapat meninjau dan menerbitkan profil yang sudah diperiksa.
+
 ### Memeriksa sampel resmi sebelum unggah
 
 Gunakan [panduan persiapan pilot](docs/plugin/PANDUAN-V103.txt) untuk memvalidasi CSV berizin dengan `tools/prepare_pilot.py` dan mencatat sumber, edisi, serta dasar izin. Pada clone LocalWP yang tidak diindeks, jalankan `wp sdp pilot-preview` dengan SHA-256 dari manifest. WordPress akan menandai calon profil baru, konflik, dan kondisi lain tanpa mengubah profil.
