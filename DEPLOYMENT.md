@@ -37,6 +37,8 @@ Pada staging dengan HTTP Basic, kunjungan berautentikasi dapat membuka situs, te
 2. Pasang crontab, lalu konfirmasi event yang jatuh tempo benar-benar berjalan melalui jadwal tersebut. Setelah berhasil, aktifkan `DISABLE_WP_CRON` pada `wp-config.php`. Pertahankan `SDP_SAFE_MODE` saat memeriksa konfigurasi. Uji pemrosesan antrean dengan fixture DEMO hanya pada salinan terisolasi dan matikan Safe Mode sementara pada salinan itu.
 3. Periksa log Nginx dan status antrean. Kunjungan biasa seharusnya tidak lagi memicu permintaan internal `/wp-cron.php`. Saat antrean selesai dan akses jaringan terjadwal mati, `wp cron event list --fields=hook,next_run_gmt` seharusnya tidak lagi menampilkan `sdp_collector_tick`. Event WordPress lain dapat tetap terjadwal.
 
+Contoh crontab telah dijalankan pada salinan staging privat oleh Supercronic sebagai pengguna non-root. Interval pengujian dipersingkat menjadi satu menit. Pada VPS gunakan interval lima menit pada contoh dan periksa log daemon yang tersedia di server tersebut.
+
 ### Verifikasi email dan pemulihan akun
 
 Siapkan SMTP melalui relay server atau integrasi email WordPress yang didukung penyedia. Gunakan pengaturan TLS, domain pengirim terverifikasi, dan kredensial dari penyedia. Simpan kredensial di konfigurasi privat atau secret store di luar Git. Untuk staging gunakan kotak masuk uji yang Anda kendalikan.
