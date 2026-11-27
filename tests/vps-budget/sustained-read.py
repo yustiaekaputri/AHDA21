@@ -12,8 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
 from benchmark_local import request, summary, target
 
 duration = int(os.environ.get('SDP_BUDGET_DURATION', '360'))
-if duration not in (120, 360):
-    raise SystemExit('Durasi uji harus 120 atau 360 detik.')
+if duration not in (120, 360, 720):
+    raise SystemExit('Durasi uji harus 120, 360, atau 720 detik.')
 
 
 def checkpoint(elapsed, batch):
@@ -70,5 +70,7 @@ expiration_times = {item['summary_expiration'] for item in checkpoints if item['
 print(json.dumps({'duration_s': round(elapsed, 3), 'batches': batch, 'mixed': results, 'checkpoints': checkpoints}, indent=2))
 if not all(result['ok'] and not result['errors'] for result in results.values()):
     raise SystemExit(1)
-if duration == 360 and (not expiration_times or max(expiration_times) - min(expiration_times) < 300):
-    raise SystemExit('Pembaruan ringkasan setelah TTL tidak teramati.')
+expected_refreshes = {120: 0, 360: 1, 720: 2}[duration]
+if expected_refreshes and (len(expiration_times) < expected_refreshes + 1
+                           or max(expiration_times) - min(expiration_times) < 300 * expected_refreshes):
+    raise SystemExit('Jumlah pembaruan ringkasan setelah TTL belum teramati.')

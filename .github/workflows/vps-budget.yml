@@ -14,10 +14,11 @@ on:
       duration:
         description: Durasi beban campuran 500.000 profil (detik)
         type: choice
-        default: '360'
+        default: '720'
         options:
           - '120'
           - '360'
+          - '720'
   push:
     paths:
       - .github/workflows/vps-budget.yml
@@ -33,7 +34,7 @@ permissions:
 jobs:
   micro-budget:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - name: Build WordPress, PHP-FPM, Nginx dan MariaDB
@@ -44,7 +45,7 @@ jobs:
         shell: bash
         env:
           SDP_BUDGET_PROFILES: ${{ inputs.profiles || '500000' }}
-          SDP_BUDGET_DURATION: ${{ inputs.duration || '360' }}
+          SDP_BUDGET_DURATION: ${{ inputs.duration || '720' }}
         run: |
           mkdir -p artifacts/vps-budget
           docker run --rm --network none --cpus 1 --memory 1g --memory-swap 1g \
