@@ -17,6 +17,8 @@ Skema direktori menyediakan indeks pengurutan nama lengkap dan NPSN untuk daftar
 
 Indeks ID artikel dan status sekolah membantu kueri ringkasan publik saat cache kosong.
 
+Worker yang memakai transient bawaan WordPress berkoordinasi saat mengisi cache ringkasan direktori.
+
 ## Perubahan v10.0 RC3 (staging saja)
 Persiapan pilot CSV per wilayah dan sumber, checksum, preview WP-CLI lokal baca-saja. Tidak ada impor otomatis; lihat PANDUAN-V103.txt.
 

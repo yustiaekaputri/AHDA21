@@ -190,3 +190,9 @@ Dalam delapan batch campuran empat klien, median direktori 44 ms, NPSN persis 42
 Pada empat klien, kedua worker menjalankan kueri ringkasan yang sama pada tiap batch setelah invalidasi. Total 14 eksekusi ringkasan tercatat selama sembilan batch awal pada seluruh tingkat konkurensi. Direktori melayani permintaan cache terisi tanpa pengulangan tersebut. Koordinasi pengisian cache antarworker dan pencarian sebagian masih bisa dioptimalkan.
 
 Puncak alokasi PHP 8 MiB per permintaan. Puncak gabungan PSS proses Nginx, PHP-FPM, dan MariaDB dalam 190 sampel sekitar 200 MiB. PSS membagi halaman memori bersama di antara proses dan tidak menghitung seluruh penggunaan sistem. Database uji sekitar 1,5 GiB berada di tmpfs, dan batas memori host uji 8 GiB. Hasil ini belum memvalidasi kapasitas VPS 1 GB atau beban berdurasi panjang.
+
+### Koordinasi pengisian ringkasan publik
+
+Saat ringkasan belum ada di transient database WordPress, worker menunggu lock MariaDB/MySQL hingga dua detik. Setelah lock diperoleh, worker membaca kembali generasi cache dan isi transient. Jika lock tidak diperoleh, worker menjalankan kueri langsung tanpa menyimpan hasilnya ke cache. Penguncian terbatas pada ringkasan publik dan tidak dipakai oleh instalasi dengan cache objek eksternal.
+
+Uji ulang profil FIKTIF dan beban satu CPU logis menghasilkan satu eksekusi ringkasan di setiap batch awal. Pada empat klien, p95 cache kosong turun dari 2.751 ms menjadi 2.020 ms. Jumlah kueri ringkasan dari sembilan batch awal turun dari 14 menjadi 9. Seluruh 161 respons memenuhi pemeriksaan isi. Puncak alokasi PHP 8 MiB dan PSS gabungan terukur sekitar 195 MiB. Uji visibilitas memverifikasi bahwa profil yang dijadikan privat, dilindungi kata sandi, atau dihapus dikeluarkan dari hitungan dan opsi wilayah publik.

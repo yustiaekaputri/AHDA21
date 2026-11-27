@@ -94,12 +94,77 @@ final class SDP_Performance {
 		$epoch = (string) get_option( self::EPOCH, '0' );
 		$hash  = hash( 'sha256', $epoch . '|' . $sql );
 		$key   = self::slot( $hash, $directory_slot );
+		$hit   = self::cached_facet( $key, $hash );
+		if ( null !== $hit ) {
+			return $hit;
+		}
+		if ( 'summary' === $directory_slot && ! wp_using_ext_object_cache() ) {
+			return self::fill_summary( $sql, $query, $key );
+		}
+		return self::fill_facet( $query, $key, $hash, $epoch );
+	}
+
+	/**
+	 * Read a cached value for the current generation of the query.
+	 *
+	 * @param string $key Transient key.
+	 * @param string $hash Query and generation hash.
+	 * @return array|null Cached result, or null on a miss.
+	 */
+	private static function cached_facet( $key, $hash ) {
 		$entry = self::$local[ $key ] ?? get_transient( $key );
 		if ( is_array( $entry ) && ( $entry['hash'] ?? '' ) === $hash && ( $entry['until'] ?? 0 ) > time() && is_array( $entry['values'] ?? null ) ) {
 			++self::$hits;
 			self::$local[ $key ] = $entry;
 			return $entry['values'];
 		}
+		return null;
+	}
+
+	/**
+	 * Coordinate a summary miss across workers using database-backed transients.
+	 *
+	 * @param string   $sql SQL used to identify the result.
+	 * @param callable $query Callback that reads the summary.
+	 * @param string   $key Transient key.
+	 * @return array Summary result.
+	 */
+	private static function fill_summary( $sql, $query, $key ) {
+		global $wpdb;
+		$lock           = 'sdp_summary_' . md5( DB_NAME . '|' . SDP_Directory::table() );
+		$was_suppressed = $wpdb->suppress_errors();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- A database lock is connection-scoped.
+		$locked = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 2)', $lock ) );
+		$wpdb->suppress_errors( $was_suppressed );
+		if ( '1' !== (string) $locked ) {
+			++self::$misses;
+			return $query() ?? array();
+		}
+		try {
+			// A different worker may have filled the slot or changed the generation while we waited.
+			foreach ( array( self::EPOCH, '_transient_' . $key, '_transient_timeout_' . $key, 'notoptions' ) as $option ) {
+				wp_cache_delete( $option, 'options' );
+			}
+			unset( self::$local[ $key ] );
+			$epoch = (string) get_option( self::EPOCH, '0' );
+			$hash  = hash( 'sha256', $epoch . '|' . $sql );
+			return self::cached_facet( $key, $hash ) ?? self::fill_facet( $query, $key, $hash, $epoch );
+		} finally {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Release the connection-scoped lock on every exit.
+			$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock ) );
+		}
+	}
+
+	/**
+	 * Query and cache a result if it fits the bounded cache.
+	 *
+	 * @param callable $query Callback that reads the result.
+	 * @param string   $key Transient key.
+	 * @param string   $hash Query and generation hash.
+	 * @param string   $epoch Cache generation recorded before the query.
+	 * @return array Query result.
+	 */
+	private static function fill_facet( $query, $key, $hash, $epoch ) {
 		++self::$misses;
 		$values = $query();
 		// null signals a failed database query; never cache errors or unbounded responses.
