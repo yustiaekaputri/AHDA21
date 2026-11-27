@@ -166,3 +166,11 @@ Indeks `sdp_name_order (nama,npsn)` pada tabel sekolah memungkinkan MariaDB meng
 Pada 500.000 profil FIKTIF, median delapan permintaan dengan cache terisi turun dari 564 ms menjadi 18 ms. Median tiga permintaan setelah invalidasi cache turun dari 2.767 ms menjadi 2.010 ms. Satu sampel kueri halaman pertama turun dari 588 ms menjadi 0,7 ms. Respons tetap 46.858 byte dan puncak alokasi PHP pada pengukuran setelah invalidasi turun dari 8 MiB menjadi 6 MiB. Indeks tambahan berukuran sekitar 20,6 MiB pada InnoDB di dataset uji. Angka ini memakai satu klien, database pada tmpfs, dan PHP-FPM dua worker.
 
 Pemilihan NPSN sebelum mengambil payload memberi urutan identik dengan waktu yang hampir sama pada tiga posisi halaman. Percobaan join untuk ringkasan juga memberi total identik. Indeks tambahan pada tabel artikel kurang membantu pada dataset ini sehingga dihapus dari database uji. Kueri penghitungan total saat cache kosong masih terbuka.
+
+### Indeks ringkasan sekolah
+
+Indeks `sdp_school_count (post_id,status)` memungkinkan MariaDB membaca ID artikel dan status negeri/swasta dari indeks sekolah. Kueri tetap memeriksa publikasi, jenis artikel, dan kata sandi melalui join WordPress. Pemilihan indeks mengikuti optimizer database tanpa petunjuk paksa.
+
+Lima permintaan HTTP setelah invalidasi cache per kondisi pada 500.000 profil FIKTIF menurunkan median respons dari 2.092 ms menjadi 1.399 ms. Median kueri ringkasan dari jejak HTTP turun dari 1.512 ms menjadi 838 ms. Semua respons berukuran 46.858 byte dan puncak alokasi PHP terukur 8 MiB pada kedua kondisi. Indeks menambah sekitar 16,5 MiB pada penyimpanan dataset uji. Uji memakai satu klien loopback dan MariaDB pada tmpfs.
+
+Enam variasi kueri menghasilkan total yang sama, yakni 500.000 profil yang terbagi rata antara negeri dan swasta. Penambahan indeks uji kedua pada tabel artikel menghasilkan penghematan tambahan yang lebih kecil dengan biaya sekitar 18,6 MiB, sehingga skema rilis menggunakan indeks pada tabel sekolah saja. Uji VPS 1 GB masih terbuka.

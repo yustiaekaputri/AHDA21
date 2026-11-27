@@ -35,6 +35,11 @@ SELECT 'ringkasan', COUNT(*), SUM(s.status='Negeri'), SUM(s.status='Swasta')
 FROM sdp_test_index_schools s JOIN sdp_test_index_posts p ON p.ID=s.post_id
 WHERE p.post_type='sdp_school' AND p.post_status='publish' AND p.post_password='';
 
+ALTER TABLE sdp_test_index_schools ADD INDEX sdp_school_count (post_id, status);
+SELECT 'ringkasan dengan indeks sekolah', COUNT(*), SUM(s.status='Negeri'), SUM(s.status='Swasta')
+FROM sdp_test_index_schools s JOIN sdp_test_index_posts p ON p.ID=s.post_id
+WHERE p.post_type='sdp_school' AND p.post_status='publish' AND p.post_password='';
+
 CREATE VIEW sdp_test_index_visible AS
 SELECT s.provinsi, s.status
 FROM sdp_test_index_posts p FORCE INDEX (sdp_test_public)

@@ -136,6 +136,8 @@ final class WordPressTest extends TestCase
         $orderIndex = array_values(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'sdp_name_order'));
         self::assertSame(['nama', 'npsn'], array_column($orderIndex, 'Column_name'));
         self::assertSame([null, null], array_column($orderIndex, 'Sub_part'));
+        $countIndex = array_values(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'sdp_school_count'));
+        self::assertSame(['post_id', 'status'], array_column($countIndex, 'Column_name'));
         self::assertContains('npsn', array_column(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'PRIMARY'), 'Column_name'));
     }
 
@@ -174,11 +176,13 @@ final class WordPressTest extends TestCase
         try {
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX wilayah"));
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_name_order"));
+            self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_school_count"));
             update_option('sdp_db_version', '9.0.0');
             self::assertTrue(SDP_Directory::install_schema());
             self::assertSame(SDP_Directory::VERSION, get_option('sdp_db_version'));
             self::assertContains('wilayah', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
             self::assertContains('sdp_name_order', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
+            self::assertContains('sdp_school_count', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
             self::assertSame($postId, (int) $wpdb->get_var($wpdb->prepare("SELECT post_id FROM `$table` WHERE npsn=%s", 'FIKMIG01')));
         } finally {
             SDP_Directory::install_schema();
@@ -257,25 +261,32 @@ final class WordPressTest extends TestCase
         update_option('sdp_seo_config', array_merge((array) $seo, ['guard' => 0]));
         add_filter('query', $countQuery);
         try {
-            $initial = SDP_Portal::results($state)['total'];
+            $initialSummary = SDP_Portal::results($state);
+            $initial = $initialSummary['total'];
             self::assertSame($initial, SDP_Portal::results($state)['total']);
             self::assertSame(1, $summaryQueries);
 
             $result = SDP_Directory::save(
-                ['npsn' => 'TESTZ998', 'nama' => 'Profil FIKTIF cache', 'jenjang' => 'Jenjang Fiktif Cache', 'provinsi' => 'Wilayah FIKTIF Cache', 'akreditasi' => 'UJI CACHE'],
+                ['npsn' => 'TESTZ998', 'nama' => 'Profil FIKTIF cache', 'jenjang' => 'Jenjang Fiktif Cache', 'provinsi' => 'Wilayah FIKTIF Cache', 'akreditasi' => 'UJI CACHE', 'status' => 'Negeri'],
                 false, 'fill', null, null, null, true
             );
             self::assertNotInstanceOf(WP_Error::class, $result);
             $postId = (int) $result['id'];
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_status' => 'publish']));
-            self::assertSame($initial + 1, SDP_Portal::results($state)['total']);
+            $published = SDP_Portal::results($state);
+            self::assertSame($initial + 1, $published['total']);
+            self::assertSame($initialSummary['negeri'] + 1, $published['negeri']);
+            self::assertSame($initialSummary['swasta'], $published['swasta']);
             self::assertContains('Jenjang Fiktif Cache', SDP_Portal::options($state)['jenjang']);
             self::assertContains('UJI CACHE', SDP_Portal::options($state)['akreditasi']);
             $scope = ['provinsi' => 'Wilayah FIKTIF Cache'];
             $scopedState = SDP_Portal::state([], $scope);
             self::assertSame(['UJI CACHE'], SDP_Portal::options($scopedState, $scope)['akreditasi']);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_password' => 'fixture']));
-            self::assertSame($initial, SDP_Portal::results($state)['total']);
+            $protected = SDP_Portal::results($state);
+            self::assertSame($initial, $protected['total']);
+            self::assertSame($initialSummary['negeri'], $protected['negeri']);
+            self::assertSame($initialSummary['swasta'], $protected['swasta']);
             self::assertNotContains('Jenjang Fiktif Cache', SDP_Portal::options($state)['jenjang']);
             self::assertNotContains('UJI CACHE', SDP_Portal::options($state)['akreditasi']);
             self::assertSame([], SDP_Portal::options($scopedState, $scope)['akreditasi']);

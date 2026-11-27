@@ -192,7 +192,8 @@ final class SDP_Directory {
             KEY status (status),
             KEY akreditasi (akreditasi),
             KEY nama (nama(100)),
-            KEY sdp_name_order (nama,npsn)
+            KEY sdp_name_order (nama,npsn),
+            KEY sdp_school_count (post_id,status)
         ) $collate;"
 		);
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) !== $table || $wpdb->last_error ) {
