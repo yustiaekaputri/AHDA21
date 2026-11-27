@@ -174,3 +174,19 @@ Indeks `sdp_school_count (post_id,status)` memungkinkan MariaDB membaca ID artik
 Lima permintaan HTTP setelah invalidasi cache per kondisi pada 500.000 profil FIKTIF menurunkan median respons dari 2.092 ms menjadi 1.399 ms. Median kueri ringkasan dari jejak HTTP turun dari 1.512 ms menjadi 838 ms. Semua respons berukuran 46.858 byte dan puncak alokasi PHP terukur 8 MiB pada kedua kondisi. Indeks menambah sekitar 16,5 MiB pada penyimpanan dataset uji. Uji memakai satu klien loopback dan MariaDB pada tmpfs.
 
 Enam variasi kueri menghasilkan total yang sama, yakni 500.000 profil yang terbagi rata antara negeri dan swasta. Penambahan indeks uji kedua pada tabel artikel menghasilkan penghematan tambahan yang lebih kecil dengan biaya sekitar 18,6 MiB, sehingga skema rilis menggunakan indeks pada tabel sekolah saja. Uji VPS 1 GB masih terbuka.
+
+### Empat klien serentak pada 500.000 profil
+
+Nginx, dua worker PHP-FPM, dan MariaDB dijalankan pada satu CPU logis yang sama di host uji. Batas memori PHP per worker 128 MiB dan buffer InnoDB 64 MiB. Pada masing-masing tingkat konkurensi, tiga batch dikirim segera setelah invalidasi cache dan diikuti 36 permintaan dengan cache terisi. Setiap batch awal berisi satu permintaan per klien.
+
+| Klien serentak | p50 setelah invalidasi | p95 setelah invalidasi | p50 cache terisi | p95 cache terisi |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 1.669 ms | 2.198 ms | 18 ms | 22 ms |
+| 2 | 2.678 ms | 2.692 ms | 35 ms | 58 ms |
+| 4 | 2.674 ms | 2.751 ms | 56 ms | 88 ms |
+
+Dalam delapan batch campuran empat klien, median direktori 44 ms, NPSN persis 42 ms, filter provinsi 378 ms, dan pencarian nama 3.026 ms. Seluruh 161 respons terukur mendapat HTTP 200 dan memenuhi pemeriksaan isi. Playwright juga memverifikasi tampilan tiga ukuran dan navigasi antarhalaman.
+
+Pada empat klien, kedua worker menjalankan kueri ringkasan yang sama pada tiap batch setelah invalidasi. Total 14 eksekusi ringkasan tercatat selama sembilan batch awal pada seluruh tingkat konkurensi. Direktori melayani permintaan cache terisi tanpa pengulangan tersebut. Koordinasi pengisian cache antarworker dan pencarian sebagian masih bisa dioptimalkan.
+
+Puncak alokasi PHP 8 MiB per permintaan. Puncak gabungan PSS proses Nginx, PHP-FPM, dan MariaDB dalam 190 sampel sekitar 200 MiB. PSS membagi halaman memori bersama di antara proses dan tidak menghitung seluruh penggunaan sistem. Database uji sekitar 1,5 GiB berada di tmpfs, dan batas memori host uji 8 GiB. Hasil ini belum memvalidasi kapasitas VPS 1 GB atau beban berdurasi panjang.
