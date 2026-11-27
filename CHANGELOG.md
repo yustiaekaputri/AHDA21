@@ -23,6 +23,8 @@ Pencarian nama atau NPSN sebagian mempersempit kandidat dari indeks sekolah sebe
 
 Filter provinsi dan pencarian umum yang berulang dapat memakai ringkasan yang disimpan dalam cache terbatas. Skema menyediakan indeks gabungan untuk pembacaan dan pengurutan hasil provinsi.
 
+Ringkasan pencarian dengan banyak kandidat dapat memakai `sdp_search_count` untuk membaca nama dan status dalam urutan ID artikel.
+
 ## Perubahan v10.0 RC3 (staging saja)
 Persiapan pilot CSV per wilayah dan sumber, checksum, preview WP-CLI lokal baca-saja. Tidak ada impor otomatis; lihat PANDUAN-V103.txt.
 

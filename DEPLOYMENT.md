@@ -10,7 +10,7 @@ Konfigurasi contoh VPS RC5 tersedia di [deployment/vps](deployment/vps/README.tx
 
 Gunakan ZIP hasil build pada clone staging terlebih dahulu. Simpan dump database dan cadangan file sebelum migrasi. Verifikasi hasil restore pada database tersendiri dan gunakan prosedur kembali ke versi sebelumnya yang telah diperiksa. Jangan ekspor data demo atau akun uji ke produksi.
 
-Pemasangan plugin membuat indeks `sdp_name_order`, `sdp_school_count`, dan `sdp_province_order` pada tabel sekolah. Pada instalasi aktif yang diperbarui dengan mengganti ZIP, buat indeks melalui menu **Kesiapan Produksi → Perbaikan schema inti** pada salinan staging atau jendela pemeliharaan setelah backup. Menu ini memakai Safe Mode dan konfirmasi backup. Periksa kolom indeks tanpa pemotongan awalan, khususnya pada tabel InnoDB lama. Latensi, ruang disk, dan biaya pembuatan indeks perlu diukur di staging tujuan.
+Pemasangan plugin membuat indeks `sdp_name_order`, `sdp_school_count`, `sdp_province_order`, dan `sdp_search_count` pada tabel sekolah. Pada instalasi aktif yang diperbarui dengan mengganti ZIP, buat indeks melalui menu **Kesiapan Produksi → Perbaikan schema inti** pada salinan staging atau jendela pemeliharaan setelah backup. Menu ini memakai Safe Mode dan konfirmasi backup. Periksa kolom indeks tanpa pemotongan awalan, khususnya pada tabel InnoDB lama. Latensi, ruang disk, dan biaya pembuatan indeks perlu diukur di staging tujuan.
 
 ## Pindahkan situs LocalWP ke staging VPS
 
