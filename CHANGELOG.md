@@ -21,6 +21,8 @@ Worker yang memakai transient bawaan WordPress berkoordinasi saat mengisi cache 
 
 Pencarian nama atau NPSN sebagian mempersempit kandidat dari indeks sekolah sebelum memeriksa artikel publik ketika hasil awal sedikit.
 
+Filter provinsi dan pencarian umum yang berulang dapat memakai ringkasan yang disimpan dalam cache terbatas. Skema menyediakan indeks gabungan untuk pembacaan dan pengurutan hasil provinsi.
+
 ## Perubahan v10.0 RC3 (staging saja)
 Persiapan pilot CSV per wilayah dan sumber, checksum, preview WP-CLI lokal baca-saja. Tidak ada impor otomatis; lihat PANDUAN-V103.txt.
 
