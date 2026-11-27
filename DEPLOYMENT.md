@@ -29,6 +29,14 @@ Untuk staging yang memakai Nginx, buat berkas `htpasswd` di luar webroot. Simpan
 
 Periksa bahwa beranda, `wp-admin`, dan REST staging meminta autentikasi HTTP. Setelah melewati autentikasi HTTP, `wp-admin` masih meminta login WordPress. Pertahankan cache HTML nonaktif pada staging privat. Sediakan sertifikat yang valid untuk domain staging.
 
+### Verifikasi cron di staging privat
+
+Pada staging dengan HTTP Basic, kunjungan berautentikasi dapat membuka situs, tetapi permintaan internal WordPress ke `/wp-cron.php` tidak membawa kredensial tersebut. Nginx mengembalikan 401 dan event yang jatuh tempo tetap menunggu. Gunakan cron sistem melalui WP-CLI sambil mempertahankan autentikasi HTTP.
+
+1. Dari akun sistem pemilik situs, sesuaikan jalur dan siapkan direktori lock privat seperti pada [contoh crontab](deployment/vps/wordpress/cron.example). Jalankan perintah pada contoh tanpa awalan `*/5 * * * *` dan `--quiet` untuk melihat hasilnya.
+2. Pasang crontab, lalu konfirmasi event yang jatuh tempo benar-benar berjalan melalui jadwal tersebut. Setelah berhasil, aktifkan `DISABLE_WP_CRON` pada `wp-config.php`. Pertahankan `SDP_SAFE_MODE` saat memeriksa konfigurasi. Uji pemrosesan antrean dengan fixture DEMO hanya pada salinan terisolasi dan matikan Safe Mode sementara pada salinan itu.
+3. Periksa log Nginx dan status antrean. Kunjungan biasa seharusnya tidak lagi memicu permintaan internal `/wp-cron.php`. Saat antrean selesai dan akses jaringan terjadwal mati, `wp cron event list --fields=hook,next_run_gmt` seharusnya tidak lagi menampilkan `sdp_collector_tick`. Event WordPress lain dapat tetap terjadwal.
+
 ### Verifikasi email dan pemulihan akun
 
 Siapkan SMTP melalui relay server atau integrasi email WordPress yang didukung penyedia. Gunakan pengaturan TLS, domain pengirim terverifikasi, dan kredensial dari penyedia. Simpan kredensial di konfigurasi privat atau secret store di luar Git. Untuk staging gunakan kotak masuk uji yang Anda kendalikan.
