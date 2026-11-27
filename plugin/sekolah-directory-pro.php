@@ -194,7 +194,8 @@ final class SDP_Directory {
             KEY nama (nama(100)),
             KEY sdp_name_order (nama,npsn),
             KEY sdp_school_count (post_id,status),
-            KEY sdp_province_order (provinsi,nama,npsn,post_id,status,kabupaten)
+            KEY sdp_province_order (provinsi,nama,npsn,post_id,status,kabupaten),
+            KEY sdp_search_count (post_id,status,nama,npsn)
         ) $collate;"
 		);
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) !== $table || $wpdb->last_error ) {

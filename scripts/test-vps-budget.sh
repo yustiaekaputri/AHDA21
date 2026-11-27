@@ -95,7 +95,7 @@ wp eval '
     [$from, $args] = SDP_Portal::from(SDP_Portal::state(["sdp_q" => "Sekolah FIKTIF"]));
     $prefix = "EXPLAIN SELECT COUNT(*), SUM(s.status=\x27Negeri\x27), SUM(s.status=\x27Swasta\x27)";
     $default = $wpdb->get_results($wpdb->prepare($prefix . $from, $args), ARRAY_A);
-    $schoolFirst = $wpdb->get_results($wpdb->prepare($prefix . str_replace(" s JOIN ", " s STRAIGHT_JOIN ", $from), $args), ARRAY_A);
+    $schoolFirst = $wpdb->get_results($wpdb->prepare($prefix . str_replace(" s JOIN ", " s FORCE INDEX (sdp_search_count) STRAIGHT_JOIN ", $from), $args), ARRAY_A);
     echo wp_json_encode(["broad_default" => $default, "broad_school_first" => $schoolFirst], JSON_PRETTY_PRINT), PHP_EOL;
 ' | tee "$reports/broad-plan.json"
 
@@ -170,7 +170,8 @@ for name, count in (('directory', 36), ('npsn', 24), ('province', 24), ('partial
 PY
 
 if [[ $profiles == 500000 ]]; then
-    curl -fsS --max-time 30 "$directory?sdp_q=Sekolah%20FIKTIF" -o /tmp/sdp-broad.html
+    curl -fsS --max-time 30 "$directory?sdp_q=Sekolah%20FIKTIF" -o /tmp/sdp-broad.html \
+        -w 'Nama umum pertama: %{time_total} detik\n' | tee "$reports/broad-cold.txt"
     grep -Fq "$total sekolah ditemukan" /tmp/sdp-broad.html
     wp eval 'SDP_Performance::invalidate();' --quiet
     python3 "$source_dir/tests/vps-budget/sustained-read.py" | tee "$reports/sustained.json"

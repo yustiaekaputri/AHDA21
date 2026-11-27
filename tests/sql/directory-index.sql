@@ -64,7 +64,8 @@ HAVING value IS NOT NULL ORDER BY value LIMIT 1000;
 ALTER TABLE sdp_test_index_schools ADD COLUMN nama varchar(191) NOT NULL DEFAULT 'Sekolah FIKTIF',
     ADD COLUMN kabupaten varchar(120) NOT NULL DEFAULT 'Kabupaten FIKTIF',
     ADD INDEX sdp_name_order (nama, npsn),
-    ADD INDEX sdp_province_order (provinsi, nama, npsn, post_id, status, kabupaten);
+    ADD INDEX sdp_province_order (provinsi, nama, npsn, post_id, status, kabupaten),
+    ADD INDEX sdp_search_count (post_id, status, nama, npsn);
 SELECT 'urutan nama dan NPSN', s.npsn
 FROM sdp_test_index_schools s JOIN sdp_test_index_posts p ON p.ID=s.post_id
 WHERE p.post_type='sdp_school' AND p.post_status='publish' AND p.post_password=''
@@ -73,7 +74,7 @@ SELECT 'ringkasan provinsi', COUNT(*), SUM(s.status='Negeri'), SUM(s.status='Swa
 FROM sdp_test_index_schools s JOIN sdp_test_index_posts p ON p.ID=s.post_id
 WHERE s.provinsi='Jawa Barat' AND p.post_type='sdp_school' AND p.post_status='publish' AND p.post_password='';
 SELECT 'ringkasan nama', COUNT(*), SUM(s.status='Negeri'), SUM(s.status='Swasta')
-FROM sdp_test_index_schools s STRAIGHT_JOIN sdp_test_index_posts p ON p.ID=s.post_id
+FROM sdp_test_index_schools s FORCE INDEX (sdp_search_count) STRAIGHT_JOIN sdp_test_index_posts p ON p.ID=s.post_id
 WHERE (s.nama LIKE '%FIKTIF%' OR s.npsn LIKE '%FIKTIF%')
     AND p.post_type='sdp_school' AND p.post_status='publish' AND p.post_password='';
 UPDATE sdp_test_index_posts SET post_status='private' WHERE ID=1;

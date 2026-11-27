@@ -162,16 +162,28 @@ final class SDP_Portal {
 	 */
 	private static function summary( $from, $args, $cache_slot, $school_first = false ) {
 		global $wpdb;
-		if ( $school_first ) {
-			$from = str_replace( ' s JOIN ', ' s STRAIGHT_JOIN ', $from );
-		}
-		$sql          = self::select_sql( "SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta" . $from, $args );
-		$read_summary = static function () use ( $wpdb, $sql ) {
+		$select       = "SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta";
+		$cache_sql    = self::select_sql( $select . $from, $args );
+		$read_summary = static function () use ( $wpdb, $school_first, $select, $from, $args, $cache_sql ) {
+			$sql = $cache_sql;
+			if ( $school_first ) {
+				$table = SDP_Directory::table();
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- The internal table name is fixed by WordPress and the check only runs on a cache miss.
+				$has_index = $wpdb->get_var( "SHOW INDEX FROM `$table` WHERE Key_name='sdp_search_count'" );
+				if ( $has_index ) {
+					$indexed = str_replace( ' s JOIN ', ' s FORCE INDEX (sdp_search_count) STRAIGHT_JOIN ', $from );
+					$sql     = self::select_sql( $select . $indexed, $args );
+				}
+			}
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Uses prepared directory predicates and the bounded aggregate cache where applicable.
 			$result = $wpdb->get_row( $sql, ARRAY_A );
+			if ( $sql !== $cache_sql && ( ! is_array( $result ) || ! empty( $wpdb->last_error ) ) ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Retry with prepared predicates if the optional index became unavailable.
+				$result = $wpdb->get_row( $cache_sql, ARRAY_A );
+			}
 			return is_array( $result ) && empty( $wpdb->last_error ) ? $result : null;
 		};
-		return null === $cache_slot ? $read_summary() : SDP_Performance::facet( $wpdb->remove_placeholder_escape( $sql ), $read_summary, $cache_slot );
+		return null === $cache_slot ? $read_summary() : SDP_Performance::facet( $wpdb->remove_placeholder_escape( $cache_sql ), $read_summary, $cache_slot );
 	}
 
 	/**

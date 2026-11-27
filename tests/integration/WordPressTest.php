@@ -140,6 +140,8 @@ final class WordPressTest extends TestCase
         self::assertSame(['post_id', 'status'], array_column($countIndex, 'Column_name'));
         $provinceIndex = array_values(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'sdp_province_order'));
         self::assertSame(['provinsi', 'nama', 'npsn', 'post_id', 'status', 'kabupaten'], array_column($provinceIndex, 'Column_name'));
+        $searchIndex = array_values(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'sdp_search_count'));
+        self::assertSame(['post_id', 'status', 'nama', 'npsn'], array_column($searchIndex, 'Column_name'));
         self::assertContains('npsn', array_column(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'PRIMARY'), 'Column_name'));
     }
 
