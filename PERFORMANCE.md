@@ -208,3 +208,9 @@ Untuk pencarian sebagian tanpa filter tambahan, database mengambil maksimal 129 
 | Kata `TIDAKADA` | 0 | 2.530 ms | 189 ms |
 
 Enam permintaan HTTP per kondisi dan kata kunci mendapat HTTP 200 setelah pemanasan cache. Pada sampel halaman, daftar hasil dan urutan identik. Sampel pencarian potongan nama mencatat 4 MiB puncak alokasi PHP sebelum dan sesudah. Pengukuran memakai satu klien loopback, WordPress 6.9, PHP-FPM 8.2.32, MariaDB 10.11.19, dan database pada tmpfs. Pencarian dengan banyak hasil masih menjadi beban tersendiri.
+
+### Pengujian gabungan dengan batas 1 GiB
+
+Workflow [Uji batas VPS](.github/workflows/vps-budget.yml) menjalankan Nginx, PHP-FPM dan MariaDB dalam satu cgroup dengan memori 1 GiB, satu CPU dan swap dinonaktifkan. Kontainer pengujian memakai preset mikro dari `deployment/vps`, database sekali pakai pada penyimpanan kontainer, dan jaringan terbatas ke loopback. Skrip membuat 10.000 profil FIKTIF melalui plugin lalu menguji direktori dan pencarian NPSN persis. Artefak berisi statistik cgroup, waktu impor fixture, latensi dan log layanan.
+
+WordPress 6.9, PHP 8.3.6 dan MariaDB 10.11.14 menyelesaikan pembuatan 10.000 profil dalam 175 detik. Pada empat klien serentak, 36 permintaan direktori dan 24 pencarian NPSN semuanya mendapat HTTP 200. p95 masing-masing 44 ms dan 59 ms. Puncak memori gabungan cgroup sekitar 399 MiB, termasuk proses uji dan cache file yang dibebankan ke kontainer. Tidak terjadi OOM dan swap tetap nol. Uji membaca database 10.000 profil di penyimpanan kontainer. Pengukuran pada sistem VPS tujuan dan beban berdurasi panjang masih terbuka. [Run GitHub Actions](https://github.com/yustiaekaputri/AHDA21/actions/runs/45963103080)
