@@ -138,3 +138,11 @@ Percobaan terkontrol memilih generasi cache yang menempatkan ringkasan, opsi sta
 Eksperimen satu NPSN menemukan identitas yang sama melalui pencarian substring maupun `s.npsn = ...`. Median lima eksekusi kueri turun dari 1.580,6 ms menjadi 0,178 ms. `EXPLAIN` beralih dari pemindaian tabel artikel ke dua pencarian kunci primer. Ini menunjukkan peluang untuk pencarian NPSN persis, sementara perubahan aplikasi perlu mempertahankan pencarian nama, NPSN parsial, filter, dan visibilitas profil. Latensi kueri tidak mewakili waktu muat halaman.
 
 Basis data mencapai sekitar 1,6 GiB termasuk ruang kerja InnoDB. Benchmark ini memakai data sintetis pada tmpfs dan host dengan batas memori 8 GiB. Pengujian VPS 1 GB, beban serentak pada 500.000 profil, dan waktu impor massal melalui plugin masih terbuka.
+
+### Perbaikan tabrakan slot cache
+
+Ringkasan publik dan opsi provinsi, jenjang, status, serta akreditasi tanpa cakupan tersendiri kini memakai lima slot khusus. Filter bercakupan memakai 27 slot lainnya. Semua entri tetap terikat pada hash SQL dan generasi cache serta batas masa berlaku 300 detik. Penyimpanan sekolah, perubahan status atau kata sandi, dan penghapusan memicu invalidasi.
+
+Uji ulang memakai 500.000 profil dan generasi cache yang sebelumnya menempatkan ringkasan, status, dan akreditasi pada slot yang sama. Lima permintaan setelah satu pemanasan turun dari median 3.760 ms menjadi 565 ms. Jejak SQL mencatat kueri ringkasan dan opsi pada kelima permintaan versi awal dan nol permintaan setelah perbaikan. Satu permintaan setelah invalidasi memerlukan 4.718 ms sebelum perbaikan dan 4.652 ms sesudahnya. Badan HTML tetap 46.858 byte dan puncak alokasi PHP tetap 6 MiB. Pengukuran memakai satu klien loopback dan database pada tmpfs seperti benchmark sebelumnya.
+
+Uji visibilitas menambahkan tiga profil FIKTIF dan mengisi cache sebelum mengubah satu profil menjadi privat, melindungi satu profil dengan kata sandi, dan menghapus satu profil. Total kembali dari 500.003 ke 500.000, ketiga opsi wilayah hilang dan ketiga permintaan REST anonim mendapat 404.

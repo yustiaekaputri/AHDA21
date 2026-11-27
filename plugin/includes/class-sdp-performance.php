@@ -4,12 +4,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 /** Bounded public facet cache, conditional assets and on-demand legacy cron. */
 final class SDP_Performance {
-	const EPOCH           = 'sdp88_cache_epoch';
-	const MIGRATION       = 'sdp88_cron_migrated';
-	const SLOTS           = 32;
-	const TTL             = 300;
+	const EPOCH                   = 'sdp88_cache_epoch';
+	const MIGRATION               = 'sdp88_cron_migrated';
+	const SLOTS                   = 32;
+	const TTL                     = 300;
+	private const DIRECTORY_SLOTS = array(
+		'summary'    => 0,
+		'provinsi'   => 1,
+		'jenjang'    => 2,
+		'status'     => 3,
+		'akreditasi' => 4,
+	);
+	/**
+	 * Request-local cache entries.
+	 *
+	 * @var array
+	 */
 	private static $local = array();
-	private static $hits  = 0, $misses = 0;
+
+	/**
+	 * Cache hits for the current request.
+	 *
+	 * @var int
+	 */
+	private static $hits = 0;
+
+	/**
+	 * Cache misses for the current request.
+	 *
+	 * @var int
+	 */
+	private static $misses = 0;
 	public static function boot() {
 		add_action( 'sdp_school_saved', array( __CLASS__, 'invalidate' ), 20, 0 );
 		add_action( 'post_updated', array( __CLASS__, 'post_updated' ), 20, 3 );
@@ -42,15 +67,33 @@ final class SDP_Performance {
 		if ( ( $post->post_type ?? '' ) === SDP_Directory::TYPE ) {
 			self::invalidate();
 		}}
-	public static function slot( $hash ) {
-		return 'sdp88_facet_' . ( hexdec( substr( $hash, 0, 4 ) ) % self::SLOTS );}
-	public static function facet( $sql, $query ) {
+	/**
+	 * Keep public directory entries separate from scoped filters.
+	 *
+	 * @param string $hash Query and cache generation hash.
+	 * @param string $directory_slot Name of an unscoped directory entry, if applicable.
+	 * @return string Transient key.
+	 */
+	public static function slot( $hash, $directory_slot = '' ) {
+		$reserved = count( self::DIRECTORY_SLOTS );
+		$index    = self::DIRECTORY_SLOTS[ $directory_slot ] ?? ( $reserved + hexdec( substr( $hash, 0, 4 ) ) % ( self::SLOTS - $reserved ) );
+		return 'sdp88_facet_' . $index;
+	}
+	/**
+	 * Read a bounded cache entry or execute the query on a miss.
+	 *
+	 * @param string   $sql SQL used to identify the result.
+	 * @param callable $query Callback that returns an array or null on failure.
+	 * @param string   $directory_slot Name of an unscoped directory entry, if applicable.
+	 * @return array|null Query result.
+	 */
+	public static function facet( $sql, $query, $directory_slot = '' ) {
 		if ( ! self::enabled() ) {
 			return $query();
 		}
 		$epoch = (string) get_option( self::EPOCH, '0' );
 		$hash  = hash( 'sha256', $epoch . '|' . $sql );
-		$key   = self::slot( $hash );
+		$key   = self::slot( $hash, $directory_slot );
 		$entry = self::$local[ $key ] ?? get_transient( $key );
 		if ( is_array( $entry ) && ( $entry['hash'] ?? '' ) === $hash && ( $entry['until'] ?? 0 ) > time() && is_array( $entry['values'] ?? null ) ) {
 			++self::$hits;

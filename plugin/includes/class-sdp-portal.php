@@ -130,7 +130,8 @@ final class SDP_Portal {
 				static function () use ( $wpdb, $sql ) {
 					$v = $wpdb->get_col( $sql );
 					return empty( $wpdb->last_error ) && is_array( $v ) ? $v : null;
-				}
+				},
+				$keys ? '' : $k
 			) ?? array();
 			if ( '' !== $state[ $k ] && ! in_array( $state[ $k ], $out[ $k ], true ) ) {
 				$out[ $k ][] = $state[ $k ];
@@ -149,7 +150,7 @@ final class SDP_Portal {
 		};
 		// Cache only the public unfiltered aggregate. The facility clause uses no placeholder.
 		$unfiltered = 1 === count( $args ) && ! isset( SDP_Analytics::FACILITIES[ $state['fasilitas'] ?? '' ] );
-		$summary    = $unfiltered ? SDP_Performance::facet( $summary_sql, $read_summary ) : $read_summary();
+		$summary    = $unfiltered ? SDP_Performance::facet( $summary_sql, $read_summary, 'summary' ) : $read_summary();
 		if ( ! isset( $summary['total'] ) ) {
 			return self::failed_results();
 		}

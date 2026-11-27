@@ -24,6 +24,28 @@ if($c::enabled()){
   for($i=0;$i<150;$i++)$c::facet('var'.$i,fn()=>[$i]);ok(count($GLOBALS['trans'])<=32,'Fixed cache slots');
   $q1='collision-a';$epoch=get_option($c::EPOCH,'0');$slot=$c::slot(hash('sha256',$epoch.'|'.$q1));for($i=0;;$i++){if($c::slot(hash('sha256',$epoch.'|collision-'.$i))===$slot)break;}$q2='collision-'.$i;
   $c::facet($q1,fn()=>['a']);$c::facet($q2,fn()=>['b']);ok($c::facet($q1,fn()=>['a'])===['a'],'Collision never returns other values');
+
+  $directory_slots = ['summary', 'provinsi', 'jenjang', 'status', 'akreditasi'];
+  $directory_reads = 0;
+  foreach ($directory_slots as $name) {
+      $c::facet('public-' . $name, static function () use ($name, &$directory_reads) {
+          ++$directory_reads;
+          return [$name];
+      }, $name);
+  }
+  for ($index = 0; $index < 150; ++$index) {
+      $c::facet('scoped-' . $index, static fn() => [$index]);
+  }
+  foreach ($directory_slots as $name) {
+      $value = $c::facet('public-' . $name, static function () use (&$directory_reads) {
+          ++$directory_reads;
+          return ['miss'];
+      }, $name);
+      ok($value === [$name], 'Scoped queries do not evict public ' . $name);
+  }
+  ok($directory_reads === 5 && count($GLOBALS['trans']) <= 32, 'Reserved public entries share the existing 32-slot limit');
+  $c::invalidate();
+  ok($c::facet('public-summary', static fn() => ['updated'], 'summary') === ['updated'], 'Invalidation expires reserved entries');
 }else{ok(empty($GLOBALS['trans']),'Cache opt-out writes nothing');}
 $GLOBALS['wp_query']=(object)['posts'=>[(object)['post_content'=>'Normal news']]];ok(!$c::assets_needed(),'Ordinary page skips assets');SDP_Directory::assets();SDP_Portal::assets();SDP_Analytics::assets();ok(empty($GLOBALS['assets']),'No portal CSS or JS ordinary page');
 $GLOBALS['wp_query']->posts[0]->post_content='[direktori_sekolah]';ok($c::assets_needed()&&$c::assets_needed('analytics'),'Directory shortcode loads assets');SDP_Analytics::assets();ok(isset($GLOBALS['assets']['sdp-directory'],$GLOBALS['assets']['sdp-portal'],$GLOBALS['assets']['sdp-analytics']),'Asset dependencies loaded');
