@@ -5,6 +5,8 @@ Catatan versi berikut berasal dari dokumentasi plugin.
 ## Perubahan v10.0 RC4 (staging saja)
 Validasi relasi pada simpan, penahanan artikel baru sebelum indeks berhasil, audit balik artikel ke indeks WP-CLI. Tidak ada pemulihan otomatis. Lihat PANDUAN-V104.txt.
 
+Dashboard Pengumpul Data menampilkan status efektif sinkronisasi harian, termasuk saat Safe Mode atau konfigurasi akses jaringan menjedanya.
+
 ## Perubahan v10.0 RC3 (staging saja)
 Persiapan pilot CSV per wilayah dan sumber, checksum, preview WP-CLI lokal baca-saja. Tidak ada impor otomatis; lihat PANDUAN-V103.txt.
 

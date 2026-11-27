@@ -548,6 +548,18 @@ final class SDP_Collector {
 		}$key   = 'sdp_collector_notice_' . get_current_user_id();
 		$notice = get_transient( $key );
 		delete_transient( $key );
+		$sync_status = 'nonaktif';
+		if ( ! empty( $c['schedule'] ) ) {
+			if ( empty( $c['url'] ) ) {
+				$sync_status = 'menunggu URL dataset';
+			} elseif ( defined( 'SDP_SAFE_MODE' ) && SDP_SAFE_MODE === true ) {
+				$sync_status = 'dijeda oleh Safe Mode';
+			} elseif ( ! SDP_Resource::scheduled_network() ) {
+				$sync_status = 'dijeda karena akses jaringan terjadwal dinonaktifkan';
+			} else {
+				$sync_status = 'aktif';
+			}
+		}
 		echo '<div class="wrap"><h1>Automatic Data Collector</h1><p>Impor dataset publik CSV/JSON, validasi, lalu buat atau lengkapi profil berdasarkan NPSN. Gunakan sumber dengan izin penggunaan ulang.</p>';
 		if ( $notice ) {
 			echo '<div class="notice ' . ( $notice['error'] ? 'notice-error' : 'notice-success' ) . '"><p>' . esc_html( $notice['message'] ) . '</p></div>';
@@ -559,7 +571,7 @@ final class SDP_Collector {
 			'failed'  => 'Gagal',
 		) as $k => $label ) {
 			echo '<div style="background:white;border:1px solid #ccd0d4;padding:16px;min-width:140px"><strong>' . esc_html( $label ) . '</strong><h2>' . esc_html( $counts[ $k ] ?? 0 ) . '</h2></div>';
-		}echo '</div><p>Sinkronisasi harian: ' . ( $c['schedule'] ? 'aktif' : 'nonaktif' ) . '. Antrean diproses maksimal sesuai preset tiap putaran WP-Cron; jadwal berhenti ketika tidak diperlukan.</p><p>Sinkronisasi terakhir: ' . esc_html( get_option( 'sdp_collector_last_message', 'Belum ada' ) ) . '</p>';
+		}echo '</div><p>Sinkronisasi harian: ' . esc_html( $sync_status ) . '. Antrean diproses maksimal sesuai preset tiap putaran WP-Cron; jadwal berhenti ketika tidak diperlukan.</p><p>Sinkronisasi terakhir: ' . esc_html( get_option( 'sdp_collector_last_message', 'Belum ada' ) ) . '</p>';
 		echo '<h2>Konfigurasi sumber dan filter</h2><form method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="sdp_collector">';
 		wp_nonce_field( 'sdp_collector' );
 		echo '<table class="form-table">';
