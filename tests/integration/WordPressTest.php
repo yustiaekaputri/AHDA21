@@ -282,6 +282,10 @@ final class WordPressTest extends TestCase
             $scope = ['provinsi' => 'Wilayah FIKTIF Cache'];
             $scopedState = SDP_Portal::state([], $scope);
             self::assertSame(['UJI CACHE'], SDP_Portal::options($scopedState, $scope)['akreditasi']);
+            $before = $summaryQueries;
+            self::assertSame(1, SDP_Portal::results($scopedState)['total']);
+            self::assertSame(1, SDP_Portal::results($scopedState)['total']);
+            self::assertSame($before + 1, $summaryQueries);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_password' => 'fixture']));
             $protected = SDP_Portal::results($state);
             self::assertSame($initial, $protected['total']);
@@ -290,6 +294,7 @@ final class WordPressTest extends TestCase
             self::assertNotContains('Jenjang Fiktif Cache', SDP_Portal::options($state)['jenjang']);
             self::assertNotContains('UJI CACHE', SDP_Portal::options($state)['akreditasi']);
             self::assertSame([], SDP_Portal::options($scopedState, $scope)['akreditasi']);
+            self::assertSame(0, SDP_Portal::results($scopedState)['total']);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_password' => '']));
             self::assertSame($initial + 1, SDP_Portal::results($state)['total']);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_status' => 'private']));

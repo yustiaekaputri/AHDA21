@@ -154,12 +154,12 @@ final class SDP_Portal {
 	/**
 	 * Read the count and status totals for the active search predicates.
 	 *
-	 * @param string $from SQL fragment containing the tables and predicates.
-	 * @param array  $args Values for SQL placeholders.
-	 * @param bool   $unfiltered Whether the public aggregate can be cached.
+	 * @param string      $from SQL fragment containing the tables and predicates.
+	 * @param array       $args Values for SQL placeholders.
+	 * @param string|null $cache_slot Reserved cache slot, empty for a bounded shared slot, or null to bypass.
 	 * @return array|null Summary, or null on a database error.
 	 */
-	private static function summary( $from, $args, $unfiltered ) {
+	private static function summary( $from, $args, $cache_slot ) {
 		global $wpdb;
 		$sql          = self::select_sql( "SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta" . $from, $args );
 		$read_summary = static function () use ( $wpdb, $sql ) {
@@ -167,7 +167,7 @@ final class SDP_Portal {
 			$result = $wpdb->get_row( $sql, ARRAY_A );
 			return is_array( $result ) && empty( $wpdb->last_error ) ? $result : null;
 		};
-		return $unfiltered ? SDP_Performance::facet( $sql, $read_summary, 'summary' ) : $read_summary();
+		return null === $cache_slot ? $read_summary() : SDP_Performance::facet( $sql, $read_summary, $cache_slot );
 	}
 
 	/**
@@ -200,13 +200,20 @@ final class SDP_Portal {
 		global $wpdb;
 		$exact_npsn    = 1 === preg_match( '/^[A-Z0-9]{8}$/iD', $state['q'] ?? '' );
 		[$from, $args] = self::result_from( $state, $exact_npsn );
-		// Cache only the public unfiltered aggregate. The facility clause uses no placeholder.
-		$unfiltered = 1 === count( $args ) && ! isset( SDP_Analytics::FACILITIES[ $state['fasilitas'] ?? '' ] );
-		$summary    = self::summary( $from, $args, $unfiltered );
+		$cache_slot    = null;
+		// Cache the global and province-only summaries. The facility clause has no placeholder.
+		if ( ! isset( SDP_Analytics::FACILITIES[ $state['fasilitas'] ?? '' ] ) ) {
+			if ( 1 === count( $args ) ) {
+				$cache_slot = 'summary';
+			} elseif ( 2 === count( $args ) && '' !== ( $state['provinsi'] ?? '' ) ) {
+				$cache_slot = '';
+			}
+		}
+		$summary = self::summary( $from, $args, $cache_slot );
 		if ( $exact_npsn && isset( $summary['total'] ) && 0 === (int) $summary['total'] ) {
 			// A name may also contain eight alphanumeric characters.
 			[$from, $args] = self::result_from( $state, false );
-			$summary       = self::summary( $from, $args, false );
+			$summary       = self::summary( $from, $args, null );
 		}
 		if ( ! isset( $summary['total'] ) ) {
 			return self::failed_results();

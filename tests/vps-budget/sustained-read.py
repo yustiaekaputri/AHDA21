@@ -33,7 +33,7 @@ with ThreadPoolExecutor(max_workers=4) as workers:
 elapsed = time.monotonic() - started
 results = {name: summary(rows, elapsed) for name, rows in samples.items()}
 for result in results.values():
-    del result['samples']
+    result['failures'] = [sample for sample in result.pop('samples') if sample['error']]
 print(json.dumps({'duration_s': round(elapsed, 3), 'batches': batch, 'mixed': results}, indent=2))
 if not all(result['ok'] and not result['errors'] for result in results.values()):
     raise SystemExit(1)
