@@ -196,3 +196,15 @@ Puncak alokasi PHP 8 MiB per permintaan. Puncak gabungan PSS proses Nginx, PHP-F
 Saat ringkasan belum ada di transient database WordPress, worker menunggu lock MariaDB/MySQL hingga dua detik. Setelah lock diperoleh, worker membaca kembali generasi cache dan isi transient. Jika lock tidak diperoleh, worker menjalankan kueri langsung tanpa menyimpan hasilnya ke cache. Penguncian terbatas pada ringkasan publik dan tidak dipakai oleh instalasi dengan cache objek eksternal.
 
 Uji ulang profil FIKTIF dan beban satu CPU logis menghasilkan satu eksekusi ringkasan di setiap batch awal. Pada empat klien, p95 cache kosong turun dari 2.751 ms menjadi 2.020 ms. Jumlah kueri ringkasan dari sembilan batch awal turun dari 14 menjadi 9. Seluruh 161 respons memenuhi pemeriksaan isi. Puncak alokasi PHP 8 MiB dan PSS gabungan terukur sekitar 195 MiB. Uji visibilitas memverifikasi bahwa profil yang dijadikan privat, dilindungi kata sandi, atau dihapus dikeluarkan dari hitungan dan opsi wilayah publik.
+
+### Pencarian sebagian dengan kandidat terbatas
+
+Untuk pencarian sebagian tanpa filter tambahan, database mengambil maksimal 129 kandidat NPSN dari tabel sekolah. Jika kandidat paling banyak 128, JOIN WordPress memeriksa visibilitas pada daftar tersebut. Kata kunci pendek, pencarian dengan filter tambahan, atau kandidat yang mencapai batas tetap menggunakan kueri biasa. MariaDB memakai indeks `sdp_name_order` pada pengambilan kandidat di dataset uji.
+
+| Pencarian pada 500.000 profil FIKTIF | Hasil | p50 sebelum | p50 sesudah |
+| --- | ---: | ---: | ---: |
+| Potongan nama `000200` | 1 | 2.480 ms | 171 ms |
+| Nama umum `Sekolah FIKTIF` | 500.000 | 1.606 ms | 1.659 ms |
+| Kata `TIDAKADA` | 0 | 2.530 ms | 189 ms |
+
+Enam permintaan HTTP per kondisi dan kata kunci mendapat HTTP 200 setelah pemanasan cache. Pada sampel halaman, daftar hasil dan urutan identik. Sampel pencarian potongan nama mencatat 4 MiB puncak alokasi PHP sebelum dan sesudah. Pengukuran memakai satu klien loopback, WordPress 6.9, PHP-FPM 8.2.32, MariaDB 10.11.19, dan database pada tmpfs. Pencarian dengan banyak hasil masih menjadi beban tersendiri.

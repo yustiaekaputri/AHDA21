@@ -19,6 +19,8 @@ Indeks ID artikel dan status sekolah membantu kueri ringkasan publik saat cache 
 
 Worker yang memakai transient bawaan WordPress berkoordinasi saat mengisi cache ringkasan direktori.
 
+Pencarian nama atau NPSN sebagian mempersempit kandidat dari indeks sekolah sebelum memeriksa artikel publik ketika hasil awal sedikit.
+
 ## Perubahan v10.0 RC3 (staging saja)
 Persiapan pilot CSV per wilayah dan sumber, checksum, preview WP-CLI lokal baca-saja. Tidak ada impor otomatis; lihat PANDUAN-V103.txt.
 

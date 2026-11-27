@@ -337,12 +337,14 @@ final class WordPressTest extends TestCase
             self::assertSame(['ZTEST817'], $find(['sdp_q' => 'ztest817']));
             self::assertSame(['00817654'], $find(['sdp_q' => '00817654']));
             self::assertSame(['ZTEST817'], $find(['sdp_q' => 'Samudera']));
+            self::assertSame([], $find(['sdp_q' => 'Kata FIKTIF tidak ada']));
             self::assertEqualsCanonicalizing(['ZTEST817', 'ZTEST818'], $find(['sdp_q' => 'ZTEST81']));
             self::assertSame(['ZTEST818'], $find(['sdp_q' => 'ztest817', 'sdp_provinsi' => 'Wilayah FIKTIF Dua']));
             self::assertSame([], $find(['sdp_q' => '00817654', 'sdp_provinsi' => 'Wilayah FIKTIF Satu']));
 
             self::assertSame($ids[0], wp_update_post(['ID' => $ids[0], 'post_password' => 'fixture']));
             self::assertSame(['ZTEST818'], $find(['sdp_q' => 'ZTEST817']));
+            self::assertSame(['ZTEST818'], $find(['sdp_q' => 'ZTEST81']));
             self::assertSame($ids[0], wp_update_post(['ID' => $ids[0], 'post_password' => '', 'post_status' => 'private']));
             self::assertSame(['ZTEST818'], $find(['sdp_q' => 'ZTEST817']));
         } finally {

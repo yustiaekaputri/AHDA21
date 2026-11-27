@@ -169,16 +169,43 @@ final class SDP_Portal {
 		};
 		return $unfiltered ? SDP_Performance::facet( $sql, $read_summary, 'summary' ) : $read_summary();
 	}
+
+	/**
+	 * Narrow unscoped substring searches before joining to WordPress posts.
+	 *
+	 * @param array $state Directory search and filters.
+	 * @param bool  $exact_npsn Whether this is an indexed exact match attempt.
+	 * @return array SQL fragment and values for its placeholders.
+	 */
+	private static function result_from( $state, $exact_npsn ) {
+		global $wpdb;
+		[$from, $args] = self::from( $state, null, false, $exact_npsn );
+		// A type and two LIKE values are the only parameters of a bare substring search.
+		if ( $exact_npsn || strlen( $state['q'] ?? '' ) < 4 || 3 !== count( $args ) || isset( SDP_Analytics::FACILITIES[ $state['fasilitas'] ?? '' ] ) ) {
+			return array( $from, $args );
+		}
+		$table = SDP_Directory::table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- The plugin table name is internal and patterns are prepared.
+		$npsns = $wpdb->get_col( $wpdb->prepare( "SELECT npsn FROM $table WHERE nama LIKE %s OR npsn LIKE %s LIMIT 129", $args[1], $args[2] ) );
+		if ( ! is_array( $npsns ) || ! empty( $wpdb->last_error ) || count( $npsns ) >= 129 ) {
+			return array( $from, $args );
+		}
+		if ( ! $npsns ) {
+			return array( $from . ' AND 1=0', $args );
+		}
+		return array( $from . ' AND s.npsn IN (' . implode( ',', array_fill( 0, count( $npsns ), '%s' ) ) . ')', array_merge( $args, $npsns ) );
+	}
+
 	public static function results( $state ) {
 		global $wpdb;
 		$exact_npsn    = 1 === preg_match( '/^[A-Z0-9]{8}$/iD', $state['q'] ?? '' );
-		[$from, $args] = self::from( $state, null, false, $exact_npsn );
+		[$from, $args] = self::result_from( $state, $exact_npsn );
 		// Cache only the public unfiltered aggregate. The facility clause uses no placeholder.
 		$unfiltered = 1 === count( $args ) && ! isset( SDP_Analytics::FACILITIES[ $state['fasilitas'] ?? '' ] );
 		$summary    = self::summary( $from, $args, $unfiltered );
 		if ( $exact_npsn && isset( $summary['total'] ) && 0 === (int) $summary['total'] ) {
 			// A name may also contain eight alphanumeric characters.
-			[$from, $args] = self::from( $state );
+			[$from, $args] = self::result_from( $state, false );
 			$summary       = self::summary( $from, $args, false );
 		}
 		if ( ! isset( $summary['total'] ) ) {
