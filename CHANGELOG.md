@@ -9,6 +9,8 @@ Dashboard Pengumpul Data menampilkan status efektif sinkronisasi harian, termasu
 
 Ringkasan direktori dan opsi filter global memakai slot cache khusus untuk mencegah pengulangan kueri akibat tabrakan slot.
 
+Pencarian direktori mengutamakan NPSN lengkap yang cocok dengan profil publik dan filter aktif, dengan pencarian substring sebagai cadangan.
+
 ## Perubahan v10.0 RC3 (staging saja)
 Persiapan pilot CSV per wilayah dan sumber, checksum, preview WP-CLI lokal baca-saja. Tidak ada impor otomatis; lihat PANDUAN-V103.txt.
 

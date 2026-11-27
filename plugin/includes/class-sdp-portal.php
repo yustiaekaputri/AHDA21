@@ -70,7 +70,16 @@ final class SDP_Portal {
 	private static function select_sql( $sql, $args ) {
 		global $wpdb;
 		return $args ? $wpdb->prepare( $sql, $args ) : $sql;}
-	public static function from( $state, $keys = null, $prefix = false ) {
+	/**
+	 * Build the query predicates for public school profiles.
+	 *
+	 * @param array      $state Directory search and filters.
+	 * @param array|null $keys Filters to apply, or null for all filters.
+	 * @param bool       $prefix Whether a school name or NPSN must start with the search term.
+	 * @param bool       $exact_npsn Whether to match a complete NPSN by equality.
+	 * @return array SQL fragment and values for its placeholders.
+	 */
+	public static function from( $state, $keys = null, $prefix = false, $exact_npsn = false ) {
 		global $wpdb;
 		$keys  = $keys ?? array_keys( self::FILTERS );
 		$where = array( "p.post_status='publish'", "p.post_password=''", 'p.post_type=%s' );
@@ -80,7 +89,10 @@ final class SDP_Portal {
 				$where[] = "s.$k=%s";
 				$args[]  = $state[ $k ];}
 		}
-		if ( ( $state['q'] ?? '' ) !== '' ) {
+		if ( $exact_npsn ) {
+			$where[] = 's.npsn=%s';
+			$args[]  = strtoupper( $state['q'] );
+		} elseif ( ( $state['q'] ?? '' ) !== '' ) {
 			$like    = ( $prefix ? '' : '%' ) . $wpdb->esc_like( $state['q'] ) . '%';
 			$where[] = '(s.nama LIKE %s OR s.npsn LIKE %s)';
 			$args[]  = $like;
@@ -139,18 +151,36 @@ final class SDP_Portal {
 		}
 		return $out;
 	}
-	public static function results( $state ) {
+	/**
+	 * Read the count and status totals for the active search predicates.
+	 *
+	 * @param string $from SQL fragment containing the tables and predicates.
+	 * @param array  $args Values for SQL placeholders.
+	 * @param bool   $unfiltered Whether the public aggregate can be cached.
+	 * @return array|null Summary, or null on a database error.
+	 */
+	private static function summary( $from, $args, $unfiltered ) {
 		global $wpdb;
-		[$from, $args] = self::from( $state );
-		$summary_sql   = self::select_sql( "SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta" . $from, $args );
-		$read_summary  = static function () use ( $wpdb, $summary_sql ) {
+		$sql          = self::select_sql( "SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta" . $from, $args );
+		$read_summary = static function () use ( $wpdb, $sql ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Uses prepared directory predicates and the bounded aggregate cache where applicable.
-			$result = $wpdb->get_row( $summary_sql, ARRAY_A );
+			$result = $wpdb->get_row( $sql, ARRAY_A );
 			return is_array( $result ) && empty( $wpdb->last_error ) ? $result : null;
 		};
+		return $unfiltered ? SDP_Performance::facet( $sql, $read_summary, 'summary' ) : $read_summary();
+	}
+	public static function results( $state ) {
+		global $wpdb;
+		$exact_npsn    = 1 === preg_match( '/^[A-Z0-9]{8}$/iD', $state['q'] ?? '' );
+		[$from, $args] = self::from( $state, null, false, $exact_npsn );
 		// Cache only the public unfiltered aggregate. The facility clause uses no placeholder.
 		$unfiltered = 1 === count( $args ) && ! isset( SDP_Analytics::FACILITIES[ $state['fasilitas'] ?? '' ] );
-		$summary    = $unfiltered ? SDP_Performance::facet( $summary_sql, $read_summary, 'summary' ) : $read_summary();
+		$summary    = self::summary( $from, $args, $unfiltered );
+		if ( $exact_npsn && isset( $summary['total'] ) && 0 === (int) $summary['total'] ) {
+			// A name may also contain eight alphanumeric characters.
+			[$from, $args] = self::from( $state );
+			$summary       = self::summary( $from, $args, false );
+		}
 		if ( ! isset( $summary['total'] ) ) {
 			return self::failed_results();
 		}

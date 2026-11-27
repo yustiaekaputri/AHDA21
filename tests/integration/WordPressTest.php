@@ -278,11 +278,53 @@ final class WordPressTest extends TestCase
             $before = $summaryQueries;
             self::assertSame(0, SDP_Portal::results($filtered)['total']);
             self::assertSame(0, SDP_Portal::results($filtered)['total']);
-            self::assertSame($before + 2, $summaryQueries);
+            self::assertSame($before + 4, $summaryQueries);
         } finally {
             remove_filter('query', $countQuery);
             if ($postId) {
                 wp_delete_post($postId, true);
+            }
+            update_option('sdp_seo_config', $seo);
+        }
+    }
+
+    public function testDirectoryPrefersExactNpsnAndFallsBackWithinPublicFilters(): void
+    {
+        $ids = [];
+        $seo = get_option('sdp_seo_config', []);
+        update_option('sdp_seo_config', array_merge((array) $seo, ['guard' => 0]));
+        try {
+            foreach ([
+                ['ZTEST817', 'Sekolah FIKTIF Samudera', 'Wilayah FIKTIF Satu'],
+                ['ZTEST818', 'Sekolah FIKTIF ZTEST817', 'Wilayah FIKTIF Dua'],
+                ['00817654', 'Madrasah FIKTIF Pesisir', 'Wilayah FIKTIF Dua'],
+            ] as [$npsn, $name, $province]) {
+                $result = SDP_Directory::save(['npsn' => $npsn, 'nama' => $name, 'provinsi' => $province], false);
+                self::assertNotInstanceOf(WP_Error::class, $result);
+                $ids[] = $id = (int) $result['id'];
+                self::assertSame($id, wp_update_post(['ID' => $id, 'post_status' => 'publish']));
+            }
+
+            $find = static function (array $query): array {
+                $result = SDP_Portal::results(SDP_Portal::state($query));
+                self::assertArrayNotHasKey('error', $result);
+                return array_column($result['rows'], 'npsn');
+            };
+
+            self::assertSame(['ZTEST817'], $find(['sdp_q' => 'ztest817']));
+            self::assertSame(['00817654'], $find(['sdp_q' => '00817654']));
+            self::assertSame(['ZTEST817'], $find(['sdp_q' => 'Samudera']));
+            self::assertEqualsCanonicalizing(['ZTEST817', 'ZTEST818'], $find(['sdp_q' => 'ZTEST81']));
+            self::assertSame(['ZTEST818'], $find(['sdp_q' => 'ztest817', 'sdp_provinsi' => 'Wilayah FIKTIF Dua']));
+            self::assertSame([], $find(['sdp_q' => '00817654', 'sdp_provinsi' => 'Wilayah FIKTIF Satu']));
+
+            self::assertSame($ids[0], wp_update_post(['ID' => $ids[0], 'post_password' => 'fixture']));
+            self::assertSame(['ZTEST818'], $find(['sdp_q' => 'ZTEST817']));
+            self::assertSame($ids[0], wp_update_post(['ID' => $ids[0], 'post_password' => '', 'post_status' => 'private']));
+            self::assertSame(['ZTEST818'], $find(['sdp_q' => 'ZTEST817']));
+        } finally {
+            foreach ($ids as $id) {
+                wp_delete_post($id, true);
             }
             update_option('sdp_seo_config', $seo);
         }

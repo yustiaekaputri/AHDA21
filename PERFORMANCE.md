@@ -146,3 +146,9 @@ Ringkasan publik dan opsi provinsi, jenjang, status, serta akreditasi tanpa caku
 Uji ulang memakai 500.000 profil dan generasi cache yang sebelumnya menempatkan ringkasan, status, dan akreditasi pada slot yang sama. Lima permintaan setelah satu pemanasan turun dari median 3.760 ms menjadi 565 ms. Jejak SQL mencatat kueri ringkasan dan opsi pada kelima permintaan versi awal dan nol permintaan setelah perbaikan. Satu permintaan setelah invalidasi memerlukan 4.718 ms sebelum perbaikan dan 4.652 ms sesudahnya. Badan HTML tetap 46.858 byte dan puncak alokasi PHP tetap 6 MiB. Pengukuran memakai satu klien loopback dan database pada tmpfs seperti benchmark sebelumnya.
 
 Uji visibilitas menambahkan tiga profil FIKTIF dan mengisi cache sebelum mengubah satu profil menjadi privat, melindungi satu profil dengan kata sandi, dan menghapus satu profil. Total kembali dari 500.003 ke 500.000, ketiga opsi wilayah hilang dan ketiga permintaan REST anonim mendapat 404.
+
+### Pencarian NPSN lengkap
+
+Pencarian direktori sekarang mengutamakan NPSN delapan karakter yang cocok persis pada profil publik dalam filter aktif. Jika tidak ada kecocokan yang dapat ditampilkan, pencarian memakai aturan substring lama. Aturan ini menjaga pencarian nama, NPSN parsial, dan kata alfanumerik yang juga dapat muncul dalam nama sekolah. Jalur yang sama melayani formulir direktori dan hasil REST portal.
+
+Pada 500.000 profil FIKTIF, sepuluh permintaan HTTP loopback setelah pemanasan menurunkan p50 dari 2.147 ms menjadi 20 ms dan p95 dari 2.517 ms menjadi 28 ms untuk satu NPSN yang tersedia. Seluruh permintaan berhasil dengan satu hasil identik dan badan respons 29.454 byte. Pada sampel terpisah, puncak alokasi PHP 4 MiB sebelum dan sesudah. MariaDB memilih kunci primer tabel sekolah dan artikel untuk kueri NPSN persis. Pengukuran ini memakai satu klien, cache opsi filter yang sudah terisi, dan database pada tmpfs. Pencarian substring masih dapat memindai tabel besar.
