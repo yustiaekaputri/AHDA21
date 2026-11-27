@@ -10,6 +10,8 @@ Konfigurasi contoh VPS RC5 tersedia di [deployment/vps](deployment/vps/README.tx
 
 Gunakan ZIP hasil build pada clone staging terlebih dahulu. Simpan dump database dan cadangan file sebelum migrasi. Verifikasi hasil restore pada database tersendiri dan gunakan prosedur kembali ke versi sebelumnya yang telah diperiksa. Jangan ekspor data demo atau akun uji ke produksi.
 
+Pemasangan plugin membuat indeks `sdp_name_order` pada tabel sekolah. Pada instalasi aktif yang diperbarui dengan mengganti ZIP, buat indeks melalui menu **Kesiapan Produksi → Perbaikan schema inti** pada salinan staging atau jendela pemeliharaan setelah backup. Menu ini memakai Safe Mode dan konfirmasi backup. Periksa bahwa indeks memuat `nama` dan `npsn` tanpa awalan kolom, terutama pada tabel InnoDB lama. Pada benchmark, indeks menambah sekitar 21 MiB untuk 500.000 profil. Latensi dan biaya pembuatan indeks pada VPS perlu diukur di staging tujuan.
+
 ## Pindahkan situs LocalWP ke staging VPS
 
 1. Pilih **Export** pada situs Local yang berisi hasil kerja. Simpan cadangan di tempat privat. Pastikan arsip menyertakan `wp-content` dan dump SQL lengkap. Ekspor konten XML WordPress tidak membawa katalog NPSN di opsi situs dan tabel indeks Sekolah Directory Pro.

@@ -133,6 +133,9 @@ final class WordPressTest extends TestCase
         $indexes = $wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A);
         self::assertContains('wilayah', array_column($indexes, 'Key_name'));
         self::assertContains('post_id', array_column($indexes, 'Key_name'));
+        $orderIndex = array_values(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'sdp_name_order'));
+        self::assertSame(['nama', 'npsn'], array_column($orderIndex, 'Column_name'));
+        self::assertSame([null, null], array_column($orderIndex, 'Sub_part'));
         self::assertContains('npsn', array_column(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'PRIMARY'), 'Column_name'));
     }
 
@@ -165,16 +168,18 @@ final class WordPressTest extends TestCase
     {
         global $wpdb;
         $table = SDP_Directory::table();
-        $result = SDP_Directory::save(['npsn' => 'TEST0001', 'nama' => 'Profil FIKTIF migrasi'], false);
+        $result = SDP_Directory::save(['npsn' => 'FIKMIG01', 'nama' => 'Profil FIKTIF migrasi'], false);
         self::assertNotInstanceOf(WP_Error::class, $result);
         $postId = (int) $result['id'];
         try {
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX wilayah"));
+            self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_name_order"));
             update_option('sdp_db_version', '9.0.0');
             self::assertTrue(SDP_Directory::install_schema());
             self::assertSame(SDP_Directory::VERSION, get_option('sdp_db_version'));
             self::assertContains('wilayah', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
-            self::assertSame($postId, (int) $wpdb->get_var($wpdb->prepare("SELECT post_id FROM `$table` WHERE npsn=%s", 'TEST0001')));
+            self::assertContains('sdp_name_order', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
+            self::assertSame($postId, (int) $wpdb->get_var($wpdb->prepare("SELECT post_id FROM `$table` WHERE npsn=%s", 'FIKMIG01')));
         } finally {
             SDP_Directory::install_schema();
             wp_delete_post($postId, true);

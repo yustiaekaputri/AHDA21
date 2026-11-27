@@ -158,3 +158,11 @@ Pada 500.000 profil FIKTIF, sepuluh permintaan HTTP loopback setelah pemanasan m
 Opsi akreditasi tanpa cakupan wilayah memakai kandidat dari indeks akreditasi. Setiap kandidat hanya ditampilkan jika ada profil publik tanpa kata sandi yang memiliki nilai tersebut. Daftar dengan cakupan wilayah tetap memakai kueri bercakupan.
 
 Pada 500.000 profil FIKTIF yang sama, lima permintaan HTTP setelah invalidasi cache per kondisi menurunkan median pembukaan direktori dari 4.135 ms menjadi 2.543 ms. Median kueri pilihan akreditasi turun dari 1.590 ms menjadi 0,4 ms. Sepuluh permintaan berhasil, pilihan filter tetap A, B, C dan badan HTML tetap 46.858 byte. Puncak alokasi PHP 8 MiB dengan pencatatan kueri aktif. Ringkasan direktori dan daftar halaman pertama masih berkontribusi pada latensi. Lingkungan uji memakai satu klien loopback dan MariaDB pada tmpfs.
+
+### Indeks pengurutan direktori
+
+Indeks `sdp_name_order (nama,npsn)` pada tabel sekolah memungkinkan MariaDB mengambil hasil pertama dalam urutan direktori tanpa `filesort`. Pengurutan tetap memakai nama lengkap lalu NPSN. Kueri tetap memeriksa status publikasi, jenis artikel dan kata sandi lewat tabel artikel WordPress. Indeks nama awalan tetap tersedia bagi instalasi lama.
+
+Pada 500.000 profil FIKTIF, median delapan permintaan dengan cache terisi turun dari 564 ms menjadi 18 ms. Median tiga permintaan setelah invalidasi cache turun dari 2.767 ms menjadi 2.010 ms. Satu sampel kueri halaman pertama turun dari 588 ms menjadi 0,7 ms. Respons tetap 46.858 byte dan puncak alokasi PHP pada pengukuran setelah invalidasi turun dari 8 MiB menjadi 6 MiB. Indeks tambahan berukuran sekitar 20,6 MiB pada InnoDB di dataset uji. Angka ini memakai satu klien, database pada tmpfs, dan PHP-FPM dua worker.
+
+Pemilihan NPSN sebelum mengambil payload memberi urutan identik dengan waktu yang hampir sama pada tiga posisi halaman. Percobaan join untuk ringkasan juga memberi total identik. Indeks tambahan pada tabel artikel kurang membantu pada dataset ini sehingga dihapus dari database uji. Kueri penghitungan total saat cache kosong masih terbuka.

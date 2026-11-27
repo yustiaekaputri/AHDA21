@@ -191,7 +191,8 @@ final class SDP_Directory {
             KEY jenjang (jenjang),
             KEY status (status),
             KEY akreditasi (akreditasi),
-            KEY nama (nama(100))
+            KEY nama (nama(100)),
+            KEY sdp_name_order (nama,npsn)
         ) $collate;"
 		);
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) !== $table || $wpdb->last_error ) {

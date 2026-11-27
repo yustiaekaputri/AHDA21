@@ -13,6 +13,8 @@ Pencarian direktori mengutamakan NPSN lengkap yang cocok dengan profil publik da
 
 Opsi akreditasi global memakai indeks yang sudah tersedia dan memeriksa keterlihatan profil untuk setiap kandidat.
 
+Skema direktori menyediakan indeks pengurutan nama lengkap dan NPSN untuk daftar sekolah.
+
 ## Perubahan v10.0 RC3 (staging saja)
 Persiapan pilot CSV per wilayah dan sumber, checksum, preview WP-CLI lokal baca-saja. Tidak ada impor otomatis; lihat PANDUAN-V103.txt.
 
