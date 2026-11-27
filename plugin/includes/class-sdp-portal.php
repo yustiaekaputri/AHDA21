@@ -157,10 +157,14 @@ final class SDP_Portal {
 	 * @param string      $from SQL fragment containing the tables and predicates.
 	 * @param array       $args Values for SQL placeholders.
 	 * @param string|null $cache_slot Reserved cache slot, empty for a bounded shared slot, or null to bypass.
+	 * @param bool        $school_first Whether to read the school index before the post table.
 	 * @return array|null Summary, or null on a database error.
 	 */
-	private static function summary( $from, $args, $cache_slot ) {
+	private static function summary( $from, $args, $cache_slot, $school_first = false ) {
 		global $wpdb;
+		if ( $school_first ) {
+			$from = str_replace( ' s JOIN ', ' s STRAIGHT_JOIN ', $from );
+		}
 		$sql          = self::select_sql( "SELECT COUNT(*) total, SUM(s.status='Negeri') negeri, SUM(s.status='Swasta') swasta" . $from, $args );
 		$read_summary = static function () use ( $wpdb, $sql ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Uses prepared directory predicates and the bounded aggregate cache where applicable.
@@ -212,11 +216,11 @@ final class SDP_Portal {
 				$cache_slot = '';
 			}
 		}
-		$summary = self::summary( $from, $args, $cache_slot );
+		$summary = self::summary( $from, $args, $cache_slot, $broad );
 		if ( $exact_npsn && isset( $summary['total'] ) && 0 === (int) $summary['total'] ) {
 			// A name may also contain eight alphanumeric characters.
 			[$from, $args, $broad] = self::result_from( $state, false );
-			$summary               = self::summary( $from, $args, $broad ? '' : null );
+			$summary               = self::summary( $from, $args, $broad ? '' : null, $broad );
 		}
 		if ( ! isset( $summary['total'] ) ) {
 			return self::failed_results();

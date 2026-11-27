@@ -90,6 +90,14 @@ wp eval '
     $summary = $wpdb->prepare("EXPLAIN SELECT COUNT(*), SUM(s.status=\x27Negeri\x27)" . $from, $args);
     echo wp_json_encode($wpdb->get_results($summary, ARRAY_A), JSON_PRETTY_PRINT), PHP_EOL;
 ' | tee "$reports/province-plan.json"
+wp eval '
+    global $wpdb;
+    [$from, $args] = SDP_Portal::from(SDP_Portal::state(["sdp_q" => "Sekolah FIKTIF"]));
+    $prefix = "EXPLAIN SELECT COUNT(*), SUM(s.status=\x27Negeri\x27), SUM(s.status=\x27Swasta\x27)";
+    $default = $wpdb->get_results($wpdb->prepare($prefix . $from, $args), ARRAY_A);
+    $schoolFirst = $wpdb->get_results($wpdb->prepare($prefix . str_replace(" s JOIN ", " s STRAIGHT_JOIN ", $from), $args), ARRAY_A);
+    echo wp_json_encode(["broad_default" => $default, "broad_school_first" => $schoolFirst], JSON_PRETTY_PRINT), PHP_EOL;
+' | tee "$reports/broad-plan.json"
 
 install -d /run/php
 sed '/^\[sdp\]/a clear_env = no' "$source_dir/deployment/vps/php-fpm/micro-1gb.conf" > /tmp/sdp-fpm-pool.conf
