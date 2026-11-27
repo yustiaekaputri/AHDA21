@@ -36,7 +36,8 @@ PY
 
 cleanup() {
     local status=$?
-    capture finish > "$reports/finish.json" || status=1
+    capture finish | tee "$reports/finish.json" || status=1
+    find "$reports" -maxdepth 1 -type f -exec chmod a+r {} + || status=1
     exit "$status"
 }
 trap cleanup EXIT
