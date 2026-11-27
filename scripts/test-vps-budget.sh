@@ -48,7 +48,8 @@ SDP_WP_SECRET=$(openssl rand -hex 32)
 wp() { runuser -u www-data --preserve-environment -- /usr/local/bin/wp --path=/var/www/html "$@"; }
 sql() { mariadb --protocol=socket --socket=/run/mysqld/mysqld.sock --user=root "$@"; }
 
-install -d -o mysql -g mysql -m 0750 "$db_dir" /run/mysqld
+install -d -o mysql -g mysql -m 0750 "$db_dir"
+install -d -o mysql -g mysql -m 0755 /run/mysqld
 runuser -u mysql -- mariadb-install-db --datadir="$db_dir" --auth-root-authentication-method=socket --skip-test-db
 mariadbd --defaults-file="$source_dir/deployment/vps/mariadb/micro-1gb.cnf" --user=mysql \
     --datadir="$db_dir" --socket=/run/mysqld/mysqld.sock --skip-networking > "$reports/mariadb.log" 2>&1 &
