@@ -62,11 +62,16 @@ SELECT 'akreditasi kandidat',
 FROM (SELECT DISTINCT akreditasi AS candidate FROM sdp_test_index_schools WHERE akreditasi<>'') facet
 HAVING value IS NOT NULL ORDER BY value LIMIT 1000;
 ALTER TABLE sdp_test_index_schools ADD COLUMN nama varchar(191) NOT NULL DEFAULT 'Sekolah FIKTIF',
-    ADD INDEX sdp_name_order (nama, npsn);
+    ADD COLUMN kabupaten varchar(120) NOT NULL DEFAULT 'Kabupaten FIKTIF',
+    ADD INDEX sdp_name_order (nama, npsn),
+    ADD INDEX sdp_province_order (provinsi, nama, npsn, post_id, status, kabupaten);
 SELECT 'urutan nama dan NPSN', s.npsn
 FROM sdp_test_index_schools s JOIN sdp_test_index_posts p ON p.ID=s.post_id
 WHERE p.post_type='sdp_school' AND p.post_status='publish' AND p.post_password=''
 ORDER BY s.nama,s.npsn LIMIT 20;
+SELECT 'ringkasan provinsi', COUNT(*), SUM(s.status='Negeri'), SUM(s.status='Swasta')
+FROM sdp_test_index_schools s JOIN sdp_test_index_posts p ON p.ID=s.post_id
+WHERE s.provinsi='Jawa Barat' AND p.post_type='sdp_school' AND p.post_status='publish' AND p.post_password='';
 UPDATE sdp_test_index_posts SET post_status='private' WHERE ID=1;
 UPDATE sdp_test_index_posts SET post_password='fixture' WHERE ID=2;
 SELECT 'terlihat setelah perubahan', COUNT(*) FROM sdp_test_index_visible;

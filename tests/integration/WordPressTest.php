@@ -138,6 +138,8 @@ final class WordPressTest extends TestCase
         self::assertSame([null, null], array_column($orderIndex, 'Sub_part'));
         $countIndex = array_values(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'sdp_school_count'));
         self::assertSame(['post_id', 'status'], array_column($countIndex, 'Column_name'));
+        $provinceIndex = array_values(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'sdp_province_order'));
+        self::assertSame(['provinsi', 'nama', 'npsn', 'post_id', 'status', 'kabupaten'], array_column($provinceIndex, 'Column_name'));
         self::assertContains('npsn', array_column(array_filter($indexes, static fn ($index) => $index['Key_name'] === 'PRIMARY'), 'Column_name'));
     }
 
@@ -177,12 +179,14 @@ final class WordPressTest extends TestCase
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX wilayah"));
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_name_order"));
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_school_count"));
+            self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_province_order"));
             update_option('sdp_db_version', '9.0.0');
             self::assertTrue(SDP_Directory::install_schema());
             self::assertSame(SDP_Directory::VERSION, get_option('sdp_db_version'));
             self::assertContains('wilayah', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
             self::assertContains('sdp_name_order', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
             self::assertContains('sdp_school_count', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
+            self::assertContains('sdp_province_order', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
             self::assertSame($postId, (int) $wpdb->get_var($wpdb->prepare("SELECT post_id FROM `$table` WHERE npsn=%s", 'FIKMIG01')));
         } finally {
             SDP_Directory::install_schema();

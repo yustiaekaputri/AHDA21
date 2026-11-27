@@ -26,6 +26,8 @@ with ThreadPoolExecutor(max_workers=4) as workers:
         names = ('directory', 'npsn', 'province', name_search)
         replies = list(workers.map(request, (targets[name] for name in names)))
         for name, result in zip(names, replies):
+            if result['error']:
+                result['batch'] = batch + 1
             samples[name].append(result)
         batch += 1
         time.sleep(0.25)

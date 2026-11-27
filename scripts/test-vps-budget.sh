@@ -84,6 +84,12 @@ else
     wp eval-file "$source_dir/tests/vps-budget/seed-read-fixture.php" DISPOSABLE-LOCAL-ONLY --user=sdp-admin | tee "$reports/fixtures.json"
 fi
 wp eval 'global $wpdb; printf("WordPress %s, PHP %s, MariaDB %s\n", get_bloginfo("version"), PHP_VERSION, $wpdb->get_var("SELECT VERSION()"));'
+wp eval '
+    global $wpdb;
+    [$from, $args] = SDP_Portal::from(SDP_Portal::state(["sdp_provinsi" => "Provinsi Fiktif 00"]));
+    $summary = $wpdb->prepare("EXPLAIN SELECT COUNT(*), SUM(s.status=\x27Negeri\x27)" . $from, $args);
+    echo wp_json_encode($wpdb->get_results($summary, ARRAY_A), JSON_PRETTY_PRINT), PHP_EOL;
+' | tee "$reports/province-plan.json"
 
 install -d /run/php
 sed '/^\[sdp\]/a clear_env = no' "$source_dir/deployment/vps/php-fpm/micro-1gb.conf" > /tmp/sdp-fpm-pool.conf
