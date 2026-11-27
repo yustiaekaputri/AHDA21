@@ -117,3 +117,24 @@ Pengujian loopback berikutnya memakai Nginx 1.22.1, PHP-FPM 8.2.32 dan MariaDB 1
 | Cache terisi, empat klien | 20 | 53 ms | 100 ms |
 
 Puncak alokasi PHP mencapai 6 MiB per permintaan. Sesaat setelah uji, RSS worker PHP-FPM tercatat 41–44 MiB per proses dan MariaDB sekitar 237 MiB. RSS mencakup memori bersama. Database menggunakan buffer InnoDB 128 MiB dan 151 koneksi maksimum yang sudah ada di Cloud. Batas cgroup lingkungan adalah 8 GiB. Hasil ini memvalidasi jalur Nginx/PHP-FPM dengan dua worker, sementara uji seluruh stack dalam batas 1 GiB, CPU VPS, dan beban berdurasi panjang masih terbuka.
+
+## Pengukuran hingga 500.000 profil
+
+WordPress 6.9, PHP-FPM 8.2.32 dengan dua worker, Nginx 1.22.1, dan MariaDB 10.11.19 diuji di loopback. MariaDB memakai database terpisah pada tmpfs, buffer InnoDB 64 MiB dan 25 koneksi maksimum. Cache halaman Nginx nonaktif. Safe Mode, mode hemat dan `noindex` aktif. Satu profil dibuat melalui plugin, sedangkan profil berikutnya disalin dengan SQL ke skema WordPress dan indeks plugin untuk mengukur pembacaan. Semua ID artikel unik dan NPSN pada JSON cocok dengan indeks. Angka ini mengukur pembacaan direktori, filter, dan pencarian dengan satu klien.
+
+| Profil FIKTIF | Pembukaan setelah invalidasi, p50 | Direktori, p50/p95 | Filter provinsi, p50/p95 | Nama, p50/p95 | NPSN lengkap, p50/p95 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 10.000 | 141,5 ms | 69,2 / 82,6 ms | 21,7 / 25,0 ms | 79,8 / 87,5 ms | 76,4 / 86,4 ms |
+| 50.000 | 342,0 ms | 78,7 / 93,0 ms | 51,9 / 56,8 ms | 111,7 / 121,7 ms | 97,5 / 115,0 ms |
+| 100.000 | 861,0 ms | 125,2 / 161,1 ms | 57,5 / 122,7 ms | 419,3 / 467,1 ms | 390,3 / 438,0 ms |
+| 500.000 | 4.306,5 ms | 3.748,0 / 3.853,3 ms | 268,2 / 399,4 ms | 2.171,6 / 2.330,5 ms | 2.030,2 / 2.060,4 ms |
+
+Setiap pembukaan setelah invalidasi memakai tiga sampel. Empat skenario lain memakai 12 sampel setelah satu pemanasan. Seluruh 204 respons terukur mendapat HTTP 200. Badan HTML direktori 500.000 profil sekitar 46,9 kB tanpa kompresi. Puncak alokasi PHP 6 MiB per permintaan terukur. Playwright membuka direktori di tiga ukuran, menemukan satu profil melalui NPSN dan membuka halaman profilnya.
+
+Pada 500.000 profil, pengulangan dengan tiga generasi cache berbeda mempercepat permintaan hangat direktori menjadi 609–670 ms ketika ringkasan dan opsi berhasil dipertahankan. Dengan cache kosong, jejak SQL mencatat sekitar 1,5 detik untuk ringkasan, 1,6–1,7 detik untuk opsi akreditasi dan 0,5–0,7 detik untuk daftar halaman pertama. Waktu tersebut mengukur kueri pada sampel terpisah.
+
+Percobaan terkontrol memilih generasi cache yang menempatkan ringkasan, opsi status, dan opsi akreditasi pada slot yang sama. Permintaan kedua masih mengulang ketiga kueri karena setiap nilai menggantikan nilai sebelumnya. Waktu PHP pada permintaan kedua 3.783 ms, sejalan dengan lonjakan pada pengukuran HTTP utama. Hasil tetap sesuai karena cache memeriksa hash kueri sebelum memakai nilainya.
+
+Eksperimen satu NPSN menemukan identitas yang sama melalui pencarian substring maupun `s.npsn = ...`. Median lima eksekusi kueri turun dari 1.580,6 ms menjadi 0,178 ms. `EXPLAIN` beralih dari pemindaian tabel artikel ke dua pencarian kunci primer. Ini menunjukkan peluang untuk pencarian NPSN persis, sementara perubahan aplikasi perlu mempertahankan pencarian nama, NPSN parsial, filter, dan visibilitas profil. Latensi kueri tidak mewakili waktu muat halaman.
+
+Basis data mencapai sekitar 1,6 GiB termasuk ruang kerja InnoDB. Benchmark ini memakai data sintetis pada tmpfs dan host dengan batas memori 8 GiB. Pengujian VPS 1 GB, beban serentak pada 500.000 profil, dan waktu impor massal melalui plugin masih terbuka.

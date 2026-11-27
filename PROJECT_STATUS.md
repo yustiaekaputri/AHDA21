@@ -9,7 +9,7 @@ Plugin tetap 10.0.0 RC4 dan tema 7.0.0. Pekerjaan ini sudah menghasilkan WordPre
 | Integrasi | RC6 lulus 40 pemeriksaan per versi. PHPUnit lulus 5 tes dan 43 asersi per versi. Deaktivasi/aktivasi, impor CSV dengan checkpoint serta snapshot/pemulihan MariaDB diuji. |
 | Browser | 9 skenario lulus per versi termasuk tampilan tiga ukuran, pencarian/filter/pagination, login, tampilan formulir registrasi, administrasi, aksesibilitas dasar, mode gelap, klaim, moderasi, dan unggah XLSX → CSV serta impor draf. |
 | Kualitas sumber | Lint PHP dan JavaScript, PHPStan level 0, tes simulasi PHP, 30 tes Python, serta 5 tes runner lulus. WPCS masih melaporkan pelanggaran. Audit dependensi tidak melaporkan advisori. |
-| Performa | 100, 1.000 dan 10.000 profil FIKTIF diuji. Latensi direktori tanpa filter naik tajam pada 10.000 profil. Lihat [PERFORMANCE.md](PERFORMANCE.md). |
+| Performa | Benchmark lokal mencakup hingga 500.000 profil FIKTIF. Pada ukuran terbesar filter provinsi masih di bawah 400 ms pada p95, sedangkan direktori dan pencarian substring melambat hingga beberapa detik. Uji VPS tetap terbuka. [Hasil benchmark](PERFORMANCE.md#pengukuran-hingga-500000-profil) |
 | GitHub | PR #1 berstatus draft. Pada run awal, integrasi PHP 8.2 dan 8.3, build ZIP, dan unggahan artefak lulus. Formatter dan perbaikan perbandingan mengurangi temuan WPCS menjadi 1.287. CI menolak temuan baru dan menyimpan laporan lengkap. WPCS penuh masih menjadi syarat rilis stabil. [Hasil Actions](https://github.com/yustiaekaputri/AHDA21/actions/runs/45705455267) |
 | Pratinjau | Layanan berjalan di Cloud. Lingkungan mencantumkan port 3000 tanpa URL akses. Screenshot Playwright berada di `artifacts/screenshots/`. |
 
