@@ -16,6 +16,7 @@ on:
       - .github/workflows/vps-budget.yml
       - tests/vps-budget/**
       - scripts/test-vps-budget.sh
+      - plugin/includes/class-sdp-portal.php
       - deployment/vps/mariadb/micro-1gb.cnf
       - deployment/vps/php-fpm/micro-1gb*
 

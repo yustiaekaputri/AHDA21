@@ -167,7 +167,7 @@ final class SDP_Portal {
 			$result = $wpdb->get_row( $sql, ARRAY_A );
 			return is_array( $result ) && empty( $wpdb->last_error ) ? $result : null;
 		};
-		return null === $cache_slot ? $read_summary() : SDP_Performance::facet( $sql, $read_summary, $cache_slot );
+		return null === $cache_slot ? $read_summary() : SDP_Performance::facet( $wpdb->remove_placeholder_escape( $sql ), $read_summary, $cache_slot );
 	}
 
 	/**
@@ -175,45 +175,48 @@ final class SDP_Portal {
 	 *
 	 * @param array $state Directory search and filters.
 	 * @param bool  $exact_npsn Whether this is an indexed exact match attempt.
-	 * @return array SQL fragment and values for its placeholders.
+	 * @return array SQL fragment, placeholder values, and whether the candidate limit was reached.
 	 */
 	private static function result_from( $state, $exact_npsn ) {
 		global $wpdb;
 		[$from, $args] = self::from( $state, null, false, $exact_npsn );
 		// A type and two LIKE values are the only parameters of a bare substring search.
 		if ( $exact_npsn || strlen( $state['q'] ?? '' ) < 4 || 3 !== count( $args ) || isset( SDP_Analytics::FACILITIES[ $state['fasilitas'] ?? '' ] ) ) {
-			return array( $from, $args );
+			return array( $from, $args, false );
 		}
 		$table = SDP_Directory::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- The plugin table name is internal and patterns are prepared.
 		$npsns = $wpdb->get_col( $wpdb->prepare( "SELECT npsn FROM $table WHERE nama LIKE %s OR npsn LIKE %s LIMIT 129", $args[1], $args[2] ) );
-		if ( ! is_array( $npsns ) || ! empty( $wpdb->last_error ) || count( $npsns ) >= 129 ) {
-			return array( $from, $args );
+		if ( ! is_array( $npsns ) || ! empty( $wpdb->last_error ) ) {
+			return array( $from, $args, false );
+		}
+		if ( count( $npsns ) >= 129 ) {
+			return array( $from, $args, true );
 		}
 		if ( ! $npsns ) {
-			return array( $from . ' AND 1=0', $args );
+			return array( $from . ' AND 1=0', $args, false );
 		}
-		return array( $from . ' AND s.npsn IN (' . implode( ',', array_fill( 0, count( $npsns ), '%s' ) ) . ')', array_merge( $args, $npsns ) );
+		return array( $from . ' AND s.npsn IN (' . implode( ',', array_fill( 0, count( $npsns ), '%s' ) ) . ')', array_merge( $args, $npsns ), false );
 	}
 
 	public static function results( $state ) {
 		global $wpdb;
-		$exact_npsn    = 1 === preg_match( '/^[A-Z0-9]{8}$/iD', $state['q'] ?? '' );
-		[$from, $args] = self::result_from( $state, $exact_npsn );
-		$cache_slot    = null;
-		// Cache the global and province-only summaries. The facility clause has no placeholder.
+		$exact_npsn            = 1 === preg_match( '/^[A-Z0-9]{8}$/iD', $state['q'] ?? '' );
+		[$from, $args, $broad] = self::result_from( $state, $exact_npsn );
+		$cache_slot            = null;
+		// Cache global, province-only and broad name summaries. Facilities have no placeholder.
 		if ( ! isset( SDP_Analytics::FACILITIES[ $state['fasilitas'] ?? '' ] ) ) {
 			if ( 1 === count( $args ) ) {
 				$cache_slot = 'summary';
-			} elseif ( 2 === count( $args ) && '' !== ( $state['provinsi'] ?? '' ) ) {
+			} elseif ( $broad || ( 2 === count( $args ) && '' !== ( $state['provinsi'] ?? '' ) ) ) {
 				$cache_slot = '';
 			}
 		}
 		$summary = self::summary( $from, $args, $cache_slot );
 		if ( $exact_npsn && isset( $summary['total'] ) && 0 === (int) $summary['total'] ) {
 			// A name may also contain eight alphanumeric characters.
-			[$from, $args] = self::result_from( $state, false );
-			$summary       = self::summary( $from, $args, null );
+			[$from, $args, $broad] = self::result_from( $state, false );
+			$summary               = self::summary( $from, $args, $broad ? '' : null );
 		}
 		if ( ! isset( $summary['total'] ) ) {
 			return self::failed_results();
