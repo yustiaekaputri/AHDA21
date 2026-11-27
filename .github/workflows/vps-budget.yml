@@ -1,0 +1,38 @@
+name: Uji batas VPS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/vps-budget.yml
+      - tests/vps-budget/**
+      - scripts/test-vps-budget.sh
+      - deployment/vps/mariadb/micro-1gb.cnf
+      - deployment/vps/php-fpm/micro-1gb*
+
+permissions:
+  contents: read
+
+jobs:
+  micro-budget:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build WordPress, PHP-FPM, Nginx dan MariaDB
+        run: |
+          docker build --tag sdp-budget-base .
+          docker build --tag sdp-budget --file tests/vps-budget/Dockerfile .
+      - name: Jalankan pengujian gabungan 1 GiB dan 1 CPU
+        shell: bash
+        run: |
+          mkdir -p artifacts/vps-budget
+          docker run --rm --network none --cpus 1 --memory 1g --memory-swap 1g \
+            --mount "type=bind,src=$PWD,dst=/opt/sdp/source,readonly" \
+            --mount "type=bind,src=$PWD/artifacts/vps-budget,dst=/reports" \
+            sdp-budget | tee artifacts/vps-budget/run.log
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: sdp-vps-budget
+          path: artifacts/vps-budget/
