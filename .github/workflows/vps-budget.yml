@@ -2,6 +2,14 @@ name: Uji batas VPS
 
 on:
   workflow_dispatch:
+    inputs:
+      profiles:
+        description: Ukuran dataset FIKTIF
+        type: choice
+        default: '100000'
+        options:
+          - '10000'
+          - '100000'
   push:
     paths:
       - .github/workflows/vps-budget.yml
@@ -25,9 +33,12 @@ jobs:
           docker build --tag sdp-budget --file tests/vps-budget/Dockerfile .
       - name: Jalankan pengujian gabungan 1 GiB dan 1 CPU
         shell: bash
+        env:
+          SDP_BUDGET_PROFILES: ${{ inputs.profiles || '100000' }}
         run: |
           mkdir -p artifacts/vps-budget
           docker run --rm --network none --cpus 1 --memory 1g --memory-swap 1g \
+            --env SDP_BUDGET_PROFILES \
             --mount "type=bind,src=$PWD,dst=/opt/sdp/source,readonly" \
             --mount "type=bind,src=$PWD/artifacts/vps-budget,dst=/reports" \
             sdp-budget | tee artifacts/vps-budget/run.log

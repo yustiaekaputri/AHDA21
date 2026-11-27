@@ -6,11 +6,14 @@ cgroup=/sys/fs/cgroup
 reports=/reports
 site=http://127.0.0.1:8080
 db_dir=/var/lib/sdp-budget
+profiles=${SDP_BUDGET_PROFILES:-100000}
+export SDP_BUDGET_PROFILES="$profiles"
 
 [[ $(cat "$cgroup/memory.max") == 1073741824 && $(cat "$cgroup/memory.swap.max") == 0 ]]
 read -r quota period < "$cgroup/cpu.max"
 [[ $quota != max && $quota == "$period" ]]
 [[ -d "$reports" && ! -e "$db_dir" ]]
+[[ $profiles == 10000 || $profiles == 100000 ]]
 
 capture() {
     local phase=$1
@@ -73,7 +76,12 @@ wp theme activate sekolah-directory-theme
 wp rewrite structure '/%postname%/' --quiet
 wp post create --post_type=page --post_name=direktori-sekolah --post_title='Direktori FIKTIF' \
     --post_content='[portal_sekolah]' --post_status=publish --user=sdp-admin --quiet
-wp eval-file "$source_dir/scripts/benchmark-fixtures.php" 10000 DISPOSABLE-LOCAL-ONLY --user=sdp-admin | tee "$reports/fixtures.json"
+if [[ $profiles == 10000 ]]; then
+    wp eval-file "$source_dir/scripts/benchmark-fixtures.php" "$profiles" DISPOSABLE-LOCAL-ONLY --user=sdp-admin | tee "$reports/fixtures.json"
+else
+    wp eval-file "$source_dir/scripts/benchmark-fixtures.php" 1 DISPOSABLE-LOCAL-ONLY --user=sdp-admin >/dev/null
+    wp eval-file "$source_dir/tests/vps-budget/seed-read-fixture.php" DISPOSABLE-LOCAL-ONLY --user=sdp-admin | tee "$reports/fixtures.json"
+fi
 wp eval 'global $wpdb; printf("WordPress %s, PHP %s, MariaDB %s\n", get_bloginfo("version"), PHP_VERSION, $wpdb->get_var("SELECT VERSION()"));'
 
 install -d /run/php
@@ -116,19 +124,30 @@ done
 directory="$site/direktori-sekolah/"
 wp eval 'SDP_Performance::invalidate();' --quiet
 curl -fsS --max-time 30 -o /tmp/sdp-directory.html -w '%{time_total} %{size_download}\n' "$directory" > "$reports/cold.tsv"
-grep -q '10,000 sekolah ditemukan' /tmp/sdp-directory.html
+total=$(python3 -c 'import sys; print(f"{int(sys.argv[1]):,}")' "$profiles")
+grep -Fq "$total sekolah ditemukan" /tmp/sdp-directory.html
 curl -fsS "$directory?sdp_q=TEST0000" -o /tmp/sdp-search.html
 grep -q '1 sekolah ditemukan' /tmp/sdp-search.html
 grep -q 'Sekolah FIKTIF 000000' /tmp/sdp-search.html
+province="$directory?sdp_provinsi=Provinsi%20Fiktif%2000"
+partial="$directory?sdp_q=000200"
+curl -fsS --max-time 30 "$province" -o /tmp/sdp-province.html
+province_total=$(python3 -c 'import sys; print(f"{(int(sys.argv[1])-1)//38+1:,}")' "$profiles")
+grep -Fq "$province_total sekolah ditemukan" /tmp/sdp-province.html
+curl -fsS --max-time 30 "$partial" -o /tmp/sdp-partial.html
+grep -q '1 sekolah ditemukan' /tmp/sdp-partial.html
+grep -q 'Sekolah FIKTIF 000200' /tmp/sdp-partial.html
 python3 "$source_dir/tools/benchmark_local.py" http "$directory" --requests 36 --workers 4 --local-test > "$reports/directory.json"
 python3 "$source_dir/tools/benchmark_local.py" http "$directory?sdp_q=TEST0000" --requests 24 --workers 4 --local-test > "$reports/npsn.json"
+python3 "$source_dir/tools/benchmark_local.py" http "$province" --requests 24 --workers 4 --local-test > "$reports/province.json"
+python3 "$source_dir/tools/benchmark_local.py" http "$partial" --requests 24 --workers 4 --local-test > "$reports/partial.json"
 python3 - "$reports" <<'PY'
 from pathlib import Path
 import json
 import sys
 
 reports = Path(sys.argv[1])
-for name, count in (('directory', 36), ('npsn', 24)):
+for name, count in (('directory', 36), ('npsn', 24), ('province', 24), ('partial', 24)):
     result = json.loads((reports / f'{name}.json').read_text())
     if result['ok'] != count or result['errors']:
         raise SystemExit(f'Permintaan gagal: {name}')
