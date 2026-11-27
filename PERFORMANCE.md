@@ -152,3 +152,9 @@ Uji visibilitas menambahkan tiga profil FIKTIF dan mengisi cache sebelum menguba
 Pencarian direktori sekarang mengutamakan NPSN delapan karakter yang cocok persis pada profil publik dalam filter aktif. Jika tidak ada kecocokan yang dapat ditampilkan, pencarian memakai aturan substring lama. Aturan ini menjaga pencarian nama, NPSN parsial, dan kata alfanumerik yang juga dapat muncul dalam nama sekolah. Jalur yang sama melayani formulir direktori dan hasil REST portal.
 
 Pada 500.000 profil FIKTIF, sepuluh permintaan HTTP loopback setelah pemanasan menurunkan p50 dari 2.147 ms menjadi 20 ms dan p95 dari 2.517 ms menjadi 28 ms untuk satu NPSN yang tersedia. Seluruh permintaan berhasil dengan satu hasil identik dan badan respons 29.454 byte. Pada sampel terpisah, puncak alokasi PHP 4 MiB sebelum dan sesudah. MariaDB memilih kunci primer tabel sekolah dan artikel untuk kueri NPSN persis. Pengukuran ini memakai satu klien, cache opsi filter yang sudah terisi, dan database pada tmpfs. Pencarian substring masih dapat memindai tabel besar.
+
+### Opsi akreditasi setelah invalidasi cache
+
+Opsi akreditasi tanpa cakupan wilayah memakai kandidat dari indeks akreditasi. Setiap kandidat hanya ditampilkan jika ada profil publik tanpa kata sandi yang memiliki nilai tersebut. Daftar dengan cakupan wilayah tetap memakai kueri bercakupan.
+
+Pada 500.000 profil FIKTIF yang sama, lima permintaan HTTP setelah invalidasi cache per kondisi menurunkan median pembukaan direktori dari 4.135 ms menjadi 2.543 ms. Median kueri pilihan akreditasi turun dari 1.590 ms menjadi 0,4 ms. Sepuluh permintaan berhasil, pilihan filter tetap A, B, C dan badan HTML tetap 46.858 byte. Puncak alokasi PHP 8 MiB dengan pencatatan kueri aktif. Ringkasan direktori dan daftar halaman pertama masih berkontribusi pada latensi. Lingkungan uji memakai satu klien loopback dan MariaDB pada tmpfs.

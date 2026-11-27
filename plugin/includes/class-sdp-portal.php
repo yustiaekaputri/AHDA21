@@ -128,7 +128,7 @@ final class SDP_Portal {
 			$keys          = array_values( array_unique( array_merge( $parents, array_keys( $scope ) ) ) );
 			[$from, $args] = self::from( $base, $keys );
 			$sql           = self::select_sql( "SELECT DISTINCT s.$k" . $from . " AND s.$k<>'' ORDER BY s.$k LIMIT 1000", $args );
-			if ( ! $keys && in_array( $k, array( 'jenjang', 'status', 'provinsi' ), true ) ) {
+			if ( ! $keys && in_array( $k, array( 'jenjang', 'status', 'provinsi', 'akreditasi' ), true ) ) {
 				// Find an actual visible value for each distinct candidate, including when spellings collate equally.
 				$table = SDP_Directory::table();
 				$sql   = self::select_sql(

@@ -257,7 +257,7 @@ final class WordPressTest extends TestCase
             self::assertSame(1, $summaryQueries);
 
             $result = SDP_Directory::save(
-                ['npsn' => 'TESTZ998', 'nama' => 'Profil FIKTIF cache', 'jenjang' => 'Jenjang Fiktif Cache'],
+                ['npsn' => 'TESTZ998', 'nama' => 'Profil FIKTIF cache', 'jenjang' => 'Jenjang Fiktif Cache', 'provinsi' => 'Wilayah FIKTIF Cache', 'akreditasi' => 'UJI CACHE'],
                 false, 'fill', null, null, null, true
             );
             self::assertNotInstanceOf(WP_Error::class, $result);
@@ -265,14 +265,21 @@ final class WordPressTest extends TestCase
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_status' => 'publish']));
             self::assertSame($initial + 1, SDP_Portal::results($state)['total']);
             self::assertContains('Jenjang Fiktif Cache', SDP_Portal::options($state)['jenjang']);
+            self::assertContains('UJI CACHE', SDP_Portal::options($state)['akreditasi']);
+            $scope = ['provinsi' => 'Wilayah FIKTIF Cache'];
+            $scopedState = SDP_Portal::state([], $scope);
+            self::assertSame(['UJI CACHE'], SDP_Portal::options($scopedState, $scope)['akreditasi']);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_password' => 'fixture']));
             self::assertSame($initial, SDP_Portal::results($state)['total']);
             self::assertNotContains('Jenjang Fiktif Cache', SDP_Portal::options($state)['jenjang']);
+            self::assertNotContains('UJI CACHE', SDP_Portal::options($state)['akreditasi']);
+            self::assertSame([], SDP_Portal::options($scopedState, $scope)['akreditasi']);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_password' => '']));
             self::assertSame($initial + 1, SDP_Portal::results($state)['total']);
             self::assertSame($postId, wp_update_post(['ID' => $postId, 'post_status' => 'private']));
             self::assertSame($initial, SDP_Portal::results($state)['total']);
             self::assertNotContains('Jenjang Fiktif Cache', SDP_Portal::options($state)['jenjang']);
+            self::assertNotContains('UJI CACHE', SDP_Portal::options($state)['akreditasi']);
 
             $filtered = SDP_Portal::state(['sdp_q' => 'TESTZ998']);
             $before = $summaryQueries;

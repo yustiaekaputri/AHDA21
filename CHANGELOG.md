@@ -11,6 +11,8 @@ Ringkasan direktori dan opsi filter global memakai slot cache khusus untuk mence
 
 Pencarian direktori mengutamakan NPSN lengkap yang cocok dengan profil publik dan filter aktif, dengan pencarian substring sebagai cadangan.
 
+Opsi akreditasi global memakai indeks yang sudah tersedia dan memeriksa keterlihatan profil untuk setiap kandidat.
+
 ## Perubahan v10.0 RC3 (staging saja)
 Persiapan pilot CSV per wilayah dan sumber, checksum, preview WP-CLI lokal baca-saja. Tidak ada impor otomatis; lihat PANDUAN-V103.txt.
 
