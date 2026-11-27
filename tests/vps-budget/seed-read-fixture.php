@@ -2,11 +2,13 @@
 /** Bulk synthetic data for a read-only benchmark on the disposable MariaDB instance. */
 global $wpdb;
 $schools = SDP_Directory::table();
+$requested = getenv('SDP_BUDGET_PROFILES');
 if (!defined('WP_CLI') || !WP_CLI || wp_get_environment_type() !== 'local' || DB_NAME !== 'sdp_development'
     || (int) get_option('blog_public') !== 0 || !current_user_can('manage_options')
-    || getenv('SDP_BUDGET_PROFILES') !== '100000' || ($args[0] ?? '') !== 'DISPOSABLE-LOCAL-ONLY') {
+    || !in_array($requested, ['100000', '500000'], true) || ($args[0] ?? '') !== 'DISPOSABLE-LOCAL-ONLY') {
     exit(1);
 }
+$profiles = (int) $requested;
 $prototype = (int) $wpdb->get_var("SELECT post_id FROM $schools WHERE npsn='TEST0000'");
 if (!$prototype || (int) $wpdb->get_var("SELECT COUNT(*) FROM $schools") !== 1) {
     WP_CLI::error('Satu profil FIKTIF diperlukan sebagai contoh.');
@@ -19,8 +21,8 @@ $run = static function (string $sql) use ($wpdb): void {
 };
 $started = hrtime(true);
 $run('CREATE TEMPORARY TABLE sdp_budget_fixture (id bigint unsigned PRIMARY KEY, npsn varchar(8), nama varchar(191), provinsi varchar(120)) ENGINE=InnoDB');
-for ($first = 1; $first < 100000; $first += 10000) {
-    $last = min($first + 9999, 99999);
+for ($first = 1; $first < $profiles; $first += 10000) {
+    $last = min($first + 9999, $profiles - 1);
     $run('START TRANSACTION');
     try {
         $run('DELETE FROM sdp_budget_fixture');
@@ -51,9 +53,9 @@ $count = $wpdb->get_row("SELECT COUNT(*) AS total, COUNT(DISTINCT p.ID) AS posts
     SUM(p.ID IS NULL OR p.post_type<>'sdp_school' OR p.post_status<>'publish' OR p.post_password<>''
         OR JSON_UNQUOTE(JSON_EXTRACT(s.payload,'$.npsn'))<>s.npsn) AS invalid
     FROM $schools s LEFT JOIN {$wpdb->posts} p ON p.ID=s.post_id", ARRAY_A);
-if (!$count || (int) $count['total'] !== 100000 || (int) $count['posts'] !== 100000 || (int) $count['invalid'] !== 0) {
+if (!$count || (int) $count['total'] !== $profiles || (int) $count['posts'] !== $profiles || (int) $count['invalid'] !== 0) {
     WP_CLI::error('Relasi fixture dengan artikel WordPress tidak sesuai.');
 }
 SDP_Performance::invalidate();
-WP_CLI::log(wp_json_encode(['fixtures' => 100000, 'method' => 'synthetic SQL after one WordPress profile',
+WP_CLI::log(wp_json_encode(['fixtures' => $profiles, 'method' => 'synthetic SQL after one WordPress profile',
     'seconds' => round((hrtime(true) - $started) / 1e9, 3)], JSON_PRETTY_PRINT));

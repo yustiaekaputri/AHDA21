@@ -6,10 +6,11 @@ on:
       profiles:
         description: Ukuran dataset FIKTIF
         type: choice
-        default: '100000'
+        default: '500000'
         options:
           - '10000'
           - '100000'
+          - '500000'
   push:
     paths:
       - .github/workflows/vps-budget.yml
@@ -34,7 +35,7 @@ jobs:
       - name: Jalankan pengujian gabungan 1 GiB dan 1 CPU
         shell: bash
         env:
-          SDP_BUDGET_PROFILES: ${{ inputs.profiles || '100000' }}
+          SDP_BUDGET_PROFILES: ${{ inputs.profiles || '500000' }}
         run: |
           mkdir -p artifacts/vps-budget
           docker run --rm --network none --cpus 1 --memory 1g --memory-swap 1g \

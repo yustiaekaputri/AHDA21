@@ -6,14 +6,14 @@ cgroup=/sys/fs/cgroup
 reports=/reports
 site=http://127.0.0.1:8080
 db_dir=/var/lib/sdp-budget
-profiles=${SDP_BUDGET_PROFILES:-100000}
+profiles=${SDP_BUDGET_PROFILES:-500000}
 export SDP_BUDGET_PROFILES="$profiles"
 
 [[ $(cat "$cgroup/memory.max") == 1073741824 && $(cat "$cgroup/memory.swap.max") == 0 ]]
 read -r quota period < "$cgroup/cpu.max"
 [[ $quota != max && $quota == "$period" ]]
 [[ -d "$reports" && ! -e "$db_dir" ]]
-[[ $profiles == 10000 || $profiles == 100000 ]]
+[[ $profiles == 10000 || $profiles == 100000 || $profiles == 500000 ]]
 
 capture() {
     local phase=$1
@@ -35,6 +35,7 @@ print(json.dumps({
 if int(events['oom']) or int(events['oom_kill']):
     sys.exit(1)
 PY
+
 }
 
 cleanup() {
@@ -153,3 +154,10 @@ for name, count in (('directory', 36), ('npsn', 24), ('province', 24), ('partial
         raise SystemExit(f'Permintaan gagal: {name}')
     print(f"{name}: {count} respons HTTP 200, p95 {result['p95_ms']} ms")
 PY
+
+if [[ $profiles == 500000 ]]; then
+    curl -fsS --max-time 30 "$directory?sdp_q=Sekolah%20FIKTIF" -o /tmp/sdp-broad.html
+    grep -Fq "$total sekolah ditemukan" /tmp/sdp-broad.html
+    wp eval 'SDP_Performance::invalidate();' --quiet
+    python3 "$source_dir/tests/vps-budget/sustained-read.py" | tee "$reports/sustained.json"
+fi
