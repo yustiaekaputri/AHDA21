@@ -5,6 +5,26 @@ Catatan versi berikut berasal dari dokumentasi plugin.
 ## Perubahan v10.0 RC4 (staging saja)
 Validasi relasi pada simpan, penahanan artikel baru sebelum indeks berhasil, audit balik artikel ke indeks WP-CLI. Tidak ada pemulihan otomatis. Lihat PANDUAN-V104.txt.
 
+Dashboard Pengumpul Data menampilkan status efektif sinkronisasi harian, termasuk saat Safe Mode atau konfigurasi akses jaringan menjedanya.
+
+Ringkasan direktori dan opsi filter global memakai slot cache khusus untuk mencegah pengulangan kueri akibat tabrakan slot.
+
+Pencarian direktori mengutamakan NPSN lengkap yang cocok dengan profil publik dan filter aktif, dengan pencarian substring sebagai cadangan.
+
+Opsi akreditasi global memakai indeks yang sudah tersedia dan memeriksa keterlihatan profil untuk setiap kandidat.
+
+Skema direktori menyediakan indeks pengurutan nama lengkap dan NPSN untuk daftar sekolah.
+
+Indeks ID artikel dan status sekolah membantu kueri ringkasan publik saat cache kosong.
+
+Worker yang memakai transient bawaan WordPress berkoordinasi saat mengisi cache ringkasan direktori.
+
+Pencarian nama atau NPSN sebagian mempersempit kandidat dari indeks sekolah sebelum memeriksa artikel publik ketika hasil awal sedikit.
+
+Filter provinsi dan pencarian umum yang berulang dapat memakai ringkasan yang disimpan dalam cache terbatas. Skema menyediakan indeks gabungan untuk pembacaan dan pengurutan hasil provinsi.
+
+Ringkasan pencarian dengan banyak kandidat dapat memakai `sdp_search_count` untuk membaca nama dan status dalam urutan ID artikel.
+
 ## Perubahan v10.0 RC3 (staging saja)
 Persiapan pilot CSV per wilayah dan sumber, checksum, preview WP-CLI lokal baca-saja. Tidak ada impor otomatis; lihat PANDUAN-V103.txt.
 
@@ -43,3 +63,15 @@ Impor Excel: konversi XLSX terbatas melalui menu Impor Excel, lanjutkan impor CS
 
 ## Perubahan v8.1: mode hemat VPS (default)
 Baca PANDUAN-V81.txt; batas versi sebelumnya dalam bagian historis tidak berlaku jika mode hemat aktif. Mode hemat: 50 baris impor CSV langsung, kolektor 1.000 rekaman / 2 MiB, antrean 5 rekaman, statistik 25 rekaman, impor CLI 100 baris, CLI statistik/antrean 5 putaran, API daftar 20 hasil, media 1 MiB / 4 megapiksel. Autocomplete dan Ollama nonaktif. Pengambilan jaringan otomatis nonaktif, pemrosesan antrean lokal tetap dijadwalkan. Untuk LocalWP yang cukup kuat, define('SDP_LOW_RESOURCE', false); di wp-config.php. Mode ini bukan jaminan pemenuhan kuota bandwidth atau performa server. Tidak ada perubahan skema baru.
+
+## Pengembangan RC4
+
+- Siapkan konfigurasi WordPress–MariaDB, data DEMO terisolasi, rangkaian PHPUnit dan Playwright, serta CI dua versi PHP.
+- Selaraskan kelayakan klaim dengan aturan portal operator agar admin tidak bisa menyetujui klaim profil demo yang ditolak modul peninjauan.
+- Validasi metadata unggahan CSV dan XLSX sebelum pemrosesan dan ringkas navigasi tema pada layar kecil.
+- Perbaiki pengalihan berulang pada `/wp-admin/` di Apache lokal dan pastikan profil Compose dapat dijalankan pada filesystem dengan izin host ketat.
+- Terapkan format WPCS pada plugin dan tema. CI mengarsipkan laporan lengkap dan menolak temuan di luar baseline RC4.
+- Terapkan urutan operand WPCS pada 431 perbandingan dengan literal di plugin dan tema.
+- Tambahkan escaping sesuai konteks HTML dan atribut pada angka, ID dan nilai formulir di plugin.
+- Tambahkan impor TXT berkolom dan impor XLSX langsung sebagai draf melalui validasi dan pembaruan NPSN yang sama dengan impor CSV.
+- Tambahkan pencarian NPSN dari katalog CSV berizin, pratinjau dengan metadata sumber, dan penyimpanan profil baru sebagai draf setelah konfirmasi administrator.

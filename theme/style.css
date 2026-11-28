@@ -22,3 +22,17 @@ Text Domain: sekolah-directory-theme
 @media print{:root{--sdt-bg:#fff;--sdt-surface:#fff;--sdt-text:#000;--sdt-muted:#333;--sdt-line:#aaa;--sdt-soft:#fff;--sdt-link:#000;color-scheme:light}.sdt-header,.sdt-footer,.sdt-sidebar,.sdt-extra,.sdt-skip,.sdt-comments{display:none!important}.sdt-main,.sdt-wrap{padding:0;max-width:none}.sdt-columns.has-sidebar{display:block}.sdt-panel{padding:0;border:none;box-shadow:none}.sdt .sdp4-profilehead{background:#fff;color:#000;border:1px solid #aaa}.sdt .sdp4-profilehead h2,.sdt .sdp4-profilehead p{color:#000}.sdt-cover{max-height:200px}.sdp-metric,.sdp64-gallery figure{break-inside:avoid}}
 /* Maintain print contrast even when the visitor selected dark mode. */
 @media print{:root[data-sdt-mode=dark]{--sdt-bg:#fff;--sdt-surface:#fff;--sdt-text:#000;--sdt-muted:#333;--sdt-line:#aaa;--sdt-soft:#fff;--sdt-link:#000;--sdt-accent:#000;color-scheme:light}.sdt .sdp4-profilehead .sdp-tags span{background:#fff;color:#000;border:1px solid #aaa}}
+
+@media (max-width: 420px) {
+    .sdt-primary .sdt-menu {
+        column-gap: 14px;
+        row-gap: 0;
+    }
+
+    .sdt-primary .sdt-menu a {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        font-size: .84rem;
+    }
+}

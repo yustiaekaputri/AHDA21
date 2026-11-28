@@ -1,0 +1,12 @@
+{
+  "name": "sekolah-directory-browser-tests",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "lint": "node --check theme/assets/theme.js && node --check plugin/assets/portal.js && node --check plugin/assets/analytics.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@axe-core/playwright": "4.11.1"
+  }
+}

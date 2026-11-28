@@ -1,6 +1,9 @@
 <?php
 if(PHP_SAPI!=='cli')exit;
 define('ABSPATH',__DIR__.'/');if(in_array('--standard',$argv,true))define('SDP_LOW_RESOURCE',false);if(in_array('--nocache',$argv,true))define('SDP_FACET_CACHE',false);
+define('DB_NAME', 'sdp_test');
+function wp_using_ext_object_cache(){return false;}
+function wp_cache_delete($key,$group){return true;}
 function is_admin(){return false;}
 class WP_Error {function __construct(public $code,public $message){}function get_error_code(){return $this->code;}function get_error_message(){return $this->message;}}
 function is_wp_error($x){return $x instanceof WP_Error;}function add_action(...$a){}function add_filter(...$a){}function add_shortcode(...$a){}function register_activation_hook(...$a){}function register_deactivation_hook(...$a){}
@@ -9,7 +12,7 @@ function get_transient($k){return $GLOBALS['trans'][$k]??false;}function set_tra
 function wp_next_scheduled($h){return $GLOBALS['cron'][$h]??false;}function wp_schedule_single_event($t,$h,$a=[],$e=false){$GLOBALS['cron'][$h]=$t;return true;}function wp_clear_scheduled_hook($h,$a=[],$e=false){unset($GLOBALS['cron'][$h]);return 1;}
 function is_singular($t){return ($GLOBALS['type']??'')===$t;}function has_shortcode($s,$t){return str_contains($s,'['.$t.']');}function _prime_post_caches($ids,$terms,$meta){$GLOBALS['primed']=[$ids,$terms,$meta];}
 function plugins_url($file,$root){return $file;}function wp_enqueue_style($h,...$a){$GLOBALS['assets'][$h]=1;}function wp_enqueue_script($h,...$a){$GLOBALS['assets'][$h]=1;}
-class FakeDB{public $prefix='wp_',$last_error='';function prepare($q,...$a){return $q;}function get_var($q){if(str_contains($q,'GET_LOCK'))return empty($GLOBALS['busy'])?1:0;if(str_contains($q,'RELEASE_LOCK'))return 1;return $GLOBALS['pending']??null;}function query($q){$GLOBALS['last_sql']=$q;return 2;}}
+class FakeDB{public $prefix='wp_',$last_error='';function prepare($q,...$a){return $q;}function get_var($q){if(str_contains($q,'GET_LOCK'))return empty($GLOBALS['busy'])?1:0;if(str_contains($q,'RELEASE_LOCK'))return 1;return $GLOBALS['pending']??null;}function query($q){$GLOBALS['last_sql']=$q;return 2;}function suppress_errors($suppress=true){return false;}}
 $GLOBALS['wpdb']=new FakeDB();require __DIR__.'/../../plugin/sekolah-directory-pro.php';
 $c=SDP_Performance::class;$n=0;function ok($b,$s){global $n;if(!$b){fwrite(STDERR,"FAIL $s\n");exit(1);}echo "PASS $s\n";$n++;}
 $calls=0;$query=function()use(&$calls){$calls++;return ['Jawa Barat'];};
@@ -24,6 +27,33 @@ if($c::enabled()){
   for($i=0;$i<150;$i++)$c::facet('var'.$i,fn()=>[$i]);ok(count($GLOBALS['trans'])<=32,'Fixed cache slots');
   $q1='collision-a';$epoch=get_option($c::EPOCH,'0');$slot=$c::slot(hash('sha256',$epoch.'|'.$q1));for($i=0;;$i++){if($c::slot(hash('sha256',$epoch.'|collision-'.$i))===$slot)break;}$q2='collision-'.$i;
   $c::facet($q1,fn()=>['a']);$c::facet($q2,fn()=>['b']);ok($c::facet($q1,fn()=>['a'])===['a'],'Collision never returns other values');
+
+  $directory_slots = ['summary', 'provinsi', 'jenjang', 'status', 'akreditasi'];
+  $directory_reads = 0;
+  foreach ($directory_slots as $name) {
+      $c::facet('public-' . $name, static function () use ($name, &$directory_reads) {
+          ++$directory_reads;
+          return [$name];
+      }, $name);
+  }
+  for ($index = 0; $index < 150; ++$index) {
+      $c::facet('scoped-' . $index, static fn() => [$index]);
+  }
+  foreach ($directory_slots as $name) {
+      $value = $c::facet('public-' . $name, static function () use (&$directory_reads) {
+          ++$directory_reads;
+          return ['miss'];
+      }, $name);
+      ok($value === [$name], 'Scoped queries do not evict public ' . $name);
+  }
+  ok($directory_reads === 5 && count($GLOBALS['trans']) <= 32, 'Reserved public entries share the existing 32-slot limit');
+  $c::invalidate();
+  ok($c::facet('public-summary', static fn() => ['updated'], 'summary') === ['updated'], 'Invalidation expires reserved entries');
+  $c::invalidate();
+  $GLOBALS['busy'] = true;
+  ok($c::facet('public-summary', static fn() => ['fallback'], 'summary') === ['fallback'], 'Summary remains available on lock timeout');
+  unset($GLOBALS['busy']);
+  ok($c::facet('public-summary', static fn() => ['coordinated'], 'summary') === ['coordinated'], 'Uncoordinated summary does not overwrite the cache');
 }else{ok(empty($GLOBALS['trans']),'Cache opt-out writes nothing');}
 $GLOBALS['wp_query']=(object)['posts'=>[(object)['post_content'=>'Normal news']]];ok(!$c::assets_needed(),'Ordinary page skips assets');SDP_Directory::assets();SDP_Portal::assets();SDP_Analytics::assets();ok(empty($GLOBALS['assets']),'No portal CSS or JS ordinary page');
 $GLOBALS['wp_query']->posts[0]->post_content='[direktori_sekolah]';ok($c::assets_needed()&&$c::assets_needed('analytics'),'Directory shortcode loads assets');SDP_Analytics::assets();ok(isset($GLOBALS['assets']['sdp-directory'],$GLOBALS['assets']['sdp-portal'],$GLOBALS['assets']['sdp-analytics']),'Asset dependencies loaded');

@@ -6,14 +6,67 @@ permissions:
   contents: read
 
 jobs:
-  tests:
+  mysql-index:
     runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_RANDOM_ROOT_PASSWORD: '1'
+          MYSQL_DATABASE: sdp_index_test
+          MYSQL_USER: sdp_index_test
+          MYSQL_PASSWORD: sdp_index_ci_only
+        options: >-
+          --health-cmd "mysqladmin ping --protocol=TCP --host=127.0.0.1 --silent"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
-      - uses: actions/checkout@v4
-      - name: Lint PHP
-        run: find plugin theme tests -type f -name '*.php' -print0 | xargs -0 -n 1 php -d disable_functions=extension_loaded -l
-      - name: Simulasi PHP
+      - uses: actions/checkout@v5
+      - name: Uji kompatibilitas indeks direktori pada MySQL 8
+        shell: bash
+        env:
+          MYSQL_CONTAINER: ${{ job.services.mysql.id }}
         run: |
+          mkdir -p artifacts/reports
+          docker exec "$MYSQL_CONTAINER" mysql --version | tee artifacts/reports/mysql-index-version.txt
+          docker exec -i "$MYSQL_CONTAINER" sh -ec '
+            MYSQL_PWD="$MYSQL_PASSWORD" mysql --protocol=TCP --host=127.0.0.1 --user="$MYSQL_USER" "$MYSQL_DATABASE" --batch --skip-column-names
+          ' < tests/sql/directory-index.sql | tee artifacts/reports/mysql-index-result.tsv
+          diff -u tests/sql/directory-index.expected.tsv artifacts/reports/mysql-index-result.tsv
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: sdp-mysql-index
+          path: artifacts/reports/mysql-index-*
+
+  integration:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3']
+    env:
+      SDP_PHP_VERSION: ${{ matrix.php }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Dependensi dan lint JavaScript
+        run: |
+          npm ci
+          npm run lint
+          npx playwright install --with-deps chromium
+      - name: PHP lint dan regresi simulasi
+        run: |
+          find plugin theme tests scripts -type f -name '*.php' -print0 | xargs -0 -n 1 php -d disable_functions=extension_loaded -l
           for test in tests/simulasi/test*.php; do
             php "$test"
             php "$test" --standard
@@ -22,7 +75,43 @@ jobs:
           php tests/simulasi/test88.php --nocache
           php tests/simulasi/test90.php --safe
           php tests/simulasi/test90.php --safe --standard
-      - name: Simulasi Python
-        run: |
           python3 -m unittest discover -s tests/simulasi
           python3 tests/localwp/test-runner.py
+      - name: Audit dependensi
+        run: |
+          mkdir -p artifacts/reports
+          composer install --no-interaction --prefer-dist
+          composer audit --locked --format=json > artifacts/reports/composer-audit.json
+          npm audit --audit-level=high --json > artifacts/reports/npm-audit.json
+      - name: WordPress Coding Standards
+        id: wpcs
+        if: always()
+        continue-on-error: true
+        run: |
+          mkdir -p artifacts/reports
+          status=0
+          vendor/bin/phpcs --standard=WordPress --extensions=php --report=json plugin theme > artifacts/reports/wpcs.json || status=$?
+          if (( status > 3 )); then exit "$status"; fi
+          python3 scripts/check-wpcs.py artifacts/reports/wpcs.json
+      - name: PHPStan
+        run: |
+          mkdir -p artifacts/reports
+          vendor/bin/phpstan analyse --memory-limit=512M --no-progress --error-format=table > artifacts/reports/phpstan.txt 2>&1
+      - name: WordPress, MariaDB, PHPUnit dan Playwright
+        run: scripts/test.sh
+      - name: Build ZIP plugin dan tema
+        run: scripts/build-zips.sh
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: sdp-php-${{ matrix.php }}
+          path: |
+            artifacts/reports/
+            artifacts/screenshots/
+            artifacts/packages/
+          if-no-files-found: warn
+      - name: Status WordPress Coding Standards
+        if: always() && steps.wpcs.outcome == 'failure'
+        run: |
+          echo 'Pemeriksaan baseline WPCS gagal. Laporan lengkap tersedia sebagai artefak.'
+          exit 1

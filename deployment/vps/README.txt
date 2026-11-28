@@ -77,6 +77,11 @@ high-8gb          8             192 MiB     192 MiB  1024 MiB     60
   dan DNS benar. Template tidak menangani ACME HTTP challenge otomatis.
 - Letakkan di sites-available dan aktifkan seperti kebijakan distro; jangan
   overwrite konfigurasi situs lain. nginx -t harus berhasil sebelum reload.
+- Untuk staging privat, sertakan nginx/sdp-staging-private.conf hanya di blok
+  server HTTPS staging. Buat berkas htpasswd secara lokal pada server, di luar
+  webroot, dan batasi akses bacanya ke administrator serta proses Nginx.
+  Setelah instalasi, periksa bahwa beranda, wp-admin, dan REST staging meminta
+  autentikasi HTTP. Login WordPress tetap dibutuhkan untuk dashboard.
 - Cache browser 7 hari pada aset publik di wp-content/wp-includes. Jangan simpan
   dokumen privat di uploads publik. Untuk aset sensitif, gunakan jalur akses
   terautentikasi di luar webroot. File backup tidak boleh berada di webroot
@@ -106,10 +111,12 @@ high-8gb          8             192 MiB     192 MiB  1024 MiB     60
 5. CRON DAN MODE HEMAT
 - wp-config-fragment.php.txt disalin sebagai potongan, bukan mengganti file.
   Jangan menduplikasi konstanta. Mode hemat aktif. Jalankan impor besar di LocalWP.
-- Default WP-Cron boleh dipertahankan. Jika memilih cron sistem, pastikan WP-CLI
-  berjalan dengan user situs non-root dan direktori lock privat. Jalankan manual
-  wp cron event run --due-now dulu. Setelah teruji, tambahkan cron.example dan
-  baru set DISABLE_WP_CRON true. Jika ingin menutup HTTP /wp-cron.php, uji dulu
+- Default WP-Cron boleh dipertahankan jika loopback HTTP berfungsi. Pada staging
+  dengan HTTP Basic, loopback WordPress mendapat 401 dan melewatkan event jatuh
+  tempo. Gunakan cron sistem dengan WP-CLI sebagai user situs non-root dan
+  direktori lock privat. Jalankan perintah pada cron.example secara manual lalu
+  verifikasi jadwal crontab sebelum set DISABLE_WP_CRON true. Jika ingin menutup
+  HTTP /wp-cron.php, uji dulu
   bahwa semua job berjalan via CLI dan tidak ada integrasi yang membutuhkannya.
   Contoh cron membangunkan WordPress tiap 5 menit walau tidak ada event; bukan
   zero idle. Flock hanya mencegah overlap proses dari cron yang sama, bukan semua

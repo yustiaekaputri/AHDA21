@@ -9,5 +9,15 @@ $d=['npsn'=>'12345678','nama'=>'Sekolah A','jenjang'=>'SD','status'=>'Negeri','p
 foreach($c::tables() as [$t,$req,$fields])$wpdb->cols[$t]=$fields;$s=$c::schema();ok(count($s)===8&&$s['Sekolah']['status']==='ok','Eight tables');$wpdb->missing=['wp_sdp_regions','wp_sdp_claims'];$s=$c::schema();ok($s['Wilayah']['status']==='warning'&&$s['Klaim']['status']==='error','Required vs optional');$wpdb->cols['wp_sdp_schools']=[];ok($c::schema()['Sekolah']['status']==='error','Missing columns');$r=$c::readiness();ok(isset($r['PHP'],$r['WordPress'],$r['HTTPS'],$r['Sekolah']),'Readiness includes schema');ok($r['HTTPS']['status']==='ok','HTTPS check');
 ok(is_wp_error($c::audit('bad')),'Invalid audit cursor');$wpdb->rows=array_fill(0,$c::limits()+1,$row);$r=$c::audit('00000001');ok($r['checked']===$c::limits()&&$r['next']==='12345678','Audit bounded + cursor');ok($wpdb->args===['00000001',$c::limits()+1]&&str_contains($wpdb->query,'OCTET_LENGTH')&&str_contains($wpdb->query,'ORDER BY s.npsn LIMIT'),'Keyset prepared and payload bounded');ok(!str_contains($wpdb->query,'COUNT('),'No full count');$wpdb->rows=[];ok($c::audit()['next']===null,'Empty audit');$GLOBALS['fail']='x';ok(is_wp_error($c::audit()),'DB error surfaced');unset($GLOBALS['fail']);
 if($c::safe()){ok(SDP_Scheduler::disabled(),'Safe blocks scheduler');ok(!SDP_Resource::scheduled_network(),'Safe blocks scheduled network');ok(!SDP_Performance::guard_legacy(),'Safe blocks legacy work');ok(SDP_Performance::next_delay(1,true,[],0,[],[],time())===null,'Safe no next event');$GLOBALS['opts']['sdp_queue_version']='2.0.0';$GLOBALS['cron'][SDP_Collector::HOOK]=time()+300;ok(SDP_Performance::reconcile()&&!isset($GLOBALS['cron'][SDP_Collector::HOOK]),'Safe clears scheduled collector');}else{ok(!SDP_Scheduler::disabled(),'Scheduler available');ok(SDP_Performance::next_delay(1,false,[],0,[],[],time())===300,'Pending wakes collector');}
+foreach ([
+    'sdp_name_order' => ['nama', 'npsn'],
+    'sdp_school_count' => ['post_id', 'status'],
+    'sdp_province_order' => ['provinsi', 'nama', 'npsn', 'post_id', 'status', 'kabupaten'],
+    'sdp_search_count' => ['post_id', 'status', 'nama', 'npsn'],
+] as $index => $columns) {
+    foreach ($columns as $offset => $column) {
+        $wpdb->rows[] = ['Key_name' => $index, 'Seq_in_index' => $offset + 1, 'Column_name' => $column, 'Sub_part' => null];
+    }
+}
 $wpdb->missing=[];$wpdb->cols['wp_sdp_schools']=array_merge(['npsn','post_id','payload','updated_at'],SDP_Directory::indexed());ok(SDP_Directory::install_schema()&&get_option('sdp_db_version')===SDP_Directory::VERSION,'Core schema success records version');$GLOBALS['opts']['sdp_db_version']='8.9.0';$wpdb->missing=['wp_sdp_schools'];ok(!SDP_Directory::install_schema()&&get_option('sdp_db_version')==='8.9.0','Missing table does not update version');$wpdb->missing=[];$wpdb->cols['wp_sdp_schools']=[];ok(!SDP_Directory::install_schema()&&get_option('sdp_db_version')==='8.9.0','Missing columns do not update version');
 echo "TOTAL $n checks\n";
