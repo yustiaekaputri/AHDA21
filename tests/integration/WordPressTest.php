@@ -184,7 +184,7 @@ final class WordPressTest extends TestCase
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_province_order"));
             update_option('sdp_db_version', '9.0.0');
             $skipIndex = static function (string $query) use ($table): string {
-                return str_starts_with($query, "ALTER TABLE $table ADD KEY sdp_province_order ")
+                return str_starts_with(str_replace('`', '', $query), "ALTER TABLE $table ADD KEY sdp_province_order ")
                     ? 'SELECT 1'
                     : $query;
             };
