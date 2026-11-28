@@ -65,6 +65,16 @@ scripts/wp.sh eval '
         WP_CLI::error("Katalog, indeks, atau status draf gagal dipulihkan.");
     }
 '
+verifier=/tmp/sdp-verify-migration.php
+docker compose --file docker-compose.yml cp deployment/vps/tools/verify-migration.php "wordpress:$verifier"
+site_url=${SDP_SITE_URL:-http://127.0.0.1:${SDP_HTTP_PORT:-3000}}
+scripts/wp.sh eval-file "$verifier" "$site_url" 1 BKUP0001
+if mismatch=$(scripts/wp.sh eval-file "$verifier" https://wrong.example 1 BKUP0001 2>&1); then
+    echo 'Pemeriksaan migrasi menerima URL tujuan yang salah.' >&2
+    exit 1
+fi
+[[ "$mismatch" == *"URL home pada database atau runtime berbeda dari URL tujuan."* ]]
+echo 'PASS: pemeriksaan migrasi menolak URL tujuan yang salah.'
 scripts/wp.sh option delete sdp_npsn_catalog >/dev/null
 scripts/wp.sh post delete "$attachment_id" --force >/dev/null
 scripts/wp.sh post delete "$post_id" --force >/dev/null
