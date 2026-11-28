@@ -32,10 +32,10 @@ attachment_id=$(scripts/wp.sh eval '
     $attachment = wp_insert_attachment([
         "post_title" => "Media FIKTIF Cadangan",
         "post_mime_type" => "image/png",
-    ], $upload["file"], (int) $args[0], true);
+    ], $upload["file"], '"$post_id"', true);
     if (is_wp_error($attachment)) { WP_CLI::error($attachment->get_error_message()); }
     echo $attachment;
-' "$post_id")
+')
 [[ "$attachment_id" =~ ^[1-9][0-9]*$ ]]
 media_path=$(scripts/wp.sh post meta get "$attachment_id" _wp_attached_file)
 [[ "$media_path" =~ ^([0-9]{4}/[0-9]{2}/)?sdp-backup-fixture(-[0-9]+)?\.png$ ]]
