@@ -7,7 +7,12 @@ if [[ "${COMPOSE_PROJECT_NAME:-}" != sdp-test-* ]]; then
 fi
 umask 077
 dump=$(mktemp)
-trap 'rm -f "$dump"' EXIT
+files=$(mktemp)
+trap 'rm -f "$dump" "$files"' EXIT
+
+content() {
+    docker compose --file docker-compose.yml exec -T wordpress "$@"
+}
 
 scripts/wp.sh option update sdp_npsn_catalog '{"BKUP0001":{"npsn":"BKUP0001","nama":"Sekolah FIKTIF Cadangan","sumber":"Sumber FIKTIF — 2025/2026","tanggal_data":"2025-09-01"}}' --format=json >/dev/null
 post_id=$(scripts/wp.sh eval '
@@ -17,10 +22,37 @@ post_id=$(scripts/wp.sh eval '
 ')
 [[ "$post_id" =~ ^[1-9][0-9]*$ ]]
 [[ "$(scripts/wp.sh post get "$post_id" --field=post_status)" == draft ]]
+attachment_id=$(scripts/wp.sh eval '
+    $image = imagecreatetruecolor(2, 2);
+    ob_start();
+    imagepng($image);
+    $png = ob_get_clean();
+    $upload = wp_upload_bits("sdp-backup-fixture.png", null, $png);
+    if ($upload["error"]) { WP_CLI::error($upload["error"]); }
+    $attachment = wp_insert_attachment([
+        "post_title" => "Media FIKTIF Cadangan",
+        "post_mime_type" => "image/png",
+    ], $upload["file"], (int) $args[0], true);
+    if (is_wp_error($attachment)) { WP_CLI::error($attachment->get_error_message()); }
+    echo $attachment;
+' "$post_id")
+[[ "$attachment_id" =~ ^[1-9][0-9]*$ ]]
+media_path=$(scripts/wp.sh post meta get "$attachment_id" _wp_attached_file)
+[[ "$media_path" =~ ^([0-9]{4}/[0-9]{2}/)?sdp-backup-fixture(-[0-9]+)?\.png$ ]]
+uploads=/var/www/html/wp-content/uploads
+media_hash=$(content sha256sum "$uploads/$media_path")
+
 docker compose --file docker-compose.yml exec -T db sh -ec 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb-dump --user="$MARIADB_USER" --single-transaction --skip-lock-tables "$MARIADB_DATABASE"' > "$dump"
+content tar -C "$uploads" -cf - "$media_path" > "$files"
 scripts/wp.sh option delete sdp_npsn_catalog >/dev/null
+scripts/wp.sh post delete "$attachment_id" --force >/dev/null
 scripts/wp.sh post delete "$post_id" --force >/dev/null
+content test ! -e "$uploads/$media_path"
 docker compose --file docker-compose.yml exec -T db sh -ec 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb --user="$MARIADB_USER" "$MARIADB_DATABASE"' < "$dump"
+content tar -C "$uploads" -xf - < "$files"
+[[ "$(content sha256sum "$uploads/$media_path")" == "$media_hash" ]]
+[[ "$(scripts/wp.sh post get "$attachment_id" --field=post_parent)" == "$post_id" ]]
+[[ "$(scripts/wp.sh post meta get "$attachment_id" _wp_attached_file)" == "$media_path" ]]
 scripts/wp.sh eval '
     global $wpdb;
     $record = get_option("sdp_npsn_catalog")["BKUP0001"] ?? [];
@@ -34,5 +66,6 @@ scripts/wp.sh eval '
     }
 '
 scripts/wp.sh option delete sdp_npsn_catalog >/dev/null
+scripts/wp.sh post delete "$attachment_id" --force >/dev/null
 scripts/wp.sh post delete "$post_id" --force >/dev/null
-echo 'PASS: snapshot MariaDB memulihkan katalog NPSN, sumber data, draf, dan indeks sekolah.'
+echo 'PASS: cadangan memulihkan katalog NPSN, draf, indeks, dan lampiran dengan checksum identik.'
