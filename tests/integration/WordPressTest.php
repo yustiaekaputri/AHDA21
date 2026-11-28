@@ -177,25 +177,33 @@ final class WordPressTest extends TestCase
         $result = SDP_Directory::save(['npsn' => 'FIKMIG01', 'nama' => 'Profil FIKTIF migrasi'], false);
         self::assertNotInstanceOf(WP_Error::class, $result);
         $postId = (int) $result['id'];
+        $previousTimeout = (int) $wpdb->get_var('SELECT @@SESSION.lock_wait_timeout');
         try {
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX wilayah"));
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_name_order"));
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_school_count"));
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_province_order"));
+            self::assertNotFalse($wpdb->query('SET SESSION lock_wait_timeout = 7'));
             update_option('sdp_db_version', '9.0.0');
-            $skipIndex = static function (string $query) use ($table): string {
-                return str_starts_with(str_replace('`', '', $query), "ALTER TABLE $table ADD KEY sdp_province_order ")
-                    ? 'SELECT 1'
-                    : $query;
+            $observedTimeout = null;
+            $skipIndex = static function (string $query) use ($table, $wpdb, &$observedTimeout): string {
+                if (!str_starts_with(str_replace('`', '', $query), "ALTER TABLE $table ADD KEY sdp_province_order ")) {
+                    return $query;
+                }
+                $observedTimeout = (int) $wpdb->get_var('SELECT @@SESSION.lock_wait_timeout');
+                return 'SELECT 1';
             };
             add_filter('query', $skipIndex);
             try {
-                self::assertFalse(SDP_Directory::install_schema());
+                self::assertFalse(SDP_Production::repair_schema());
+                self::assertSame(2, $observedTimeout);
+                self::assertSame(7, (int) $wpdb->get_var('SELECT @@SESSION.lock_wait_timeout'));
                 self::assertSame('9.0.0', get_option('sdp_db_version'));
             } finally {
                 remove_filter('query', $skipIndex);
             }
-            self::assertTrue(SDP_Directory::install_schema());
+            self::assertTrue(SDP_Production::repair_schema());
+            self::assertSame(7, (int) $wpdb->get_var('SELECT @@SESSION.lock_wait_timeout'));
             self::assertSame(SDP_Directory::VERSION, get_option('sdp_db_version'));
             self::assertContains('wilayah', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
             self::assertContains('sdp_name_order', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
@@ -203,6 +211,7 @@ final class WordPressTest extends TestCase
             self::assertContains('sdp_province_order', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
             self::assertSame($postId, (int) $wpdb->get_var($wpdb->prepare("SELECT post_id FROM `$table` WHERE npsn=%s", 'FIKMIG01')));
         } finally {
+            $wpdb->query($wpdb->prepare('SET SESSION lock_wait_timeout = %d', $previousTimeout));
             SDP_Directory::install_schema();
             wp_delete_post($postId, true);
         }

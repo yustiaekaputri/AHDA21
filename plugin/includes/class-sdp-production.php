@@ -14,6 +14,37 @@ final class SDP_Production {
 		add_submenu_page( 'sdp-directory', 'Kesiapan Produksi', 'Kesiapan Produksi', 'manage_options', self::PAGE, array( __CLASS__, 'page' ) );}
 	public static function safe() {
 		return defined( 'SDP_SAFE_MODE' ) && SDP_SAFE_MODE === true;}
+	/**
+	 * Repair core schema with a short metadata lock wait.
+	 *
+	 * @return bool|WP_Error Repair result or collector lock error.
+	 */
+	public static function repair_schema() {
+		return SDP_Collector::lock(
+			static function () {
+				global $wpdb;
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Read the live session setting.
+				$previous_timeout = $wpdb->get_var( 'SELECT @@SESSION.lock_wait_timeout' );
+				if ( ! is_numeric( $previous_timeout ) || (int) $previous_timeout < 1 ) {
+					return false;
+				}
+				$previous_timeout = (int) $previous_timeout;
+				if ( $previous_timeout <= 2 ) {
+					return SDP_Directory::install_schema();
+				}
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Limit metadata lock waits in this session.
+				if ( false === $wpdb->query( 'SET SESSION lock_wait_timeout = 2' ) ) {
+					return false;
+				}
+				try {
+					return SDP_Directory::install_schema();
+				} finally {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Restore the original session setting.
+					$wpdb->query( $wpdb->prepare( 'SET SESSION lock_wait_timeout = %d', $previous_timeout ) );
+				}
+			}
+		);
+	}
 	public static function limits() {
 		return SDP_Resource::cap( 100, 25 );}
 	public static function cursor( $v ) {
@@ -186,7 +217,7 @@ final class SDP_Production {
 			if ( 'audit' === $op ) {
 				$result = self::audit( is_string( $_POST['after'] ?? null ) ? wp_unslash( $_POST['after'] ) : '' );
 			} elseif ( 'repair' === $op && ( $_POST['backup'] ?? '' ) === '1' && self::safe() ) {
-				$r   = SDP_Collector::lock( fn()=>SDP_Directory::install_schema() );
+				$r   = self::repair_schema();
 				$msg = true === $r ? 'Schema inti diperiksa dan marker diperbarui.' : 'Pemeriksaan/perbaikan gagal atau kolektor sedang sibuk.';
 			} else {
 				$msg = 'Tindakan tidak valid, mode darurat belum aktif, atau konfirmasi cadangan belum diisi.';
