@@ -225,7 +225,7 @@ Putaran akhir menyelesaikan 1.132 permintaan campuran dan 108 permintaan penguji
 
 ### Uji melewati masa berlaku cache
 
-Workflow menyediakan pilihan 120, 360, atau 720 detik untuk 500.000 profil. Jadwal rutin memakai 720 detik secara bawaan. Mode 360 detik mempertahankan empat klien dan batas lima detik per permintaan. Skrip mencatat pemakaian memori dan waktu kedaluwarsa ringkasan secara berkala, lalu memastikan waktu kedaluwarsa ringkasan maju setidaknya 300 detik setelah trafik mengisi ulang cache.
+Workflow menyediakan pilihan 120, 360, atau 720 detik untuk 500.000 profil. Workflow memakai 720 detik secara bawaan. Mode 360 detik mempertahankan empat klien dan batas lima detik per permintaan. Skrip mencatat pemakaian memori dan waktu kedaluwarsa ringkasan secara berkala, lalu memastikan waktu kedaluwarsa ringkasan maju setidaknya 300 detik setelah trafik mengisi ulang cache.
 
 Percobaan enam menit pertama dan variasi urutan join masih mencatat timeout saat ringkasan nama umum diisi atau diperbarui. Indeks `sdp_search_count (post_id,status,nama,npsn)` memberi kueri kolom yang diperlukan dalam urutan ID artikel. `EXPLAIN` mengonfirmasi pemakaiannya. Pada instalasi yang belum membuat indeks, kueri biasa tetap tersedia.
 
