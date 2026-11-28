@@ -33,6 +33,12 @@ wp eval-file /jalur/verify-migration.php https://staging.example.com 689 2021082
 
 Skrip memeriksa URL tersimpan dan efektif, jumlah katalog, relasi draf dengan indeks sekolah, dan status REST anonim. Periksa juga melalui browser untuk memastikan Nginx, HTTPS, autentikasi staging, dan permalink publik bekerja dari luar WordPress.
 
+### Sambungkan Claude setelah migrasi
+
+Atur `ANTHROPIC_API_KEY` pada environment proses PHP di VPS atau simpan `SDP_CLAUDE_API_KEY` di `wp-config.php` milik VPS. Konstanta tersebut didahulukan jika keduanya ada. Jika memakai PHP-FPM dengan variabel lingkungan, pastikan pool situs menerima variabel itu dan muat ulang PHP-FPM setelah perubahan. Jika WordPress membatasi akses HTTP keluar, tambahkan `api.anthropic.com` ke daftar host yang sudah diizinkan.
+
+Masuk melalui HTTPS dan buka **Direktori Sekolah → SEO & AI**. Periksa indikator konfigurasi, klik **Ambil daftar model Claude**, kemudian pilih ID dan klik **Periksa model Claude**. Kedua tindakan mengambil metadata. Permintaan **Buat usulan narasi** memakai data profil yang dipilih dan dapat menimbulkan biaya, sehingga jalankan setelah meninjau izin pemrosesan.
+
 ### Lindungi staging Nginx
 
 Untuk staging yang memakai Nginx, buat berkas `htpasswd` di luar webroot. Simpan dengan akses baca terbatas untuk proses Nginx. Tambahkan [konfigurasi staging privat](deployment/vps/nginx/sdp-staging-private.conf) ke blok `server` HTTPS staging dan sesuaikan lokasi berkas autentikasi. Gunakan `nginx -t` sebelum memuat ulang konfigurasi.

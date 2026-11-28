@@ -42,6 +42,14 @@ Untuk mencoba pencarian NPSN setelah peninjauan, unggah hanya `identity.csv` yan
 
 ## Claude untuk usulan narasi
 
+Di LocalWP, pilih situs dan klik **Go to site folder**. Buka `app/public/wp-config.php` dan tambahkan baris berikut sebelum pemanggilan `wp-settings.php`. Ganti placeholder dengan kunci dari akun Anthropic Anda. Jika konstanta sudah ada, ubah definisi yang ada.
+
+```php
+define( 'SDP_CLAUDE_API_KEY', 'GANTI_DENGAN_KUNCI_ANDA' );
+```
+
+Simpan file lalu muat ulang **Direktori Sekolah → SEO & AI**. Jika panel mendeteksi kunci, gunakan **Ambil daftar model Claude** sebelum mencoba membuat narasi. Simpan `wp-config.php` secara privat.
+
 Untuk menyiapkan Claude, set `ANTHROPIC_API_KEY` pada environment proses PHP atau tetapkan `SDP_CLAUDE_API_KEY` di konfigurasi WordPress lokal. Dari profil yang sudah tersimpan, klik **Buka asisten narasi AI** untuk mengisi NPSN otomatis. Formulir juga tersedia di **Direktori Sekolah → SEO & AI**. Pilih **Claude (Anthropic)**, isi ID model dari akun Anthropic Anda, lalu konfirmasi izin pemrosesan sebelum membuat usulan. Pratinjau privat tersedia selama sepuluh menit untuk ditinjau. Permintaan dilakukan atas tindakan administrator dan dapat menimbulkan biaya.
 
 Sebelum membuat narasi, gunakan **Periksa model Claude** pada menu yang sama. Pemeriksaan metadata ini hanya mengirim kunci API dan ID model ke Anthropic. Keberhasilan pemeriksaan mengonfirmasi akses metadata model, sementara kuota dan kemampuan membuat narasi baru diuji saat mengirim permintaan narasi.
