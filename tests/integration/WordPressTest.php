@@ -63,7 +63,8 @@ final class WordPressTest extends TestCase
     {
         $previousKey = getenv('ANTHROPIC_API_KEY');
         $requests = 0;
-        $intercept = static function ($response, $args, $url) use (&$requests) {
+        $status = 200;
+        $intercept = static function ($response, $args, $url) use (&$requests, &$status) {
             ++$requests;
             self::assertSame('https://api.anthropic.com/v1/messages', $url);
             self::assertSame('ci-placeholder', $args['headers']['x-api-key']);
@@ -78,6 +79,9 @@ final class WordPressTest extends TestCase
                 ['nama' => 'Sekolah FIKTIF', 'npsn' => 'TEST0001'],
                 json_decode($body['messages'][0]['content'], true, 512, JSON_THROW_ON_ERROR)
             );
+            if ($status !== 200) {
+                return ['response' => ['code' => $status], 'body' => '{"error":"provider-private-detail"}'];
+            }
             return [
                 'response' => ['code' => 200],
                 'body' => wp_json_encode([
@@ -97,10 +101,18 @@ final class WordPressTest extends TestCase
             self::assertSame('key', $missing->get_error_code());
             self::assertSame(0, $requests);
             putenv('ANTHROPIC_API_KEY=ci-placeholder');
-            self::assertSame('Usulan narasi.', SDP_AI::generate('claude', 'claude-model-example', [
+            $profile = [
                 'npsn' => 'TEST0001', 'nama' => 'Sekolah FIKTIF', 'telepon' => '123', 'email' => 'uji@example.invalid',
-            ]));
+            ];
+            self::assertSame('Usulan narasi.', SDP_AI::generate('claude', 'claude-model-example', $profile));
             self::assertSame(1, $requests);
+            $status = 429;
+            $limited = SDP_AI::generate('claude', 'claude-model-example', $profile);
+            self::assertInstanceOf(WP_Error::class, $limited);
+            self::assertSame('http', $limited->get_error_code());
+            self::assertStringContainsString('HTTP 429. Batas permintaan tercapai.', $limited->get_error_message());
+            self::assertStringNotContainsString('provider-private-detail', $limited->get_error_message());
+            self::assertSame(2, $requests);
             self::assertInstanceOf(WP_Error::class, SDP_AI::extract('claude', [
                 'stop_reason' => 'max_tokens', 'content' => [['type' => 'text', 'text' => 'Terpotong']],
             ]));

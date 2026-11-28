@@ -108,21 +108,31 @@ final class SDP_AI {
 		}
 		$code = wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $code ) {
-			$hint = match ( (int) $code ) {
-				401     => 'Periksa apakah kunci API aktif dan disalin dengan benar.',
-				403     => 'Periksa izin kunci dan akses model di akun Anthropic.',
-				404     => 'Periksa ID model. Gunakan daftar model yang tersedia untuk akun Anda.',
-				429     => 'Batas permintaan tercapai. Tunggu sebelum mencoba lagi.',
-				500, 502, 503, 504, 529 => 'Layanan Anthropic sedang bermasalah. Coba lagi nanti.',
-				default => 'Periksa kunci, ID model, dan akses akun.',
-			};
-			return new WP_Error( 'http', 'Anthropic mengembalikan HTTP ' . (int) $code . '. ' . $hint );
+			return self::claude_http_error( (int) $code );
 		}
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $data ) ) {
 			return new WP_Error( 'response', 'Respons metadata model tidak valid.' );
 		}
 		return $data;
+	}
+
+	/**
+	 * Explain a Claude HTTP error without exposing the response body.
+	 *
+	 * @param int $code HTTP status.
+	 * @return WP_Error Error shown to the administrator.
+	 */
+	private static function claude_http_error( $code ) {
+		$hint = match ( $code ) {
+			401     => 'Periksa apakah kunci API aktif dan disalin dengan benar.',
+			403     => 'Periksa izin kunci dan akses model di akun Anthropic.',
+			404     => 'Periksa ID model. Gunakan daftar model yang tersedia untuk akun Anda.',
+			429     => 'Batas permintaan tercapai. Tunggu sebelum mencoba lagi.',
+			500, 502, 503, 504, 529 => 'Layanan Anthropic sedang bermasalah. Coba lagi nanti.',
+			default => 'Periksa kunci, ID model, dan akses akun.',
+		};
+		return new WP_Error( 'http', 'Anthropic mengembalikan HTTP ' . $code . '. ' . $hint );
 	}
 
 	public static function facts( $d ) {
@@ -244,6 +254,9 @@ final class SDP_AI {
 			return new WP_Error( 'network', 'Koneksi penyedia gagal. Periksa jaringan, model dan konfigurasi.' );
 		}$code = wp_remote_retrieve_response_code( $r );
 		if ( 200 !== $code ) {
+			if ( 'claude' === $provider ) {
+				return self::claude_http_error( (int) $code );
+			}
 			return new WP_Error( 'http', 'Penyedia mengembalikan HTTP ' . (int) $code . '. Periksa model, kunci dan kuota.' );
 		}return self::extract( $provider, json_decode( wp_remote_retrieve_body( $r ), true ) );}
 }
