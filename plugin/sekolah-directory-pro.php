@@ -178,7 +178,7 @@ final class SDP_Directory {
 			'sdp_province_order' => array( 'provinsi', 'nama', 'npsn', 'post_id', 'status', 'kabupaten' ),
 			'sdp_search_count'   => array( 'post_id', 'status', 'nama', 'npsn' ),
 		);
-		$index_sql = array();
+		$index_sql        = array();
 		foreach ( $required_indexes as $name => $index_columns ) {
 			$index_sql[] = "KEY $name (" . implode( ',', $index_columns ) . ')';
 		}
@@ -227,7 +227,9 @@ final class SDP_Directory {
 			}
 		}
 		foreach ( $required_indexes as $name => $index_columns ) {
-			if ( ( $actual_indexes[ $name ] ?? array() ) != $index_columns ) {
+			$actual_columns = $actual_indexes[ $name ] ?? array();
+			ksort( $actual_columns );
+			if ( $actual_columns !== $index_columns ) {
 				return false;
 			}
 		}
