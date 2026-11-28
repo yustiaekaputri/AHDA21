@@ -108,7 +108,15 @@ final class SDP_AI {
 		}
 		$code = wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $code ) {
-			return new WP_Error( 'http', 'Anthropic mengembalikan HTTP ' . (int) $code . '. Periksa kunci, ID model, dan akses akun.' );
+			$hint = match ( (int) $code ) {
+				401     => 'Periksa apakah kunci API aktif dan disalin dengan benar.',
+				403     => 'Periksa izin kunci dan akses model di akun Anthropic.',
+				404     => 'Periksa ID model. Gunakan daftar model yang tersedia untuk akun Anda.',
+				429     => 'Batas permintaan tercapai. Tunggu sebelum mencoba lagi.',
+				500, 502, 503, 504, 529 => 'Layanan Anthropic sedang bermasalah. Coba lagi nanti.',
+				default => 'Periksa kunci, ID model, dan akses akun.',
+			};
+			return new WP_Error( 'http', 'Anthropic mengembalikan HTTP ' . (int) $code . '. ' . $hint );
 		}
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $data ) ) {
