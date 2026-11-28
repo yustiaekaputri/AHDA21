@@ -170,8 +170,19 @@ final class SDP_Directory {
 	public static function install_schema() {
 		global $wpdb;
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$table   = self::table();
-		$collate = $wpdb->get_charset_collate();
+		$table            = self::table();
+		$collate          = $wpdb->get_charset_collate();
+		$required_indexes = array(
+			'sdp_name_order'     => array( 'nama', 'npsn' ),
+			'sdp_school_count'   => array( 'post_id', 'status' ),
+			'sdp_province_order' => array( 'provinsi', 'nama', 'npsn', 'post_id', 'status', 'kabupaten' ),
+			'sdp_search_count'   => array( 'post_id', 'status', 'nama', 'npsn' ),
+		);
+		$index_sql = array();
+		foreach ( $required_indexes as $name => $index_columns ) {
+			$index_sql[] = "KEY $name (" . implode( ',', $index_columns ) . ')';
+		}
+		$index_sql = implode( ",\n", $index_sql );
 		dbDelta(
 			"CREATE TABLE $table (
             npsn varchar(8) NOT NULL,
@@ -192,10 +203,7 @@ final class SDP_Directory {
             KEY status (status),
             KEY akreditasi (akreditasi),
             KEY nama (nama(100)),
-            KEY sdp_name_order (nama,npsn),
-            KEY sdp_school_count (post_id,status),
-            KEY sdp_province_order (provinsi,nama,npsn,post_id,status,kabupaten),
-            KEY sdp_search_count (post_id,status,nama,npsn)
+            $index_sql
         ) $collate;"
 		);
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) !== $table || $wpdb->last_error ) {
@@ -204,6 +212,24 @@ final class SDP_Directory {
 		$columns = $wpdb->get_col( "SHOW COLUMNS FROM `$table`" );
 		if ( $wpdb->last_error || ! is_array( $columns ) || array_diff( array_merge( array( 'npsn', 'post_id', 'payload', 'updated_at' ), self::indexed() ), $columns ) ) {
 			return false;
+		}
+		// dbDelta reports planned changes even when an ALTER fails.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Internal table name; inspect fresh schema after dbDelta.
+		$indexes = $wpdb->get_results( "SHOW INDEX FROM `$table`", ARRAY_A );
+		if ( $wpdb->last_error || ! is_array( $indexes ) ) {
+			return false;
+		}
+		$actual_indexes = array();
+		foreach ( $indexes as $index ) {
+			$name = $index['Key_name'];
+			if ( isset( $required_indexes[ $name ] ) ) {
+				$actual_indexes[ $name ][ (int) $index['Seq_in_index'] - 1 ] = null === $index['Sub_part'] ? $index['Column_name'] : null;
+			}
+		}
+		foreach ( $required_indexes as $name => $index_columns ) {
+			if ( ( $actual_indexes[ $name ] ?? array() ) != $index_columns ) {
+				return false;
+			}
 		}
 		update_option( 'sdp_db_version', self::VERSION, false );
 		return get_option( 'sdp_db_version' ) === self::VERSION;

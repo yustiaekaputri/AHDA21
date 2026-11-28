@@ -183,6 +183,18 @@ final class WordPressTest extends TestCase
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_school_count"));
             self::assertNotFalse($wpdb->query("ALTER TABLE `$table` DROP INDEX sdp_province_order"));
             update_option('sdp_db_version', '9.0.0');
+            $skipIndex = static function (string $query) use ($table): string {
+                return str_starts_with($query, "ALTER TABLE $table ADD KEY sdp_province_order ")
+                    ? 'SELECT 1'
+                    : $query;
+            };
+            add_filter('query', $skipIndex);
+            try {
+                self::assertFalse(SDP_Directory::install_schema());
+                self::assertSame('9.0.0', get_option('sdp_db_version'));
+            } finally {
+                remove_filter('query', $skipIndex);
+            }
             self::assertTrue(SDP_Directory::install_schema());
             self::assertSame(SDP_Directory::VERSION, get_option('sdp_db_version'));
             self::assertContains('wilayah', array_column($wpdb->get_results("SHOW INDEX FROM `$table`", ARRAY_A), 'Key_name'));
