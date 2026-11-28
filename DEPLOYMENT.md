@@ -25,6 +25,14 @@ Pemasangan plugin membuat indeks `sdp_name_order`, `sdp_school_count`, `sdp_prov
 
 4. Rotasi kata sandi administrator hasil impor dan periksa pengaturan HTTPS, cache, serta Safe Mode. Uji jumlah rekaman katalog, tautan sumber, pencarian NPSN dan halaman profil. Pastikan draf tetap tersembunyi bagi pengunjung dan profil terbit memakai tautan domain tujuan. Simpan backup sebelum mengubah data di tujuan. Gunakan salinan database dan `wp-content` dari satu waktu pencadangan saat memulihkan.
 
+Untuk instalasi standar dengan `home` dan `siteurl` yang sama, jalankan pemeriksaan setelah migrasi. Salin [skrip verifikasi](deployment/vps/tools/verify-migration.php) ke direktori di luar webroot. Jalankan dari direktori WordPress tujuan dengan URL tujuan, jumlah rekaman katalog dari situs asal, dan NPSN yang sudah tersimpan sebagai draf sebelum ekspor.
+
+```sh
+wp eval-file /jalur/verify-migration.php https://staging.example.com 689 20210822
+```
+
+Skrip memeriksa URL tersimpan dan efektif, jumlah katalog, relasi draf dengan indeks sekolah, dan status REST anonim. Periksa juga melalui browser untuk memastikan Nginx, HTTPS, autentikasi staging, dan permalink publik bekerja dari luar WordPress.
+
 ### Lindungi staging Nginx
 
 Untuk staging yang memakai Nginx, buat berkas `htpasswd` di luar webroot. Simpan dengan akses baca terbatas untuk proses Nginx. Tambahkan [konfigurasi staging privat](deployment/vps/nginx/sdp-staging-private.conf) ke blok `server` HTTPS staging dan sesuaikan lokasi berkas autentikasi. Gunakan `nginx -t` sebelum memuat ulang konfigurasi.
